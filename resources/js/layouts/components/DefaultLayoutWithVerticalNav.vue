@@ -1,21 +1,64 @@
 <script setup>
-import { useTheme } from 'vuetify'
-import VerticalNavSectionTitle from '@/@layouts/components/VerticalNavSectionTitle.vue'
-import upgradeBannerDark from '@images/pro/upgrade-banner-dark.png'
-import upgradeBannerLight from '@images/pro/upgrade-banner-light.png'
-import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
-import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
+import { useTheme } from "vuetify";
+import VerticalNavSectionTitle from "@/@layouts/components/VerticalNavSectionTitle.vue";
+import upgradeBannerDark from "@images/pro/upgrade-banner-dark.png";
+import upgradeBannerLight from "@images/pro/upgrade-banner-light.png";
+import VerticalNavLayout from "@layouts/components/VerticalNavLayout.vue";
+import VerticalNavLink from "@layouts/components/VerticalNavLink.vue";
 
 // Components
-import Footer from '@/layouts/components/Footer.vue'
-import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
-import UserProfile from '@/layouts/components/UserProfile.vue'
+import Footer from "@/layouts/components/Footer.vue";
+import NavbarThemeSwitcher from "@/layouts/components/NavbarThemeSwitcher.vue";
+import UserProfile from "@/layouts/components/UserProfile.vue";
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import ApiService from "@/services/api";
 
-const vuetifyTheme = useTheme()
+const store = useStore();
+const vuetifyTheme = useTheme();
+
+const token = localStorage.getItem("__t");
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const user = computed(() => store.getters.user);
+const router = useRouter();
+
+if (!token) {
+  // No token in Local Storage, redirect to login
+  router.push("/login");
+} else {
+  // Proceed to validate the token
+  validateToken();
+}
+
+async function validateToken() {
+  if (!isAuthenticated.value) {
+    // request user information
+    try {
+      const res = await ApiService.authentication();
+      if (res.data.success) {
+        const token = res.data.response.token;
+        const user = res.data.response.user;
+        localStorage.setItem("__t", token);
+        localStorage.setItem("__u", JSON.stringify(user));
+        store.dispatch("updateUser", user);
+      } else {
+        localStorage.removeItem("__t");
+        localStorage.removeItem("__u");
+        router.push("/login");
+      }
+    } catch (error) {
+      localStorage.removeItem("__t");
+      localStorage.removeItem("__u");
+      router.push("/login");
+    }
+  }
+}
 
 const upgradeBanner = computed(() => {
-  return vuetifyTheme.global.name.value === 'light' ? upgradeBannerLight : upgradeBannerDark
-})
+  return vuetifyTheme.global.name.value === "light"
+    ? upgradeBannerLight
+    : upgradeBannerDark;
+});
 </script>
 
 <template>
@@ -31,36 +74,7 @@ const upgradeBanner = computed(() => {
           <VIcon icon="bx-menu" />
         </IconBtn>
 
-        <!-- 👉 Search -->
-        <div
-          class="d-flex align-center cursor-pointer"
-          style="user-select: none;"
-        >
-          <!-- 👉 Search Trigger button -->
-          <IconBtn>
-            <VIcon icon="bx-search" />
-          </IconBtn>
-
-          <span class="d-none d-md-flex align-center text-disabled">
-            <span class="me-3">Search</span>
-            <span class="meta-key">&#8984;K</span>
-          </span>
-        </div>
-
         <VSpacer />
-
-        <IconBtn
-          class="me-2"
-          href="https://github.com/themeselection/sneat-vuetify-vuejs-laravel-admin-template-free"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <VIcon icon="bxl-github" />
-        </IconBtn>
-
-        <IconBtn class="me-2">
-          <VIcon icon="bx-bell" />
-        </IconBtn>
 
         <NavbarThemeSwitcher class="me-2" />
 
@@ -75,6 +89,28 @@ const upgradeBanner = computed(() => {
           icon: 'bx-home',
           to: '/dashboard',
         }"
+      />
+
+      <!-- 👉 Users -->
+      <VerticalNavSectionTitle
+        :item="{
+          heading: 'Users',
+        }"
+      />
+      <VerticalNavLink
+        :item="{
+          title: 'Users',
+          icon: 'bx-user',
+          to: '/users',
+        }"
+      />
+      <VerticalNavLink
+        :item="{
+          title: 'Add/Edit User',
+          icon: 'bx-user',
+          to: '/users/user',
+        }"
+        v-if="user?.admin"
       />
       <VerticalNavLink
         :item="{
@@ -161,15 +197,15 @@ const upgradeBanner = computed(() => {
         href="https://themeselection.com/item/sneat-vuetify-vuejs-laravel-admin-template"
         target="_blank"
         rel="noopener noreferrer"
-        style="margin-left: 7px;"
+        style="margin-left: 7px"
       >
         <img
           :src="upgradeBanner"
           alt="upgrade-banner"
           transition="scale-transition"
           class="upgrade-banner mx-auto"
-          style="max-width: 230px;"
-        >
+          style="max-width: 230px"
+        />
       </a>
     </template>
 

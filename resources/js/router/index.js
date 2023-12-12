@@ -13,6 +13,14 @@ const router = createRouter({
           component: () => import('../pages/dashboard.vue'),
         },
         {
+          path: 'users',
+          component: () => import('../pages/user/user-list.vue'),
+        },
+        {
+          path: 'users/user',
+          component: () => import('../pages/user/user-create-edit.vue'),
+        },
+        {
           path: 'account-settings',
           component: () => import('../pages/account-settings.vue'),
         },
@@ -50,10 +58,10 @@ const router = createRouter({
           path: 'register',
           component: () => import('../pages/register.vue'),
         },
-        {
-          path: '/:pathMatch(.*)*',
-          component: () => import('../pages/[...all].vue'),
-        },
+        // {
+        //   path: '/:pathMatch(.*)*',
+        //   component: () => import('../pages/[...all].vue'),
+        // },
       ],
     },
   ],

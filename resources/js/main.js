@@ -9,6 +9,10 @@ import '@layouts/styles/index.scss'
 import '@styles/styles.scss'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
+import Toast, { POSITION } from "vue-toastification"
+import 'vue-toastification/dist/index.css'
+import store from './store'
+
 
 loadFonts()
 
@@ -21,6 +25,11 @@ const app = createApp(App)
 app.use(vuetify)
 app.use(createPinia())
 app.use(router)
+app.use(store)
+app.use(Toast, {
+	// Setting the global default position
+	position: POSITION.TOP_RIGHT
+});
 
 // Mount vue app
 app.mount('#app')

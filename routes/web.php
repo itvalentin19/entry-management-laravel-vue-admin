@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('{any?}', function() {
+// Exclude specific routes for assets
+Route::get('/{path}', function () {
     return view('application');
-})->where('any', '.*');
+})->where('path', '^(?!avatars|css|js|images).*$'); // Exclude these directories
+

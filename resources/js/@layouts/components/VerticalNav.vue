@@ -1,16 +1,17 @@
 <script setup>
-import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
-import { useDisplay } from 'vuetify'
-import logo from '@images/logo.svg?raw'
+import { PerfectScrollbar } from "vue3-perfect-scrollbar";
+import { useDisplay } from "vuetify";
+import logo from "@images/logo.png";
+import { useRoute, useRouter } from "vue-router";
+import { computed } from "vue";
+import { useStore } from "vuex";
+import axios from "axios";
 
 const props = defineProps({
   tag: {
-    type: [
-      String,
-      null,
-    ],
+    type: [String, null],
     required: false,
-    default: 'aside',
+    default: "aside",
   },
   isOverlayNavActive: {
     type: Boolean,
@@ -20,22 +21,26 @@ const props = defineProps({
     type: Function,
     required: true,
   },
-})
+});
 
-const { mdAndDown } = useDisplay()
-const refNav = ref()
-const route = useRoute()
+const { mdAndDown } = useDisplay();
+const refNav = ref();
+const route = useRoute();
 
-watch(() => route.path, () => {
-  props.toggleIsOverlayNavActive(false)
-})
+watch(
+  () => route.path,
+  () => {
+    props.toggleIsOverlayNavActive(false);
+  }
+);
 
-const isVerticalNavScrolled = ref(false)
-const updateIsVerticalNavScrolled = val => isVerticalNavScrolled.value = val
+const isVerticalNavScrolled = ref(false);
+const updateIsVerticalNavScrolled = (val) =>
+  (isVerticalNavScrolled.value = val);
 
-const handleNavScroll = evt => {
-  isVerticalNavScrolled.value = evt.target.scrollTop > 0
-}
+const handleNavScroll = (evt) => {
+  isVerticalNavScrolled.value = evt.target.scrollTop > 0;
+};
 </script>
 
 <template>
@@ -45,8 +50,8 @@ const handleNavScroll = evt => {
     class="layout-vertical-nav"
     :class="[
       {
-        'visible': isOverlayNavActive,
-        'scrolled': isVerticalNavScrolled,
+        visible: isOverlayNavActive,
+        scrolled: isVerticalNavScrolled,
         'overlay-nav': mdAndDown,
       },
     ]"
@@ -58,14 +63,7 @@ const handleNavScroll = evt => {
           to="/"
           class="app-logo d-flex align-center gap-x-3 app-title-wrapper"
         >
-          <div
-            class="d-flex"
-            v-html="logo"
-          />
-
-          <h1 class="leading-normal">
-            sneat
-          </h1>
+          <VImg :src="logo" width="200" height="80" />
         </RouterLink>
       </slot>
     </div>
@@ -85,8 +83,6 @@ const handleNavScroll = evt => {
         <slot />
       </PerfectScrollbar>
     </slot>
-
-    <slot name="after-nav-items" />
   </Component>
 </template>
 
@@ -104,7 +100,8 @@ const handleNavScroll = evt => {
   inline-size: variables.$layout-vertical-nav-width;
   inset-block-start: 0;
   inset-inline-start: 0;
-  transition: transform 0.25s ease-in-out, inline-size 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+  transition: transform 0.25s ease-in-out, inline-size 0.25s ease-in-out,
+    box-shadow 0.25s ease-in-out;
   will-change: transform, inline-size;
 
   .nav-header {

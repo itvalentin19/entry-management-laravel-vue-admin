@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +14,23 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('v1')->group(function () {
+    Route::post('login', [UserController::class, 'login'])->name('user.login');
+    Route::post('register', [UserController::class, 'register']);
+    Route::middleware('auth:sanctum')->group(function () {
+        // Authenticate for current user
+        Route::get('user', [UserController::class, 'index']);
+        Route::post('logout', [UserController::class, 'logout']);
+        Route::post('update-account', [UserController::class, 'update']);
+
+        // User Management
+        Route::get('users', [UserController::class, 'getUsers']);
+        Route::post('user', [UserController::class, 'store']);
+        Route::get('user/{id}', [UserController::class, 'getUser']);
+        Route::post('user/{id}', [UserController::class, 'updateUser']);
+        Route::delete('user/{id}', [UserController::class, 'delete']);
+
+        // Stats for Dashboard
+        Route::get('stats', [UserController::class, 'stats']);
+    });
 });

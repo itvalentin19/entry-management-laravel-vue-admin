@@ -1,5 +1,31 @@
 <script setup>
-import avatar1 from '@images/avatars/avatar-1.png'
+import avatar1 from "@images/avatars/avatar-1.png";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import axios from "axios";
+import ApiService from "@/services/api";
+import { computed, ref, watchEffect } from "vue";
+
+const router = useRouter();
+const store = useStore();
+const user = computed(() => store.getters.user);
+
+const logout = async () => {
+  try {
+    // Call backend logout endpoint (optional)
+    await ApiService.logout();
+  } catch (error) {
+    console.error("Logout failed", error);
+  }
+
+  // Clear local storage or cookies
+  localStorage.removeItem("__t");
+  localStorage.removeItem("__rm"); // If you're using remember me feature
+  localStorage.removeItem("__u"); // If you're using remember me feature
+
+  // Redirect to login page
+  router.push("/login");
+};
 </script>
 
 <template>
@@ -11,20 +37,11 @@ import avatar1 from '@images/avatars/avatar-1.png'
     color="success"
     bordered
   >
-    <VAvatar
-      class="cursor-pointer"
-      color="primary"
-      variant="tonal"
-    >
-      <VImg :src="avatar1" />
+    <VAvatar class="cursor-pointer" color="primary" variant="tonal">
+      <VImg :src="user?.photo || avatar1" />
 
       <!-- SECTION Menu -->
-      <VMenu
-        activator="parent"
-        width="230"
-        location="bottom end"
-        offset="14px"
-      >
+      <VMenu activator="parent" width="230" location="bottom end" offset="14px">
         <VList>
           <!-- 👉 User Avatar & Name -->
           <VListItem>
@@ -37,10 +54,7 @@ import avatar1 from '@images/avatars/avatar-1.png'
                   offset-y="3"
                   color="success"
                 >
-                  <VAvatar
-                    color="primary"
-                    variant="tonal"
-                  >
+                  <VAvatar color="primary" variant="tonal">
                     <VImg :src="avatar1" />
                   </VAvatar>
                 </VBadge>
@@ -48,20 +62,16 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle class="font-weight-semibold">
-              John Doe
+              {{ user?.name || "Unknown" }}
             </VListItemTitle>
-            <VListItemSubtitle>Admin</VListItemSubtitle>
+            <VListItemSubtitle v-if="user?.admin">Admin</VListItemSubtitle>
           </VListItem>
           <VDivider class="my-2" />
 
           <!-- 👉 Profile -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-user"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-user" size="22" />
             </template>
 
             <VListItemTitle>Profile</VListItemTitle>
@@ -70,11 +80,7 @@ import avatar1 from '@images/avatars/avatar-1.png'
           <!-- 👉 Settings -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-cog"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-cog" size="22" />
             </template>
 
             <VListItemTitle>Settings</VListItemTitle>
@@ -83,11 +89,7 @@ import avatar1 from '@images/avatars/avatar-1.png'
           <!-- 👉 Pricing -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-dollar"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-dollar" size="22" />
             </template>
 
             <VListItemTitle>Pricing</VListItemTitle>
@@ -96,11 +98,7 @@ import avatar1 from '@images/avatars/avatar-1.png'
           <!-- 👉 FAQ -->
           <VListItem link>
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-help-circle"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-help-circle" size="22" />
             </template>
 
             <VListItemTitle>FAQ</VListItemTitle>
@@ -110,13 +108,9 @@ import avatar1 from '@images/avatars/avatar-1.png'
           <VDivider class="my-2" />
 
           <!-- 👉 Logout -->
-          <VListItem to="/login">
+          <VListItem @click="logout">
             <template #prepend>
-              <VIcon
-                class="me-2"
-                icon="bx-log-out"
-                size="22"
-              />
+              <VIcon class="me-2" icon="bx-log-out" size="22" />
             </template>
 
             <VListItemTitle>Logout</VListItemTitle>
