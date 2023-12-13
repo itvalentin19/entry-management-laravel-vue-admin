@@ -5,8 +5,6 @@ import { useStore } from "vuex";
 
 const store = useStore();
 const _user = computed(() => store.getters.user);
-console.log(_user?.value?.id);
-console.log(_user?.value?.admin);
 const props = defineProps({
   userList: {
     type: Array,

@@ -107,10 +107,61 @@ const upgradeBanner = computed(() => {
       <VerticalNavLink
         :item="{
           title: 'Add/Edit User',
-          icon: 'bx-user',
+          icon: 'bx-user-plus',
           to: '/users/user',
         }"
         v-if="user?.admin"
+      />
+
+      <!-- 👉 Entities -->
+      <VerticalNavSectionTitle
+        :item="{
+          heading: 'Entities',
+        }"
+      />
+      <VerticalNavLink
+        :item="{
+          title: 'Entities',
+          icon: 'bx-data',
+          to: '/entities',
+        }"
+      />
+      <VerticalNavLink
+        :item="{
+          title: 'Add/Edit Entity',
+          icon: 'bx-file',
+          to: '/entities/entity',
+        }"
+        v-if="user?.admin"
+      />
+
+      <!-- 👉 Entities -->
+      <VerticalNavSectionTitle
+        :item="{
+          heading: 'Owners',
+        }"
+      />
+      <VerticalNavLink
+        :item="{
+          title: 'Owners',
+          icon: 'bx-group',
+          to: '/owners',
+        }"
+      />
+      <VerticalNavLink
+        :item="{
+          title: 'Add/Edit Owner',
+          icon: 'bx-user-plus',
+          to: '/owners/owner',
+        }"
+        v-if="user?.admin"
+      />
+
+      <!-- 👉 Entities -->
+      <VerticalNavSectionTitle
+        :item="{
+          heading: '',
+        }"
       />
       <VerticalNavLink
         :item="{

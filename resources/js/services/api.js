@@ -22,6 +22,7 @@ apiClient.interceptors.request.use(config => {
 
 
 export default {
+  // 👉 Auth Management //
   // Login
   login(data) {
     return apiClient.post('/login', data);
@@ -34,43 +35,64 @@ export default {
   updateAccount(data, config) {
     return apiClient.post('/update-account', data, config);
   },
-
-  // Get User Information
-  getUser(id) {
-    return apiClient.get('/user/' + id);
-  },
-
-  // Get All Users
-  getUsers(currentPage) {
-    return apiClient.get(`/users?page=${currentPage}`);
-  },
-
   // Logout
   logout() {
     return apiClient.post('/logout');
   },
 
-  // Example POST request
+  
+  // 👉 Users Management //
+  // Get User Information
+  getUser(id) {
+    return apiClient.get('/user/' + id);
+  },
+  // Get All Users
+  getUsers(currentPage) {
+    return apiClient.get(`/users?page=${currentPage}`);
+  },
+  // Create a User
   createUser(data, config) {
     return apiClient.post('/user', data, config);
   },
-
-  // Example POST request
+  // Update user data
   updateUser(id, data, config) {
     return apiClient.post('/user/' + id, data, config);
   },
-
-// Example POST request
+  // delete user
   deleteUser(userId) {
     return apiClient.delete('/user/' + userId);
   },
 
-  // Example POST request
-  createPost(data) {
-    return apiClient.post('/posts', data);
+
+  // 👉 Owners Management //
+  // Get Owner Information
+  getOwner(id) {
+    return apiClient.get('/owner/' + id);
   },
 
-  // Fetch Stats for Dashboard
+  // Get All Owners
+  getOwners(currentPage) {
+    return apiClient.get(`/owners?page=${currentPage}`);
+  },
+
+  // create an owner
+  createOwner(data, config) {
+    return apiClient.post('/owner', data, config);
+  },
+
+  // Update Owner Data
+  updateOwner(id, data, config) {
+    return apiClient.post('/owner/' + id, data, config);
+  },
+
+  // Delete Owner
+  deleteOwner(id) {
+    return apiClient.delete('/owner/' + id);
+  },
+
+
+
+  // 👉 Fetch Stats for Dashboard //
   getStats() {
     return apiClient.get('/stats');
   }

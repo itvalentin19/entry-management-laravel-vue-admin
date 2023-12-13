@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,13 @@ Route::prefix('v1')->group(function () {
         Route::get('user/{id}', [UserController::class, 'getUser']);
         Route::post('user/{id}', [UserController::class, 'updateUser']);
         Route::delete('user/{id}', [UserController::class, 'delete']);
+
+        // Entity Owner Management
+        Route::get('owners', [OwnerController::class, 'list']);
+        Route::post('owner', [OwnerController::class, 'store']);
+        Route::get('owner/{id}', [OwnerController::class, 'index']);
+        Route::post('owner/{id}', [OwnerController::class, 'update']);
+        Route::delete('owner/{id}', [OwnerController::class, 'delete']);
 
         // Stats for Dashboard
         Route::get('stats', [UserController::class, 'stats']);

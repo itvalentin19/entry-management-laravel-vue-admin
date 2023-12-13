@@ -21,6 +21,22 @@ const router = createRouter({
           component: () => import('../pages/user/user-create-edit.vue'),
         },
         {
+          path: 'owners',
+          component: () => import('../pages/owner/owner-list.vue'),
+        },
+        {
+          path: 'owners/owner',
+          component: () => import('../pages/owner/owner-create-edit.vue'),
+        },
+        {
+          path: 'entities',
+          component: () => import('../pages/entity/entity-list.vue'),
+        },
+        {
+          path: 'entities/entity',
+          component: () => import('../pages/entity/entity-create-edit.vue'),
+        },
+        {
           path: 'account-settings',
           component: () => import('../pages/account-settings.vue'),
         },
