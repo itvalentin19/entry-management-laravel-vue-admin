@@ -62,7 +62,7 @@ const menuList = ref([
         <th>Document Expiration</th>
         <th>Document</th>
         <th>Created At</th>
-        <th :v-bind="_user && _user.value && _user.value.admin">Actions</th>
+        <th v-if="_user?.admin == true">Actions</th>
       </tr>
     </thead>
 
@@ -122,11 +122,8 @@ const menuList = ref([
         <td class="text-center">
           {{ moment(user.created_at).format("YYYY-MM-DD HH:mm:ss") }}
         </td>
-        <td class="text-center" :v-bind="_user?.value?.admin == true">
+        <td class="text-center" v-if="_user?.admin == true">
           <MoreBtn :menu-list="menuList" :data="user" />
-          <!-- Edit and Delete Buttons -->
-          <!-- <VBtn small color="primary" @click="editUser(user)">Edit</VBtn>
-          <VBtn small color="error" @click="deleteUser(user.id)">Delete</VBtn> -->
         </td>
       </tr>
     </tbody>

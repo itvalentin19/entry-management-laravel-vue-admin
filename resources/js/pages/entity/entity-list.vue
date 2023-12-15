@@ -1,15 +1,12 @@
 <script setup>
 import { ref, onMounted, reactive } from "vue";
 import ApiService from "@/services/api";
-import OwnersTable from "@/layouts/components/OwnersTable.vue";
+import EntitiesTable from "@/layouts/components/EntitiesTable.vue";
 import { useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
-import { useStore } from "vuex";
 
 const router = useRouter();
 const toast = useToast();
-const store = useStore();
-const _user = computed(() => store.getters.user);
 
 // Reactive state
 const state = reactive({
@@ -30,10 +27,14 @@ const state = reactive({
 
 const dialog = ref(false);
 let ownerIdToDelete = ref(null);
+const loaded = ref(false);
+const loading = ref(false);
+const searchText = ref("");
 
 // Fetch users method
-async function fetchOwners() {
-  const response = await ApiService.getOwners(state.current_page);
+async function fetchEntities() {
+  const params = "page=" + state.current_page;
+  const response = await ApiService.getEntities(params);
   if (response.data) {
     Object.keys(response.data).map((key) => {
       state[key] = response.data[key];
@@ -41,19 +42,26 @@ async function fetchOwners() {
   }
 }
 
-// Navigate to Owner Create component
+// Navigate to Entity Create component
 function goToCreateUser() {
-  router.push("/owners/owner");
+  router.push("/entities/entity");
 }
 
 // Search users method
-async function searchOwners(searchTerm) {
-  const response = await ApiService.get(`/owners?search=${searchTerm}`);
-  state.users = response.data;
+async function searchEntities() {
+  if (searchText.value) {
+    const params = "page=1&search=" + searchText.value;
+    const response = await ApiService.getEntities(params);
+    if (response.data) {
+      Object.keys(response.data).map((key) => {
+        state[key] = response.data[key];
+      });
+    }
+  }
 }
 
 const handleEdit = (id) => {
-  router.push("owners/owner?id=" + id);
+  router.push("entities/entity?id=" + id);
 };
 
 const handleDelete = (id) => {
@@ -66,10 +74,10 @@ const confirmDelete = async () => {
   if (ownerIdToDelete.value) {
     try {
       // Perform the delete action
-      await ApiService.deleteOwner(ownerIdToDelete.value);
+      await ApiService.deleteEntity(ownerIdToDelete.value);
       // Show success message
-      toast.success("Owner successfully deleted.");
-      fetchOwners();
+      toast.success("Entity successfully deleted.");
+      fetchEntities();
       // Reset ownerIdToDelete for future deletions
       ownerIdToDelete.value = null;
     } catch (error) {
@@ -86,25 +94,48 @@ const confirmDelete = async () => {
   }
 };
 
+const handleChangeSearchText = (e) => {
+  console.log(e.target.value);
+  searchText.value = e.target.value;
+};
+
+const handleKeyPress = (e) => {
+  if (e.key === "Enter") {
+    searchEntities();
+  }
+};
+
 // Mounted lifecycle hook
 onMounted(() => {
-  fetchOwners();
+  fetchEntities();
 });
 </script>
 
 <template>
   <VRow>
     <VCol cols="12">
-      <v-btn color="primary" @click="goToCreateUser" v-if="_user?.admin == true"
-        >Create Entity Owner</v-btn
-      >
+      <div class="d-flex align-center justify-space-between gap-10">
+        <v-btn color="primary" @click="goToCreateUser">Create Entity</v-btn>
+        <v-text-field
+          :loading="loading"
+          v-model="searchText"
+          density="compact"
+          variant="solo"
+          label="Search Entities"
+          append-inner-icon="mdi-magnify"
+          single-line
+          hide-details
+          @click:append-inner="searchEntities"
+          @keypress="handleKeyPress"
+        ></v-text-field>
+      </div>
     </VCol>
   </VRow>
   <VRow>
     <VCol cols="12">
-      <VCard title="Owners">
-        <OwnersTable
-          :user-list="state.data"
+      <VCard title="Entities">
+        <EntitiesTable
+          :data="state.data"
           @edit="handleEdit"
           @delete="handleDelete"
         />
@@ -114,7 +145,7 @@ onMounted(() => {
   <VDialog v-model="dialog" width="500">
     <VCard>
       <VCardTitle class="headline">Confirm Deletion</VCardTitle>
-      <VCardText> Are you sure you want to delete this owner? </VCardText>
+      <VCardText> Are you sure you want to delete this entity? </VCardText>
       <VCardActions>
         <VSpacer></VSpacer>
         <VBtn color="green darken-1" text @click="dialog = false">Cancel</VBtn>

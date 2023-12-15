@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->string('contact_phone')->nullable();
             $table->string('contact_email')->nullable();
             $table->string('services')->nullable();
-            $table->integer('annual_fee')->nullable();
+            $table->string('annual_fees')->nullable();
             $table->string('first_tax_year')->nullable();
             $table->tinyInteger('directors')->nullable();
             $table->string('ein_number')->nullable();

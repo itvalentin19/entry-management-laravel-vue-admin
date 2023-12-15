@@ -64,7 +64,6 @@ class UserController extends Controller
 	{
 		try {
 			$user = auth()->user();
-			\Log::info('Request data:', $request->all());
 
 			// Validate the incoming request data
 			$request->validate([
@@ -146,6 +145,28 @@ class UserController extends Controller
 		return $this->sendResponse($success, 'Registration successful.');
 	}
 
+	public function updatePassword(Request $request)
+	{
+		$user = auth()->user();
+
+		$request->validate([
+			'currentPassword' => 'required|string|max:255',
+			'newPassword' => 'required|string|min:8|different:currentPassword',
+			'confirmPassword' => 'required|string|same:newPassword',
+		]);
+
+		// Check if the current password is correct
+		if (!Hash::check($request->currentPassword, $user->password)) {
+			return response()->json(['message' => 'Current password is incorrect'], 403);
+		}
+
+		// Update the password
+		$user->password = Hash::make($request->newPassword);
+		$user->save();
+
+		return response()->json(['message' => 'Password updated successfully']);
+	}
+
 	public function store(Request $request)
 	{
 		$request->validate([
@@ -189,7 +210,6 @@ class UserController extends Controller
 			//code...
 			// Find the user by ID or fail with a 404 error
 			$user = User::findOrFail($id);
-			\Log::info('Request data:', $request->all());
 
 			// Validate the incoming request data
 			$request->validate([

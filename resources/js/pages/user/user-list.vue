@@ -4,9 +4,12 @@ import ApiService from "@/services/api";
 import UsersTable from "@/layouts/components/UsersTable.vue";
 import { useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
+import { useStore } from "vuex";
 
 const router = useRouter();
 const toast = useToast();
+const store = useStore();
+const _user = computed(() => store.getters.user);
 
 // Reactive state
 const state = reactive({
@@ -94,7 +97,9 @@ onMounted(() => {
 <template>
   <VRow>
     <VCol cols="12">
-      <v-btn color="primary" @click="goToCreateUser">Create User</v-btn>
+      <v-btn color="primary" @click="goToCreateUser" v-if="_user?.admin == true"
+        >Create User</v-btn
+      >
     </VCol>
   </VRow>
   <VRow>

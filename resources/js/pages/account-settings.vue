@@ -11,7 +11,6 @@ import ApiService from "@/services/api";
 
 const route = useRoute();
 const store = useStore();
-const activeTab = ref(0);
 const user = computed(() => store.getters.user);
 const accountData = {
   name: "",
@@ -26,7 +25,33 @@ const accountDataLocal = ref(accountData);
 const isAccountDeactivated = ref(false);
 const toast = useToast();
 const router = useRouter();
+const activeTab = ref(route.params.tab);
 
+const isCurrentPasswordVisible = ref(false);
+const isNewPasswordVisible = ref(false);
+const isConfirmPasswordVisible = ref(false);
+const currentPassword = ref(null);
+const newPassword = ref(null);
+const confirmPassword = ref(null);
+
+// tabs
+const tabs = [
+  {
+    title: "Account",
+    icon: "bx-user",
+    tab: "account",
+  },
+  {
+    title: "Security",
+    icon: "bx-lock-open",
+    tab: "security",
+  },
+  // {
+  //   title: "Notifications",
+  //   icon: "bx-bell",
+  //   tab: "notification",
+  // },
+];
 console.log(accountData);
 console.log(accountDataLocal.value);
 const resetForm = () => {
@@ -85,7 +110,37 @@ const handleUpdateUser = async () => {
     };
     const res = await ApiService.updateAccount(formData, config);
     store.dispatch("updateUser", res.data);
-    toast.success("User updated successfully!");
+    toast.success("Account information updated successfully!");
+  } catch (error) {
+    if (error.response) {
+      // Handle HTTP errors
+      const errorMsg =
+        error.response.data.message ||
+        "An error occurred while creating the user.";
+      toast.error(errorMsg);
+    } else if (error.request) {
+      // The request was made but no response was received
+      toast.error("No response from server. Please try again later.");
+    } else {
+      // Something else happened in setting up the request
+      toast.error("Error: " + error.message);
+    }
+    console.error(error);
+  }
+};
+
+const handleUpdatePassword = async () => {
+  try {
+    const formData = {
+      currentPassword: currentPassword.value,
+      newPassword: newPassword.value,
+      confirmPassword: confirmPassword.value,
+    };
+    const res = await ApiService.updatePassword(formData);
+    toast.success("Password updated successfully!");
+    currentPassword.value = null;
+    newPassword.value = null;
+    confirmPassword.value = null;
   } catch (error) {
     if (error.response) {
       // Handle HTTP errors
@@ -107,6 +162,12 @@ const handleUpdateUser = async () => {
 
 <template>
   <div>
+    <VTabs v-model="activeTab" show-arrows>
+      <VTab v-for="item in tabs" :key="item.icon" :value="item.tab">
+        <VIcon size="20" start :icon="item.icon" />
+        {{ item.title }}
+      </VTab>
+    </VTabs>
     <VDivider />
 
     <VWindow v-model="activeTab" class="mt-5 disable-tab-transition">
@@ -219,6 +280,81 @@ const handleUpdateUser = async () => {
                   </VRow>
                 </VForm>
               </VCardText>
+            </VCard>
+          </VCol>
+        </VRow>
+      </VWindowItem>
+
+      <!-- Security -->
+      <VWindowItem value="security">
+        <VRow>
+          <!-- SECTION: Change Password -->
+          <VCol cols="12">
+            <VCard title="Change Password">
+              <VForm>
+                <VCardText>
+                  <!-- 👉 Current Password -->
+                  <VRow>
+                    <VCol cols="12" md="6">
+                      <!-- 👉 current password -->
+                      <VTextField
+                        v-model="currentPassword"
+                        :type="isCurrentPasswordVisible ? 'text' : 'password'"
+                        :append-inner-icon="
+                          isCurrentPasswordVisible ? 'bx-hide' : 'bx-show'
+                        "
+                        label="Current Password"
+                        placeholder="············"
+                        @click:append-inner="
+                          isCurrentPasswordVisible = !isCurrentPasswordVisible
+                        "
+                      />
+                    </VCol>
+                  </VRow>
+
+                  <!-- 👉 New Password -->
+                  <VRow>
+                    <VCol cols="12" md="6">
+                      <!-- 👉 new password -->
+                      <VTextField
+                        v-model="newPassword"
+                        :type="isNewPasswordVisible ? 'text' : 'password'"
+                        :append-inner-icon="
+                          isNewPasswordVisible ? 'bx-hide' : 'bx-show'
+                        "
+                        label="New Password"
+                        placeholder="············"
+                        @click:append-inner="
+                          isNewPasswordVisible = !isNewPasswordVisible
+                        "
+                      />
+                    </VCol>
+
+                    <VCol cols="12" md="6">
+                      <!-- 👉 confirm password -->
+                      <VTextField
+                        v-model="confirmPassword"
+                        :type="isConfirmPasswordVisible ? 'text' : 'password'"
+                        :append-inner-icon="
+                          isConfirmPasswordVisible ? 'bx-hide' : 'bx-show'
+                        "
+                        label="Confirm New Password"
+                        placeholder="············"
+                        @click:append-inner="
+                          isConfirmPasswordVisible = !isConfirmPasswordVisible
+                        "
+                      />
+                    </VCol>
+                  </VRow>
+                </VCardText>
+                <!-- 👉 Action Buttons -->
+                <VCardText
+                  class="d-flex flex-wrap gap-4"
+                  @click="handleUpdatePassword"
+                >
+                  <VBtn>Save changes</VBtn>
+                </VCardText>
+              </VForm>
             </VCard>
           </VCol>
         </VRow>

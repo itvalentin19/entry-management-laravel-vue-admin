@@ -3,6 +3,9 @@ import avatar1 from "@images/avatars/avatar-1.png";
 import ApiService from "@/services/api";
 import { useToast } from "vue-toastification";
 import { useRoute, useRouter } from "vue-router";
+import VueDatePicker from "@vuepic/vue-datepicker";
+import { useStore } from "vuex";
+import { onMounted, watch } from "vue";
 
 const accountData = {
   first_name: "",
@@ -17,11 +20,13 @@ const accountData = {
   country: "USA",
   ownership_stake: "",
   document_type: "DL",
-  document_expiration: null,
+  document_expiration: new Date(),
   document: null,
   kyc_document: null,
 };
 const route = useRoute();
+const store = useStore();
+const _user = computed(() => store.getters.user);
 const ownerId = ref(null);
 const refInputEl = ref();
 const accountDataLocal = ref(structuredClone(accountData));
@@ -105,18 +110,22 @@ const onCreate = async () => {
 watch(
   route,
   async (currentRoute) => {
-    ownerId.value = currentRoute.query.id || null;
-    if (ownerId?.value) {
-      try {
-        const response = await ApiService.getOwner(ownerId.value);
-        accountDataLocal.value = response.data;
-      } catch (error) {
-        toast.error("Failed to load owner data.");
-        router.push("/owners/owner");
-        console.error(error);
+    if (_user.value?.admin == true) {
+      ownerId.value = currentRoute.query.id || null;
+      if (ownerId?.value) {
+        try {
+          const response = await ApiService.getOwner(ownerId.value);
+          accountDataLocal.value = response.data;
+        } catch (error) {
+          toast.error("Failed to load owner data.");
+          router.push("/owners/owner");
+          console.error(error);
+        }
+      } else {
+        resetForm();
       }
     } else {
-      resetForm();
+      router.push("/owners");
     }
   },
   { immediate: true }
@@ -244,30 +253,9 @@ watch(
 
               <!-- 👉 Document Expiration -->
               <VCol cols="12" md="6">
-                <VMenu
-                  ref="menu"
-                  v-model="menu"
-                  :close-on-content-click="false"
-                  transition="scale-transition"
-                  offset-y
-                  min-width="auto"
-                >
-                  <template v-slot:activator="{ on, attrs }">
-                    <VTextField
-                      v-model="accountDataLocal.document_expiration"
-                      label="Document Expiration"
-                      placeholder="Select expiration date"
-                      readonly
-                      v-bind="attrs"
-                      :v-on="on"
-                    />
-                  </template>
-                  <VDatePicker
-                    v-model="accountDataLocal.document_expiration"
-                    no-title
-                    @input="menu = false"
-                  ></VDatePicker>
-                </VMenu>
+                <VueDatePicker
+                  v-model="accountDataLocal.document_expiration"
+                ></VueDatePicker>
               </VCol>
               <!-- 👉 Document -->
               <VCol cols="12" md="6">

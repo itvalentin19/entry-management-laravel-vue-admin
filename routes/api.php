@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EntityController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,7 @@ Route::prefix('v1')->group(function () {
         Route::get('user', [UserController::class, 'index']);
         Route::post('logout', [UserController::class, 'logout']);
         Route::post('update-account', [UserController::class, 'update']);
+        Route::post('update-password', [UserController::class, 'updatePassword']);
 
         // User Management
         Route::get('users', [UserController::class, 'getUsers']);
@@ -37,6 +39,14 @@ Route::prefix('v1')->group(function () {
         Route::get('owner/{id}', [OwnerController::class, 'index']);
         Route::post('owner/{id}', [OwnerController::class, 'update']);
         Route::delete('owner/{id}', [OwnerController::class, 'delete']);
+
+        // Entity Management
+        Route::get('entities', [EntityController::class, 'list']);
+        Route::get('entities/props', [EntityController::class, 'getProps']);
+        Route::post('entity', [EntityController::class, 'store']);
+        Route::get('entity/{id}', [EntityController::class, 'index']);
+        Route::post('entity/{id}', [EntityController::class, 'update']);
+        Route::delete('entity/{id}', [EntityController::class, 'delete']);
 
         // Stats for Dashboard
         Route::get('stats', [UserController::class, 'stats']);

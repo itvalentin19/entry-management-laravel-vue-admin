@@ -37,7 +37,7 @@ const isAdmin = (user) => {
         <th>Phone</th>
         <th>Created At</th>
         <th>Role</th>
-        <th :v-bind="_user && _user.value && _user.value.admin">Actions</th>
+        <th v-if="_user?.admin == true">Actions</th>
       </tr>
     </thead>
 
@@ -69,7 +69,7 @@ const isAdmin = (user) => {
         <td class="text-center">
           {{ isAdmin(user) ? "Admin" : "" }}
         </td>
-        <td class="text-center" :v-bind="_user?.value?.admin == true">
+        <td class="text-center" v-if="_user?.admin == true">
           <!-- Edit and Delete Buttons -->
           <VBtn small color="primary" @click="editUser(user)">Edit</VBtn>
           <VBtn small color="error" @click="deleteUser(user.id)">Delete</VBtn>

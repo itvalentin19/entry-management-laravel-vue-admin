@@ -10,10 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('people', function (Blueprint $table) {
-            $table->id();
-            $table->string('type');
-            $table->timestamps();
+        Schema::table('entities', function (Blueprint $table) {
+            $table->boolean('is_deleted')->default(false); // Add this line
         });
     }
 
@@ -22,6 +20,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('people');
+        Schema::table('entities', function (Blueprint $table) {
+            $table->dropColumn('is_deleted');
+        });
     }
 };

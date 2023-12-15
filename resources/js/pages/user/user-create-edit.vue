@@ -3,6 +3,7 @@ import avatar1 from "@images/avatars/avatar-1.png";
 import ApiService from "@/services/api";
 import { useToast } from "vue-toastification";
 import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
 
 const accountData = {
   name: "",
@@ -19,6 +20,8 @@ const accountDataLocal = ref(structuredClone(accountData));
 const isAccountDeactivated = ref(false);
 const toast = useToast();
 const router = useRouter();
+const store = useStore();
+const _user = computed(() => store.getters.user);
 
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData);
@@ -98,20 +101,24 @@ const onCreateUser = async () => {
 watch(
   route,
   async (currentRoute) => {
-    userId.value = currentRoute.query.id || null;
-    if (userId?.value) {
-      try {
-        const response = await ApiService.getUser(userId.value);
-        accountDataLocal.value = response.data;
-        accountDataLocal.value.avatarImg = response.data.photo || avatar1;
-      } catch (error) {
-        toast.error("Failed to load user data.");
-        router.push("/users/user");
-        console.error(error);
+    if (_user.value?.admin == true) {
+      userId.value = currentRoute.query.id || null;
+      if (userId?.value) {
+        try {
+          const response = await ApiService.getUser(userId.value);
+          accountDataLocal.value = response.data;
+          accountDataLocal.value.avatarImg = response.data.photo || avatar1;
+        } catch (error) {
+          toast.error("Failed to load user data.");
+          router.push("/users/user");
+          console.error(error);
+        }
+      } else {
+        resetForm();
+        resetAvatar();
       }
     } else {
-      resetForm();
-      resetAvatar();
+      router.push("/users");
     }
   },
   { immediate: true }

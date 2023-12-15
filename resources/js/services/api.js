@@ -35,6 +35,10 @@ export default {
   updateAccount(data, config) {
     return apiClient.post('/update-account', data, config);
   },
+  // Get Logged in User Information
+  updatePassword(data) {
+    return apiClient.post('/update-password', data);
+  },
   // Logout
   logout() {
     return apiClient.post('/logout');
@@ -88,6 +92,37 @@ export default {
   // Delete Owner
   deleteOwner(id) {
     return apiClient.delete('/owner/' + id);
+  },
+
+  // 👉 Entities Management //
+  // Get Entity Information
+  getEntity(id) {
+    return apiClient.get('/entity/' + id);
+  },
+
+  // Get All Entities
+  getEntities(params) {
+    return apiClient.get(`/entities?${params}`);
+  },
+
+  // Get All Entity Props
+  getEntityProps() {
+    return apiClient.get(`/entities/props`);
+  },
+
+  // create an Entity
+  createEntity(data, config) {
+    return apiClient.post('/entity', data, config);
+  },
+
+  // Update Entity Data
+  updateEntity(id, data, config) {
+    return apiClient.post('/entity/' + id, data, config);
+  },
+
+  // Delete Entity
+  deleteEntity(id) {
+    return apiClient.delete('/entity/' + id);
   },
 
 

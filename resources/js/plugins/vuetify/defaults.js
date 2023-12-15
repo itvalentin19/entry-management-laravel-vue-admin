@@ -129,4 +129,7 @@ export default {
     color: 'primary',
     hideDetails: 'auto',
   },
+  VDataPicker: {
+    width: "400"
+  }
 }

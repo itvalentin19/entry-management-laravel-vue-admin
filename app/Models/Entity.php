@@ -8,21 +8,54 @@ use Illuminate\Database\Eloquent\Model;
 class Entity extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'firm_name',
+        'doing_business_as',
+        'entity_name',
+        'address_1',
+        'address_2',
+        'city',
+        'state',
+        'zip',
+        'country',
+        'type',
+        'services',
+        'annual_fees',
+        'first_tax_year',
+        'directors',
+        'ein_number',
+        'form_id',
+        'date_signed',
+        'person',
+        'jurisdiction',
+        'notes',
+        'ref_by',
+        'user_id',
+    ];
     protected $casts = [
-        'services' => 'array',
         'directors' => 'boolean',
-        'notes' => 'array',
+        'form_id' => 'boolean',
+        'owner_ids' => 'array',
+        'document_ids' => 'array',
+        'ref_by' => 'array',
+        'services' => 'array',
+        'annual_fees' => 'array',
     ];
 
     // Relationship to Owner
-    public function owners()
+    // public function ownerList()
+    // {
+    //     return $this->hasMany(Owner::class, 'id', 'owners');
+    // }
+    public function get_owners($ids)
     {
-        return $this->belongsToMany(Owner::class, 'owners', 'id', 'id');
+        return Owner::whereIn('id', $ids)->get();
     }
 
     // Relationship to Document
     public function documents()
     {
-        return $this->belongsToMany(Document::class, 'documents', 'entity_id', 'id');
+        return $this->hasMany(Document::class, 'entity_id', 'id');
     }
 }

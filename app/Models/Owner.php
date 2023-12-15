@@ -27,7 +27,7 @@ class Owner extends Model
     // Relationship to Entity
     public function entities()
     {
-        return $this->belongsToMany(Entity::class, 'entities', 'id', 'owners');
+        return $this->belongsTo(Entity::class);
     }
     // Relationship to Document
     public function documents()

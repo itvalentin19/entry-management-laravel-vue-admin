@@ -8,7 +8,7 @@ import ApiService from "@/services/api";
 import { useStore } from "vuex";
 
 const form = reactive({
-  email: "test@gmail.com",
+  email: "dev@gmail.com",
   password: "test1234",
   remember: false,
 });
