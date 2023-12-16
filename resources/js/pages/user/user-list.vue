@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, watch } from "vue";
 import ApiService from "@/services/api";
 import UsersTable from "@/layouts/components/UsersTable.vue";
 import { useRouter } from "vue-router";
@@ -10,7 +10,9 @@ const router = useRouter();
 const toast = useToast();
 const store = useStore();
 const _user = computed(() => store.getters.user);
-
+const loaded = ref(false);
+const loading = ref(false);
+const searchText = ref("");
 // Reactive state
 const state = reactive({
   current_page: 1,
@@ -33,7 +35,9 @@ let userIdToDelete = ref(null);
 
 // Fetch users method
 async function fetchUsers() {
-  const response = await ApiService.getUsers(state.current_page);
+  const params = "page=" + state.current_page;
+
+  const response = await ApiService.getUsers(params);
   if (response.data) {
     Object.keys(response.data).map((key) => {
       state[key] = response.data[key];
@@ -47,9 +51,17 @@ function goToCreateUser() {
 }
 
 // Search users method
-async function searchUsers(searchTerm) {
-  const response = await ApiService.get(`/users?search=${searchTerm}`);
-  state.users = response.data;
+async function searchUsers() {
+  loading.value = true;
+  const params = "page=" + state.current_page + "&search=" + searchText.value;
+
+  const response = await ApiService.getUsers(params);
+  if (response.data) {
+    Object.keys(response.data).map((key) => {
+      state[key] = response.data[key];
+    });
+  }
+  loading.value = false;
 }
 
 const handleEdit = (user) => {
@@ -88,6 +100,28 @@ const confirmDelete = async () => {
   }
 };
 
+const handleSearch = () => {
+  state.current_page = 1;
+  searchUsers();
+};
+
+const handleKeyPress = (e) => {
+  if (e.key === "Enter") {
+    state.current_page = 1;
+    searchUsers();
+  }
+};
+
+watch(
+  () => state.current_page,
+  (newPage, oldPage) => {
+    if (newPage !== oldPage) {
+      searchUsers();
+    }
+  },
+  { immediate: false } // Set to true if you also want to run on initial setup
+);
+
 // Mounted lifecycle hook
 onMounted(() => {
   fetchUsers();
@@ -97,19 +131,40 @@ onMounted(() => {
 <template>
   <VRow>
     <VCol cols="12">
-      <v-btn color="primary" @click="goToCreateUser" v-if="_user?.admin == true"
-        >Create User</v-btn
-      >
+      <div class="d-flex align-center justify-space-between gap-10">
+        <v-btn
+          color="primary"
+          @click="goToCreateUser"
+          v-if="_user?.admin == true"
+          >Create User</v-btn
+        >
+        <v-text-field
+          :loading="loading"
+          v-model="searchText"
+          density="compact"
+          variant="solo"
+          label="Search Users"
+          append-inner-icon="mdi-magnify"
+          single-line
+          hide-details
+          @click:append-inner="handleSearch"
+          @keypress="handleKeyPress"
+        ></v-text-field>
+      </div>
     </VCol>
   </VRow>
   <VRow>
     <VCol cols="12">
-      <VCard title="Users">
+      <VCard title="Users" prepend-icon="mdi-users">
         <UsersTable
           :user-list="state.data"
           @edit="handleEdit"
           @delete="handleDelete"
         />
+        <VPagination
+          v-model="state.current_page"
+          :length="Math.ceil(state.total / state.per_page)"
+        ></VPagination>
       </VCard>
     </VCol>
   </VRow>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, watch } from "vue";
 import ApiService from "@/services/api";
 import EntitiesTable from "@/layouts/components/EntitiesTable.vue";
 import { useRouter } from "vue-router";
@@ -49,15 +49,16 @@ function goToCreateUser() {
 
 // Search users method
 async function searchEntities() {
-  if (searchText.value) {
-    const params = "page=1&search=" + searchText.value;
-    const response = await ApiService.getEntities(params);
-    if (response.data) {
-      Object.keys(response.data).map((key) => {
-        state[key] = response.data[key];
-      });
-    }
+  loading.value = true;
+
+  const params = "page=" + state.current_page + "&search=" + searchText.value;
+  const response = await ApiService.getEntities(params);
+  if (response.data) {
+    Object.keys(response.data).map((key) => {
+      state[key] = response.data[key];
+    });
   }
+  loading.value = false;
 }
 
 const handleEdit = (id) => {
@@ -94,9 +95,9 @@ const confirmDelete = async () => {
   }
 };
 
-const handleChangeSearchText = (e) => {
-  console.log(e.target.value);
-  searchText.value = e.target.value;
+const handleSearch = () => {
+  state.current_page = 1;
+  searchEntities();
 };
 
 const handleKeyPress = (e) => {
@@ -105,6 +106,65 @@ const handleKeyPress = (e) => {
   }
 };
 
+function prepareDataForExport(entities) {
+  return entities.map((entity) => {
+    // Remove unnecessary fields
+    const { owner_ids, document_ids, is_deleted, user_id, ...cleanedEntity } =
+      entity;
+
+    // Concatenate owner names
+    if (entity.owners && entity.owners.length) {
+      cleanedEntity.owners = entity.owners
+        .map((owner) => `${owner.first_name} ${owner.last_name}`)
+        .join(", ");
+    }
+
+    // Extract document URLs
+    if (entity.documents && entity.documents.length) {
+      cleanedEntity.documents = entity.documents
+        .map((doc) => doc.url)
+        .join(", ");
+    }
+
+    return cleanedEntity;
+  });
+}
+
+function downloadCSV() {
+  const filename = "entities.csv";
+  const jsonData = prepareDataForExport(state.data);
+  // Create CSV headers from the keys of the first object (assuming all objects have the same keys)
+  const csvHeaders = Object.keys(jsonData[0]).join(",");
+
+  // Map each JSON object to a CSV string
+  const csvRows = jsonData.map((row) =>
+    Object.values(row)
+      .map((value) =>
+        typeof value === "string" ? `"${value.replace(/"/g, '""')}"` : value
+      )
+      .join(",")
+  );
+
+  // Combine headers and rows
+  const csvString = [csvHeaders, ...csvRows].join("\n");
+
+  // Create a Blob and trigger a download
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+watch(
+  () => state.current_page,
+  (newPage, oldPage) => {
+    if (newPage !== oldPage) {
+      searchEntities();
+    }
+  },
+  { immediate: false } // Set to true if you also want to run on initial setup
+);
 // Mounted lifecycle hook
 onMounted(() => {
   fetchEntities();
@@ -125,7 +185,7 @@ onMounted(() => {
           append-inner-icon="mdi-magnify"
           single-line
           hide-details
-          @click:append-inner="searchEntities"
+          @click:append-inner="handleSearch"
           @keypress="handleKeyPress"
         ></v-text-field>
       </div>
@@ -133,12 +193,19 @@ onMounted(() => {
   </VRow>
   <VRow>
     <VCol cols="12">
-      <VCard title="Entities">
+      <VCard title="Entities" prepend-icon="mdi-company">
+        <template v-slot:append>
+          <v-btn icon="mdi-download" @click="downloadCSV"></v-btn>
+        </template>
         <EntitiesTable
           :data="state.data"
           @edit="handleEdit"
           @delete="handleDelete"
         />
+        <VPagination
+          v-model="state.current_page"
+          :length="Math.ceil(state.total / state.per_page)"
+        ></VPagination>
       </VCard>
     </VCol>
   </VRow>

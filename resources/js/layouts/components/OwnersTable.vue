@@ -47,8 +47,8 @@ const menuList = ref([
     <thead>
       <tr>
         <th class="text-uppercase">Id</th>
-        <th>Photo</th>
-        <th>Name</th>
+        <th>FirstName</th>
+        <th>LastName</th>
         <th>Email</th>
         <th>Phone</th>
         <th>Address 1</th>
@@ -62,68 +62,68 @@ const menuList = ref([
         <th>Document Expiration</th>
         <th>Document</th>
         <th>Created At</th>
-        <th v-if="_user?.admin == true">Actions</th>
+        <th>Actions</th>
       </tr>
     </thead>
 
     <tbody v-if="props.userList">
-      <tr v-for="user in props.userList" :key="user.id">
+      <tr v-for="owner in props.userList" :key="owner.id">
         <td>
-          {{ user.id }}
+          {{ owner.id }}
         </td>
         <td class="text-center">
-          {{ user.first_name }}
+          {{ owner.first_name }}
         </td>
         <td class="text-center">
-          {{ user.last_name }}
+          {{ owner.last_name }}
         </td>
         <td class="text-center">
-          {{ user.email }}
+          {{ owner.email }}
         </td>
         <td class="text-center">
-          {{ user.phone }}
+          {{ owner.phone }}
         </td>
         <td class="text-center">
-          {{ user.address1 }}
+          {{ owner.address1 }}
         </td>
         <td class="text-center">
-          {{ user.address2 }}
+          {{ owner.address2 }}
         </td>
         <td class="text-center">
-          {{ user.city }}
+          {{ owner.city }}
         </td>
         <td class="text-center">
-          {{ user.state }}
+          {{ owner.state }}
         </td>
         <td class="text-center">
-          {{ user.zip }}
+          {{ owner.zip }}
         </td>
         <td class="text-center">
-          {{ user.country }}
+          {{ owner.country }}
         </td>
         <td class="text-center">
-          {{ user.ownership_stake }}
+          {{ owner.ownership_stake }}
         </td>
         <td class="text-center">
-          {{ user.document_type }}
+          {{ owner.document_type }}
         </td>
         <td class="text-center">
-          {{ user.document_expiration }}
+          {{ moment(owner.document_expiration).format("YYYY-MM-DD HH:mm:ss") }}
         </td>
         <td class="text-center">
           <a
-            v-if="user.kyc_document?.url"
+            v-if="owner.kyc_document?.url"
             target="_blank"
-            :href="user.kyc_document?.url"
+            :href="owner.kyc_document?.url"
           >
             <VBtn color="transparent" size="small" icon="bx-link-alt" />
           </a>
         </td>
         <td class="text-center">
-          {{ moment(user.created_at).format("YYYY-MM-DD HH:mm:ss") }}
+          {{ moment(owner.created_at).format("YYYY-MM-DD HH:mm:ss") }}
         </td>
-        <td class="text-center" v-if="_user?.admin == true">
-          <MoreBtn :menu-list="menuList" :data="user" />
+        <td class="text-center" v-if="_user?.id == owner.user_id">
+          <MoreBtn :menu-list="menuList" :data="owner" />
         </td>
       </tr>
     </tbody>

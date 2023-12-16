@@ -42,34 +42,45 @@ onMounted(() => {
     <VCol cols="12">
       <VRow>
         <!-- 👉 Admins -->
-        <VCol cols="12" sm="4" v-if="user?.admin">
+        <VCol cols="12" md="4" sm="6" lg="3">
           <CardStatisticsVertical
             v-bind="{
               title: 'Admins',
-              image: chart,
+              icon: 'mdi-users',
               stats: stats?.admins?.length,
             }"
           />
         </VCol>
 
         <!-- 👉 Users -->
-        <VCol cols="12" sm="4" v-if="user?.admin">
+        <VCol cols="12" md="4" sm="6" lg="3">
           <CardStatisticsVertical
             v-bind="{
               title: 'Users',
-              image: chart,
+              icon: 'mdi-users',
               stats: stats?.users?.length,
             }"
           />
         </VCol>
 
-        <!-- 👉 Companies -->
-        <VCol cols="12" sm="4">
+        <!-- 👉 My Companies -->
+        <VCol cols="12" md="4" sm="6" lg="3">
           <CardStatisticsVertical
             v-bind="{
-              title: 'My Companies',
-              image: wallet,
+              title: 'My Entities',
+              icon: 'mdi-company',
               stats: stats?.own_companies?.length || 0,
+            }"
+          />
+        </VCol>
+
+        <!-- 👉 Others Companies -->
+        <VCol cols="12" md="4" sm="6" lg="3">
+          <CardStatisticsVertical
+            v-bind="{
+              title: 'Other Entities',
+              icon: 'mdi-company',
+              stats: stats?.other_companies?.length || 0,
             }"
           />
         </VCol>

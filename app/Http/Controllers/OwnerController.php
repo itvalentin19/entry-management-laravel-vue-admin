@@ -58,6 +58,9 @@ class OwnerController extends Controller
             )
         );
 
+        $user = auth()->user();
+        $owner->user_id = $user->id;
+
         $owner->save();
         if ($request->hasFile('document')) {
             $document = new Document();
@@ -143,12 +146,19 @@ class OwnerController extends Controller
         $query = $query->with('kycDocument')->where('is_deleted', false);
 
         // Add filters based on query parameters
-        if ($request->has('search')) {
+        if ($request->has('search') && !empty($request->get('search'))) {
             $search = $request->input('search');
             // Assuming you want to search across multiple properties
             $query->where(function ($query) use ($search) {
-                $query->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%");
+                $query->where('first_name', 'LIKE', "%{$search}%")
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('address1', 'LIKE', "%{$search}%")
+                    ->orWhere('address2', 'LIKE', "%{$search}%")
+                    ->orWhere('city', 'LIKE', "%{$search}%")
+                    ->orWhere('state', 'LIKE', "%{$search}%")
+                    ->orWhere('country', 'LIKE', "%{$search}%")
+                    ->orWhere('ownership_stake', 'LIKE', "%{$search}%");
                 // Add other properties you want to search by
             });
         }

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, watch } from "vue";
 import ApiService from "@/services/api";
 import OwnersTable from "@/layouts/components/OwnersTable.vue";
 import { useRouter } from "vue-router";
@@ -30,10 +30,14 @@ const state = reactive({
 
 const dialog = ref(false);
 let ownerIdToDelete = ref(null);
+const loaded = ref(false);
+const loading = ref(false);
+const searchText = ref("");
 
 // Fetch users method
 async function fetchOwners() {
-  const response = await ApiService.getOwners(state.current_page);
+  const params = "page=" + state.current_page;
+  const response = await ApiService.getOwners(params);
   if (response.data) {
     Object.keys(response.data).map((key) => {
       state[key] = response.data[key];
@@ -47,9 +51,17 @@ function goToCreateUser() {
 }
 
 // Search users method
-async function searchOwners(searchTerm) {
-  const response = await ApiService.get(`/owners?search=${searchTerm}`);
-  state.users = response.data;
+async function searchOwners() {
+  const params = "page=" + state.current_page + "&search=" + searchText.value;
+  loading.value = true;
+
+  const response = await ApiService.getOwners(params);
+  if (response.data) {
+    Object.keys(response.data).map((key) => {
+      state[key] = response.data[key];
+    });
+  }
+  loading.value = false;
 }
 
 const handleEdit = (id) => {
@@ -86,6 +98,28 @@ const confirmDelete = async () => {
   }
 };
 
+const handleSearch = () => {
+  state.current_page = 1;
+  searchOwners();
+};
+
+const handleKeyPress = (e) => {
+  if (e.key === "Enter") {
+    state.current_page = 1;
+    searchOwners();
+  }
+};
+
+watch(
+  () => state.current_page,
+  (newPage, oldPage) => {
+    if (newPage !== oldPage) {
+      searchOwners();
+    }
+  },
+  { immediate: false } // Set to true if you also want to run on initial setup
+);
+
 // Mounted lifecycle hook
 onMounted(() => {
   fetchOwners();
@@ -95,19 +129,37 @@ onMounted(() => {
 <template>
   <VRow>
     <VCol cols="12">
-      <v-btn color="primary" @click="goToCreateUser" v-if="_user?.admin == true"
-        >Create Entity Owner</v-btn
-      >
+      <div class="d-flex align-center justify-space-between gap-10">
+        <v-btn color="primary" @click="goToCreateUser"
+          >Create Entity Owner</v-btn
+        >
+        <v-text-field
+          :loading="loading"
+          v-model="searchText"
+          density="compact"
+          variant="solo"
+          label="Search Owners"
+          append-inner-icon="mdi-magnify"
+          single-line
+          hide-details
+          @click:append-inner="handleSearch"
+          @keypress="handleKeyPress"
+        ></v-text-field>
+      </div>
     </VCol>
   </VRow>
   <VRow>
     <VCol cols="12">
-      <VCard title="Owners">
+      <VCard title="Owners" prepend-icon="mdi-accounts">
         <OwnersTable
           :user-list="state.data"
           @edit="handleEdit"
           @delete="handleDelete"
         />
+        <VPagination
+          v-model="state.current_page"
+          :length="Math.ceil(state.total / state.per_page)"
+        ></VPagination>
       </VCard>
     </VCol>
   </VRow>

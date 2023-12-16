@@ -128,7 +128,7 @@ watch(
 <template>
   <VRow>
     <VCol cols="12">
-      <VCard title="Add User Detail">
+      <VCard :title="userId ? 'Edit User Detail' : 'Add User Detail'">
         <VCardText class="d-flex">
           <!-- 👉 Avatar -->
           <VAvatar
@@ -175,6 +175,17 @@ watch(
         <VDivider />
 
         <VCardText>
+          <VAlert color="success" icon="mdi-info" text="Default Password: "
+            ><span
+              style="
+                color: red;
+                background: #e8e8e8;
+                padding: 4px;
+                border-radius: 20px;
+              "
+              >Password</span
+            ></VAlert
+          >
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>

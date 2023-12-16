@@ -31,7 +31,7 @@ const accountData = {
   directors: null,
   ein_number: null,
   form_id: false,
-  date_signed: new Date(),
+  date_signed: null,
   person: null,
   jurisdiction: null,
   owners: null,
@@ -253,7 +253,7 @@ const years = [
 <template>
   <VRow>
     <VCol cols="12">
-      <VCard title="Add Entity Detail">
+      <VCard :title="entityId ? 'Edit Entity Detail' : 'Add Entity Detail'">
         <VDivider />
 
         <VCardText>
@@ -388,6 +388,7 @@ const years = [
               <VCol cols="12" md="6">
                 <VueDatePicker
                   v-model="accountDataLocal.date_signed"
+                  placeholder="Signed Date"
                 ></VueDatePicker>
               </VCol>
 

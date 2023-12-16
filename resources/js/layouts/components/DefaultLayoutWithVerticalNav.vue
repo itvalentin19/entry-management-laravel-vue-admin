@@ -153,7 +153,6 @@ const upgradeBanner = computed(() => {
           icon: 'bx-user-plus',
           to: '/owners/owner',
         }"
-        v-if="user?.admin"
       />
 
       <!-- 👉 Entities -->

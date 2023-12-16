@@ -14,7 +14,7 @@ const illustrationJohn = computed(() =>
 );
 
 const gotoEntities = () => {
-  router.push("/users");
+  router.push("/entities");
 };
 </script>
 

@@ -51,8 +51,8 @@ export default {
     return apiClient.get('/user/' + id);
   },
   // Get All Users
-  getUsers(currentPage) {
-    return apiClient.get(`/users?page=${currentPage}`);
+  getUsers(params) {
+    return apiClient.get(`/users?${params}`);
   },
   // Create a User
   createUser(data, config) {
@@ -75,8 +75,8 @@ export default {
   },
 
   // Get All Owners
-  getOwners(currentPage) {
-    return apiClient.get(`/owners?page=${currentPage}`);
+  getOwners(params) {
+    return apiClient.get(`/owners?${params}`);
   },
 
   // create an owner

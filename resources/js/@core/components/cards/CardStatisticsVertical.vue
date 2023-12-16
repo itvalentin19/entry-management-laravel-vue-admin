@@ -4,7 +4,7 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  image: {
+  icon: {
     type: String,
     required: true,
   },
@@ -27,7 +27,7 @@ const isPositive = controlledComputed(
 <template>
   <VCard>
     <VCardText class="d-flex align-center pb-4">
-      <img width="42" :src="props.image" alt="image" />
+      <VIcon size="42" :icon="props.icon" />
 
       <VSpacer />
 

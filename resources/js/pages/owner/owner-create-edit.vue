@@ -8,19 +8,19 @@ import { useStore } from "vuex";
 import { onMounted, watch } from "vue";
 
 const accountData = {
-  first_name: "",
-  last_name: "",
-  email: "",
-  phone: "",
-  address1: "",
-  address2: "",
-  city: "",
-  state: "",
-  zip: "",
+  first_name: null,
+  last_name: null,
+  email: null,
+  phone: null,
+  address1: null,
+  address2: null,
+  city: null,
+  state: null,
+  zip: null,
   country: "USA",
-  ownership_stake: "",
+  ownership_stake: null,
   document_type: "DL",
-  document_expiration: new Date(),
+  document_expiration: null,
   document: null,
   kyc_document: null,
 };
@@ -110,23 +110,23 @@ const onCreate = async () => {
 watch(
   route,
   async (currentRoute) => {
-    if (_user.value?.admin == true) {
-      ownerId.value = currentRoute.query.id || null;
-      if (ownerId?.value) {
-        try {
-          const response = await ApiService.getOwner(ownerId.value);
-          accountDataLocal.value = response.data;
-        } catch (error) {
-          toast.error("Failed to load owner data.");
-          router.push("/owners/owner");
-          console.error(error);
-        }
-      } else {
-        resetForm();
+    ownerId.value = currentRoute.query.id || null;
+    if (ownerId?.value) {
+      try {
+        const response = await ApiService.getOwner(ownerId.value);
+        accountDataLocal.value = response.data;
+      } catch (error) {
+        toast.error("Failed to load owner data.");
+        router.push("/owners/owner");
+        console.error(error);
       }
     } else {
-      router.push("/owners");
+      resetForm();
     }
+    // if (_user.value?.admin == true) {
+    // } else {
+    //   router.push("/owners");
+    // }
   },
   { immediate: true }
 );
@@ -135,7 +135,7 @@ watch(
 <template>
   <VRow>
     <VCol cols="12">
-      <VCard title="Add Owner Detail">
+      <VCard :title="ownerId ? 'Edit Owner Detail' : 'Add Owner Detail'">
         <VDivider />
 
         <VCardText>
@@ -255,6 +255,7 @@ watch(
               <VCol cols="12" md="6">
                 <VueDatePicker
                   v-model="accountDataLocal.document_expiration"
+                  placeholder="Document Expiration Date"
                 ></VueDatePicker>
               </VCol>
               <!-- 👉 Document -->

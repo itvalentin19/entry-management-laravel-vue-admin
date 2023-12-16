@@ -21,7 +21,8 @@ class Owner extends Model
         'country',
         'ownership_stake',
         'document_type',
-        'document_expiration'
+        'document_expiration',
+        'user_id'
     ];
 
     // Relationship to Entity

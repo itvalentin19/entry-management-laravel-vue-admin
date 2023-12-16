@@ -307,12 +307,24 @@ class EntityController extends Controller
         $query = $query->with('documents')->where('is_deleted', false);
 
         // Add filters based on query parameters
-        if ($request->has('search') && empty($request->get('search'))) {
+        if ($request->has('search') && !empty($request->get('search'))) {
             $search = $request->input('search');
             // Assuming you want to search across multiple properties
             $query->where(function ($query) use ($search) {
                 $query->where('firm_name', 'LIKE', "%{$search}%")
                     ->orWhere('entity_name', 'LIKE', "%{$search}%")
+                    ->orWhere('address_1', 'LIKE', "%{$search}%")
+                    ->orWhere('address_2', 'LIKE', "%{$search}%")
+                    ->orWhere('city', 'LIKE', "%{$search}%")
+                    ->orWhere('state', 'LIKE', "%{$search}%")
+                    ->orWhere('zip', 'LIKE', "%{$search}%")
+                    ->orWhere('country', 'LIKE', "%{$search}%")
+                    ->orWhere('type', 'LIKE', "%{$search}%")
+                    ->orWhere('services', 'LIKE', "%{$search}%")
+                    ->orWhere('person', 'LIKE', "%{$search}%")
+                    ->orWhere('jurisdiction', 'LIKE', "%{$search}%")
+                    ->orWhere('notes', 'LIKE', "%{$search}%")
+                    ->orWhere('ref_by', 'LIKE', "%{$search}%")
                     ->orWhere('doing_business_as', 'LIKE', "%{$search}%");
                 // Add other properties you want to search by
             });

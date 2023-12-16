@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Models\Entity;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -279,10 +280,12 @@ class UserController extends Controller
 			$stats = [];
 			$users = $user->role == 'admin' ? User::where('role', 'user')->where('is_deleted', false)->get() : [];
 			$admins = $user->role == 'admin' ? User::where('role', 'admin')->where('is_deleted', false)->get() : [];
+			$own_companies = Entity::where('user_id', $user->id)->get();
+			$other_companies = Entity::where('user_id', '!=', $user->id)->get();
 			$stats['users'] = $users;
 			$stats['admins'] = $admins;
-			$stats['own_companies'] = [];
-			$stats['other_companies'] = [];
+			$stats['own_companies'] = $own_companies;
+			$stats['other_companies'] = $other_companies;
 
 			return response()->json($stats);
 		} catch (\Throwable $th) {
