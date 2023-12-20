@@ -40,6 +40,22 @@ const menuList = ref([
     action: deleteUser,
   },
 ]);
+
+function parseAndFormatDate(dateStr) {
+  if (dateStr.includes("/")) {
+    const [month, day, year] = dateStr.split("/").map(Number);
+    // Adjust the year to the correct century
+    const adjustedYear = year < 50 ? 2000 + year : 1900 + year;
+
+    // Create a new Date object
+    const date = new Date(adjustedYear, month - 1, day);
+
+    // Format the date as YYYY-MM-DD
+    return date.toISOString().split("T")[0];
+  } else {
+    return moment(dateStr).format("YYYY-MM-DD");
+  }
+}
 </script>
 
 <template>
@@ -65,6 +81,7 @@ const menuList = ref([
         <th>Contact Phone</th>
         <th>Contact Email</th>
         <th>EIN Number</th>
+        <th>Created Date</th>
         <th>Form ID</th>
         <th>Signed Date</th>
         <th>Person</th>
@@ -145,10 +162,13 @@ const menuList = ref([
           {{ entity.ein_number }}
         </td>
         <td class="text-center text-sm">
+          {{ parseAndFormatDate(entity.date_created) }}
+        </td>
+        <td class="text-center text-sm">
           <VCheckbox v-model="entity.form_id" readonly />
         </td>
         <td class="text-center text-sm">
-          {{ moment(entity.date_signed).format("YYYY-MM-DD HH:mm:ss") }}
+          {{ parseAndFormatDate(entity.date_signed) }}
         </td>
         <td class="text-center text-sm">
           {{ entity.person }}

@@ -1,7 +1,8 @@
 // services/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api/v1'; // Replace with your API URL
+const origin = window.location.origin
+const API_URL = origin + '/api/v1'; // Replace with your API URL
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -25,6 +26,7 @@ export default {
   // 👉 Auth Management //
   // Login
   login(data) {
+    console.log(API_URL);
     return apiClient.post('/login', data);
   },
   // Get Logged in User Information
@@ -113,6 +115,11 @@ export default {
   // create an Entity
   createEntity(data, config) {
     return apiClient.post('/entity', data, config);
+  },
+
+  // create an Entity
+  entityUpload(data, config) {
+    return apiClient.post('/entity/bulk-upload', data, config);
   },
 
   // Update Entity Data

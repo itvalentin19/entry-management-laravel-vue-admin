@@ -83,6 +83,7 @@ class UserController extends Controller
 			$user->address = $request->input('address', $user->address);
 			$user->role = $request->input('role', $user->role);
 
+			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 			// Handle avatar update if provided
 			if ($request->hasFile('avatar')) {
 				// Delete old avatar if it exists and isn't a default
@@ -91,7 +92,7 @@ class UserController extends Controller
 				}
 
 				// Store new avatar
-				$user->photo = '/storage/' . $request->file('avatar')->store('avatars', 'public');
+				$user->photo = $pathPrefix . $request->file('avatar')->store('avatars', 'public');
 			}
 
 			// Save the user
@@ -181,9 +182,10 @@ class UserController extends Controller
 		]);
 
 		$user = new User($request->only(['name', 'email', 'phone', 'address', 'role']));
+		$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 
 		if ($request->hasFile('avatar')) {
-			$user->photo = '/storage/' . $request->file('avatar')->store('avatars', 'public');
+			$user->photo = $pathPrefix . $request->file('avatar')->store('avatars', 'public');
 		} else {
 			// Set default avatar path if no avatar is uploaded
 			$user->photo = '/img/default_avatar.png'; // Make sure this path is correct
@@ -229,6 +231,7 @@ class UserController extends Controller
 			$user->address = $request->input('address', $user->address);
 			$user->role = $request->input('role', $user->role);
 
+			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 			// Handle avatar update if provided
 			if ($request->hasFile('avatar')) {
 				// Delete old avatar if it exists and isn't a default
@@ -237,7 +240,7 @@ class UserController extends Controller
 				}
 
 				// Store new avatar
-				$user->photo = '/storage/' . $request->file('avatar')->store('avatars', 'public');
+				$user->photo = $pathPrefix . $request->file('avatar')->store('avatars', 'public');
 			}
 
 			// Save the user

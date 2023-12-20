@@ -52,8 +52,7 @@ const tabs = [
   //   tab: "notification",
   // },
 ];
-console.log(accountData);
-console.log(accountDataLocal.value);
+
 const resetForm = () => {
   setUserDetail();
 };

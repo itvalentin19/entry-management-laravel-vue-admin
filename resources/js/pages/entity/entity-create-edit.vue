@@ -5,6 +5,7 @@ import { useToast } from "vue-toastification";
 import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
 import VueDatePicker from "@vuepic/vue-datepicker";
+import EntityUpload from "@/layouts/components/EntityUpload.vue";
 
 const route = useRoute();
 const toast = useToast();
@@ -31,6 +32,7 @@ const accountData = {
   directors: null,
   ein_number: null,
   form_id: false,
+  date_created: null,
   date_signed: null,
   person: null,
   jurisdiction: null,
@@ -58,6 +60,25 @@ const menu = ref(true);
 const dialog = ref(false);
 const documentIdToDelete = ref(null);
 
+const activeTab = ref(0);
+// tabs
+const tabs = [
+  {
+    title: "Add Entity",
+    icon: "bx-edit",
+    tab: "add_entity",
+  },
+  {
+    title: "Bulk Upload",
+    icon: "bx-upload",
+    tab: "bulk_upload",
+  },
+  // {
+  //   title: "Notifications",
+  //   icon: "bx-bell",
+  //   tab: "notification",
+  // },
+];
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData);
 };
@@ -251,324 +272,352 @@ const years = [
 </script>
 
 <template>
-  <VRow>
-    <VCol cols="12">
-      <VCard :title="entityId ? 'Edit Entity Detail' : 'Add Entity Detail'">
-        <VDivider />
+  <VTabs v-model="activeTab" show-arrows>
+    <VTab v-for="item in tabs" :key="item.icon" :value="item.tab">
+      <VIcon size="20" start :icon="item.icon" />
+      {{ item.title }}
+    </VTab>
+  </VTabs>
+  <VDivider />
+  <VWindow v-model="activeTab" class="mt-5 disable-tab-transition">
+    <VWindowItem value="add_entity">
+      <VRow>
+        <VCol cols="12">
+          <VCard :title="entityId ? 'Edit Entity Detail' : 'Add Entity Detail'">
+            <VDivider />
 
-        <VCardText>
-          <!-- 👉 Form -->
-          <VForm class="mt-6">
-            <VRow>
-              <!-- 👉 Firm Name -->
-              <VCol md="6" cols="12">
-                <VTextField
-                  v-model="accountDataLocal.firm_name"
-                  placeholder="Vauban Technologies Ltd"
-                  label="Firm Name"
-                />
-              </VCol>
-              <!-- 👉 Doing Business Name -->
-              <VCol md="6" cols="12">
-                <VTextField
-                  v-model="accountDataLocal.doing_business_as"
-                  placeholder="Vauban Ltd"
-                  label="Doing Business Name"
-                />
-              </VCol>
-
-              <!-- 👉 Entity Name -->
-              <VCol md="6" cols="12">
-                <VTextField
-                  v-model="accountDataLocal.entity_name"
-                  placeholder="Nano I a Series of S5V Coinvest"
-                  label="Entity Name"
-                />
-              </VCol>
-
-              <!-- 👉 Address 1 -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.address_1"
-                  label="Address 1"
-                  placeholder="5645 Coral Ridge Drive"
-                />
-              </VCol>
-              <!-- 👉 Address 2 -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.address_2"
-                  label="Address 2"
-                  placeholder="Suite 410"
-                />
-              </VCol>
-              <!-- 👉 City -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.city"
-                  label="City"
-                  placeholder="Coral Springs"
-                />
-              </VCol>
-
-              <!-- 👉 State -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.state"
-                  label="State"
-                  placeholder="FL"
-                />
-              </VCol>
-
-              <!-- 👉 Zip Code -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.zip"
-                  label="Zip Code"
-                  placeholder="10001"
-                />
-              </VCol>
-
-              <!-- 👉 Country -->
-              <VCol cols="12" md="6">
-                <VSelect
-                  v-model="accountDataLocal.country"
-                  label="Country"
-                  :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
-                  placeholder="Select Country"
-                />
-              </VCol>
-
-              <!-- 👉 Type -->
-              <VCol cols="12" md="6">
-                <VCombobox
-                  v-model="accountDataLocal.type"
-                  label="Type"
-                  :items="types"
-                  placeholder="Select Type"
-                />
-              </VCol>
-
-              <!-- 👉 Person -->
-              <VCol cols="12" md="6">
-                <VCombobox
-                  v-model="accountDataLocal.person"
-                  label="Person"
-                  :items="person_types"
-                  placeholder="Select Person"
-                />
-              </VCol>
-
-              <!-- 👉 First Tax Year -->
-              <VCol cols="12" md="6">
-                <VSelect
-                  v-model="accountDataLocal.first_tax_year"
-                  label="First Tax Year"
-                  :items="years"
-                  placeholder="Select Year"
-                />
-              </VCol>
-              <!-- 👉 EIN Number -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.ein_number"
-                  label="EIN Number"
-                  placeholder="93-4459228"
-                />
-              </VCol>
-              <!-- 👉 Jurisdiction -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.jurisdiction"
-                  label="Jurisdiction"
-                  placeholder=""
-                />
-              </VCol>
-              <!-- 👉 Signed Date -->
-              <VCol cols="12" md="6">
-                <VueDatePicker
-                  v-model="accountDataLocal.date_signed"
-                  placeholder="Signed Date"
-                ></VueDatePicker>
-              </VCol>
-
-              <!-- 👉 Owners -->
-              <VCol cols="12" md="6">
-                <VSelect
-                  v-model="accountDataLocal.owner_ids"
-                  label="Owners"
-                  multiple
-                  item-title="name"
-                  item-value="id"
-                  :items="owners"
-                  placeholder="Select Owners"
-                />
-              </VCol>
-
-              <VDivider />
-              <VCol cols="12">
-                <p>
-                  Services
-                  <VIcon icon="bx-plus-circle" @click="addNewServiceFee" />
-                </p>
-                <!-- 👉 Services -->
-                <VRow v-for="(item, index) in serviceFeeDataLocal" :key="index">
-                  <VCol cols="12" md="6">
-                    <d class="d-flex align-center justify-center">
-                      <VIcon
-                        icon="bx-minus-circle"
-                        color="#c93903"
-                        @click="removeServiceFee(index)"
-                      />
-                      <VCombobox
-                        v-model="item.service"
-                        label="Service"
-                        :items="services"
-                        placeholder="Select Type"
-                      />
-                    </d>
-                  </VCol>
-
-                  <!-- 👉 Contact First Name -->
-                  <VCol cols="12" md="6">
-                    <VTextField
-                      v-model="item.fee"
-                      label="Annual Fee"
-                      prepend-inner-icon="bx-dollar"
-                      placeholder="129"
-                      type="number"
-                    />
-                  </VCol>
-                </VRow>
-              </VCol>
-
-              <VDivider />
-
-              <!-- 👉 Directors -->
-              <VCol cols="12">
-                <VCheckbox
-                  v-model="accountDataLocal.directors"
-                  label="Directors"
-                />
-              </VCol>
-              <VCol cols="12" v-if="accountDataLocal.directors">
+            <VCardText>
+              <!-- 👉 Form -->
+              <VForm class="mt-6">
                 <VRow>
-                  <!-- 👉 Contact First Name -->
-                  <VCol cols="12" md="6">
+                  <!-- 👉 Firm Name -->
+                  <VCol md="6" cols="12">
                     <VTextField
-                      v-model="accountDataLocal.contact_first_name"
-                      label="Contact First Name"
-                      placeholder="Daniel"
+                      v-model="accountDataLocal.firm_name"
+                      placeholder="Vauban Technologies Ltd"
+                      label="Firm Name"
+                    />
+                  </VCol>
+                  <!-- 👉 Doing Business Name -->
+                  <VCol md="6" cols="12">
+                    <VTextField
+                      v-model="accountDataLocal.doing_business_as"
+                      placeholder="Vauban Ltd"
+                      label="Doing Business Name"
                     />
                   </VCol>
 
-                  <!-- 👉 Contact Last Name -->
-                  <VCol cols="12" md="6">
+                  <!-- 👉 Entity Name -->
+                  <VCol md="6" cols="12">
                     <VTextField
-                      v-model="accountDataLocal.contact_last_name"
-                      label="Contact Last Name"
-                      placeholder="Strachman"
+                      v-model="accountDataLocal.entity_name"
+                      placeholder="Nano I a Series of S5V Coinvest"
+                      label="Entity Name"
                     />
                   </VCol>
 
-                  <!-- 👉 Contact Email -->
+                  <!-- 👉 Address 1 -->
                   <VCol cols="12" md="6">
                     <VTextField
-                      v-model="accountDataLocal.contact_email"
-                      label="Contact Email"
-                      placeholder="johndoe@gmail.com"
-                      type="email"
+                      v-model="accountDataLocal.address_1"
+                      label="Address 1"
+                      placeholder="5645 Coral Ridge Drive"
+                    />
+                  </VCol>
+                  <!-- 👉 Address 2 -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.address_2"
+                      label="Address 2"
+                      placeholder="Suite 410"
+                    />
+                  </VCol>
+                  <!-- 👉 City -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.city"
+                      label="City"
+                      placeholder="Coral Springs"
                     />
                   </VCol>
 
-                  <!-- 👉 Contact Phone -->
+                  <!-- 👉 State -->
                   <VCol cols="12" md="6">
                     <VTextField
-                      v-model="accountDataLocal.contact_phone"
-                      label="Contact Phone"
-                      placeholder="+1 (917) 543-9876"
+                      v-model="accountDataLocal.state"
+                      label="State"
+                      placeholder="FL"
                     />
+                  </VCol>
+
+                  <!-- 👉 Zip Code -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.zip"
+                      label="Zip Code"
+                      placeholder="10001"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Country -->
+                  <VCol cols="12" md="6">
+                    <VSelect
+                      v-model="accountDataLocal.country"
+                      label="Country"
+                      :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+                      placeholder="Select Country"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Type -->
+                  <VCol cols="12" md="6">
+                    <VCombobox
+                      v-model="accountDataLocal.type"
+                      label="Type"
+                      :items="types"
+                      placeholder="Select Type"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Person -->
+                  <VCol cols="12" md="6">
+                    <VCombobox
+                      v-model="accountDataLocal.person"
+                      label="Person"
+                      :items="person_types"
+                      placeholder="Select Person"
+                    />
+                  </VCol>
+
+                  <!-- 👉 First Tax Year -->
+                  <VCol cols="12" md="6">
+                    <VSelect
+                      v-model="accountDataLocal.first_tax_year"
+                      label="First Tax Year"
+                      :items="years"
+                      placeholder="Select Year"
+                    />
+                  </VCol>
+                  <!-- 👉 EIN Number -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.ein_number"
+                      label="EIN Number"
+                      placeholder="93-4459228"
+                    />
+                  </VCol>
+                  <!-- 👉 Jurisdiction -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.jurisdiction"
+                      label="Jurisdiction"
+                      placeholder=""
+                    />
+                  </VCol>
+                  <!-- 👉 Created Date -->
+                  <VCol cols="12" md="6">
+                    <VueDatePicker
+                      v-model="accountDataLocal.date_created"
+                      placeholder="Created Date"
+                    ></VueDatePicker>
+                  </VCol>
+
+                  <!-- 👉 Signed Date -->
+                  <VCol cols="12" md="6">
+                    <VueDatePicker
+                      v-model="accountDataLocal.date_signed"
+                      placeholder="Signed Date"
+                    ></VueDatePicker>
+                  </VCol>
+
+                  <!-- 👉 Owners -->
+                  <VCol cols="12" md="6">
+                    <VSelect
+                      v-model="accountDataLocal.owner_ids"
+                      label="Owners"
+                      multiple
+                      item-title="name"
+                      item-value="id"
+                      :items="owners"
+                      placeholder="Select Owners"
+                    />
+                  </VCol>
+
+                  <VDivider />
+                  <VCol cols="12">
+                    <p>
+                      Services
+                      <VIcon icon="bx-plus-circle" @click="addNewServiceFee" />
+                    </p>
+                    <!-- 👉 Services -->
+                    <VRow
+                      v-for="(item, index) in serviceFeeDataLocal"
+                      :key="index"
+                    >
+                      <VCol cols="12" md="6">
+                        <d class="d-flex align-center justify-center">
+                          <VIcon
+                            icon="bx-minus-circle"
+                            color="#c93903"
+                            @click="removeServiceFee(index)"
+                          />
+                          <VCombobox
+                            v-model="item.service"
+                            label="Service"
+                            :items="services"
+                            placeholder="Select Type"
+                          />
+                        </d>
+                      </VCol>
+
+                      <!-- 👉 Contact First Name -->
+                      <VCol cols="12" md="6">
+                        <VTextField
+                          v-model="item.fee"
+                          label="Annual Fee"
+                          prepend-inner-icon="bx-dollar"
+                          placeholder="129"
+                          type="number"
+                        />
+                      </VCol>
+                    </VRow>
+                  </VCol>
+
+                  <VDivider />
+
+                  <!-- 👉 Directors -->
+                  <VCol cols="12">
+                    <VCheckbox
+                      v-model="accountDataLocal.directors"
+                      label="Directors"
+                    />
+                  </VCol>
+                  <VCol cols="12" v-if="accountDataLocal.directors">
+                    <VRow>
+                      <!-- 👉 Contact First Name -->
+                      <VCol cols="12" md="6">
+                        <VTextField
+                          v-model="accountDataLocal.contact_first_name"
+                          label="Contact First Name"
+                          placeholder="Daniel"
+                        />
+                      </VCol>
+
+                      <!-- 👉 Contact Last Name -->
+                      <VCol cols="12" md="6">
+                        <VTextField
+                          v-model="accountDataLocal.contact_last_name"
+                          label="Contact Last Name"
+                          placeholder="Strachman"
+                        />
+                      </VCol>
+
+                      <!-- 👉 Contact Email -->
+                      <VCol cols="12" md="6">
+                        <VTextField
+                          v-model="accountDataLocal.contact_email"
+                          label="Contact Email"
+                          placeholder="johndoe@gmail.com"
+                          type="email"
+                        />
+                      </VCol>
+
+                      <!-- 👉 Contact Phone -->
+                      <VCol cols="12" md="6">
+                        <VTextField
+                          v-model="accountDataLocal.contact_phone"
+                          label="Contact Phone"
+                          placeholder="+1 (917) 543-9876"
+                        />
+                      </VCol>
+                    </VRow>
+                  </VCol>
+                  <VDivider />
+
+                  <!-- 👉 Directors -->
+                  <VCol cols="12">
+                    <VCheckbox
+                      v-model="accountDataLocal.form_id"
+                      label="Form ID"
+                    />
+                  </VCol>
+                  <VDivider />
+
+                  <!-- 👉 Document -->
+                  <VCol cols="12" md="6">
+                    <VFileInput
+                      :v-model="accountDataLocal.files"
+                      clearable
+                      label="Upload Document"
+                      accept=".pdf"
+                      variant="outlined"
+                      show-size
+                      chips
+                      multiple
+                      @change="addDocument"
+                    ></VFileInput>
+                  </VCol>
+
+                  <!-- 👉 Ref By -->
+                  <VCol cols="12" md="6">
+                    <VCombobox
+                      v-model="accountDataLocal.ref_by"
+                      label="Ref By"
+                      multiple
+                      :items="refers"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="4"
+                    md="3"
+                    v-for="document in accountDataLocal.documents"
+                    :key="document.id"
+                  >
+                    <iframe :src="document.url" class="pdf-preview"></iframe>
+                    <a :href="document.url" target="_blank">View Document</a>
+                    <VIcon
+                      icon="bx-minus-circle"
+                      color="#c93903"
+                      @click="removeDocument(document.id)"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Notes -->
+                  <VCol cols="12">
+                    <VTextarea
+                      v-model="accountDataLocal.notes"
+                      label="Notes"
+                      placeholder="..."
+                    />
+                  </VCol>
+
+                  <!-- 👉 Form Actions -->
+                  <VCol cols="12" class="d-flex flex-wrap gap-4">
+                    <VBtn @click="onCreate">
+                      {{ entityId ? "Update Entity" : "Create Entity" }}
+                    </VBtn>
+
+                    <VBtn
+                      color="secondary"
+                      variant="tonal"
+                      type="reset"
+                      @click.prevent="resetForm"
+                    >
+                      Reset
+                    </VBtn>
                   </VCol>
                 </VRow>
-              </VCol>
-              <VDivider />
-
-              <!-- 👉 Directors -->
-              <VCol cols="12">
-                <VCheckbox v-model="accountDataLocal.form_id" label="Form ID" />
-              </VCol>
-              <VDivider />
-
-              <!-- 👉 Document -->
-              <VCol cols="12" md="6">
-                <VFileInput
-                  :v-model="accountDataLocal.files"
-                  clearable
-                  label="Upload Document"
-                  accept=".pdf"
-                  variant="outlined"
-                  show-size
-                  chips
-                  multiple
-                  @change="addDocument"
-                ></VFileInput>
-              </VCol>
-
-              <!-- 👉 Ref By -->
-              <VCol cols="12" md="6">
-                <VCombobox
-                  v-model="accountDataLocal.ref_by"
-                  label="Ref By"
-                  multiple
-                  :items="refers"
-                />
-              </VCol>
-
-              <VCol
-                cols="4"
-                md="3"
-                v-for="document in accountDataLocal.documents"
-                :key="document.id"
-              >
-                <iframe :src="document.url" class="pdf-preview"></iframe>
-                <a :href="document.url" target="_blank">View Document</a>
-                <VIcon
-                  icon="bx-minus-circle"
-                  color="#c93903"
-                  @click="removeDocument(document.id)"
-                />
-              </VCol>
-
-              <!-- 👉 Notes -->
-              <VCol cols="12">
-                <VTextarea
-                  v-model="accountDataLocal.notes"
-                  label="Notes"
-                  placeholder="..."
-                />
-              </VCol>
-
-              <!-- 👉 Form Actions -->
-              <VCol cols="12" class="d-flex flex-wrap gap-4">
-                <VBtn @click="onCreate">
-                  {{ entityId ? "Update Entity" : "Create Entity" }}
-                </VBtn>
-
-                <VBtn
-                  color="secondary"
-                  variant="tonal"
-                  type="reset"
-                  @click.prevent="resetForm"
-                >
-                  Reset
-                </VBtn>
-              </VCol>
-            </VRow>
-          </VForm>
-        </VCardText>
-      </VCard>
-    </VCol>
-  </VRow>
+              </VForm>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </VRow>
+    </VWindowItem>
+    <VWindowItem value="bulk_upload">
+      <EntityUpload />
+    </VWindowItem>
+  </VWindow>
   <VDialog v-model="dialog" width="500">
     <VCard>
       <VCardTitle class="headline">Confirm Deletion</VCardTitle>

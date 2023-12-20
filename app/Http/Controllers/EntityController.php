@@ -9,8 +9,11 @@ use App\Models\Person;
 use App\Models\Ref;
 use App\Models\Service;
 use App\Models\Type;
+use DateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class EntityController extends Controller
 {
@@ -45,6 +48,7 @@ class EntityController extends Controller
             'annual_fees' => 'required|string|max:255',
             'first_tax_year' => 'sometimes|string|max:255',
             'ein_number' => 'required|string|max:255',
+            'date_created' => 'required|string|max:255',
             'date_signed' => 'required|string|max:255',
             'person' => 'required|string|max:255',
             'jurisdiction' => 'required|string|max:255',
@@ -82,6 +86,7 @@ class EntityController extends Controller
                     'directors',
                     'ein_number',
                     'form_id',
+                    'date_created',
                     'date_signed',
                     'person',
                     'jurisdiction',
@@ -145,12 +150,13 @@ class EntityController extends Controller
         $user = auth()->user();
         $entity->user_id = $user->id;
         $entity->save();
+        $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
         if ($request->hasFile('files')) {
             $document_ids = [];
             foreach ($request->file('files') as $file) {
                 $document = new Document();
                 $document->entity_id = $entity->id;
-                $document->url = '/storage/' . $file->store('documents', 'public');
+                $document->url = $pathPrefix . $file->store('documents', 'public');
                 $document->save();
                 $document_ids[] = $document->id;
             }
@@ -185,6 +191,7 @@ class EntityController extends Controller
                 'annual_fees' => 'string|max:255',
                 'first_tax_year' => 'string|max:255',
                 'ein_number' => 'string|max:255',
+                'date_created' => 'string|max:255',
                 'date_signed' => 'string|max:255',
                 'person' => 'string|max:255',
                 'jurisdiction' => 'string|max:255',
@@ -210,6 +217,7 @@ class EntityController extends Controller
             $entity->annual_fees = $request->input('annual_fees', $entity->annual_fees);
             $entity->first_tax_year = $request->input('first_tax_year', $entity->first_tax_year);
             $entity->ein_number = $request->input('ein_number', $entity->ein_number);
+            $entity->date_created = $request->input('date_created', $entity->date_created);
             $entity->date_signed = $request->input('date_signed', $entity->date_signed);
             $entity->person = $request->input('person', $entity->person);
             $entity->jurisdiction = $request->input('jurisdiction', $entity->jurisdiction);
@@ -227,7 +235,7 @@ class EntityController extends Controller
 
             $type_name = $request->input('type');
             $type_exist = Type::where('name', $type_name)->first();
-            if (!$type_exist) {
+            if (!$type_exist && $type_name) {
                 $type = new Type();
                 $type->name = $type_name;
                 $type->save();
@@ -235,7 +243,7 @@ class EntityController extends Controller
 
             $person_type = $request->input('person');
             $person_exist = Person::where('type', $person_type)->first();
-            if (!$person_exist) {
+            if (!$person_exist && $person_type) {
                 $person = new Person();
                 $person->type = $person_type;
                 $person->save();
@@ -266,13 +274,15 @@ class EntityController extends Controller
             }
             $document_ids = array_map('intval', explode(',', $request->input('document_ids')));
 
-            $removedIds = array_diff($entity->document_ids, $document_ids);
+            $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
+
+            $removedIds = array_diff($entity->document_ids ?? [], $document_ids);
             if (count($removedIds) > 0) {
                 foreach ($removedIds as $id) {
                     try {
                         $document = Document::find($id);
                         if ($document) {
-                            Storage::delete(str_replace('/storage/', '', $document->url));
+                            Storage::delete(str_replace($pathPrefix, '', $document->url));
                             $document->delete();
                         }
                     } catch (\Throwable $th) {
@@ -284,7 +294,7 @@ class EntityController extends Controller
                 foreach ($request->file('files') as $file) {
                     $document = new Document();
                     $document->entity_id = $entity->id;
-                    $document->url = '/storage/' . $file->store('documents', 'public');
+                    $document->url = $pathPrefix . $file->store('documents', 'public');
                     $document->save();
                     $document_ids[] = $document->id;
                 }
@@ -367,6 +377,138 @@ class EntityController extends Controller
         $data['owners'] = $owners;
 
         return response()->json($data);
+    }
+
+    function convertDateString($dateString)
+    {
+        // Create a DateTime object from the date string
+        $date = DateTime::createFromFormat('m/d/y', $dateString);
+
+        // Check if the date is valid
+        if ($date) {
+            // Format the date as a string in the desired format (e.g., Y-m-d for 2023-11-01)
+            $formattedDateString = $date->format('Y-m-d');
+            return $formattedDateString;
+        } else {
+            return null;
+        }
+    }
+
+    public function bulkUpload(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
+
+        $user = auth()->user();
+
+        $path = $request->file('file')->getRealPath();
+        $spreadsheet = IOFactory::load($path);
+        $worksheet = $spreadsheet->getActiveSheet();
+
+        $entities = [];
+        foreach ($worksheet->getRowIterator() as $row) {
+            // Assuming the first row is the header
+            if ($row->getRowIndex() == 1) {
+                continue;
+            }
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(false);
+
+            $entityData = [];
+            $cells = [];
+            foreach ($cellIterator as $cell) {
+                $cells[] = $cell->getValue();
+            }
+
+            // Map cells to entity attributes
+            $entityData['firm_name'] = $cells[0] ?? null;
+            $entityData['entity_name'] = $cells[1] ?? null;
+            $entityData['address_1'] = $cells[2] ?? null;
+            $entityData['address_2'] = $cells[3] ?? null;
+            $entityData['city'] = $cells[4] ?? null;
+            $entityData['state'] = $cells[5] ?? null;
+            $entityData['zip'] = $cells[6] ?? null;
+            $entityData['country'] = $cells[7] ?? null;
+            $entityData['type'] = $cells[8] ?? null;
+            $entityData['contact_first_name'] = $cells[9] ?? null;
+            $entityData['contact_last_name'] = $cells[10] ?? null;
+            $entityData['contact_phone'] = $cells[11] ?? null;
+            $entityData['contact_email'] = $cells[12] ?? null;
+            $entityData['services'] = $cells[13] ?? null;
+            $entityData['annual_fees'] = $cells[14] ?? null;
+            $entityData['first_tax_year'] = $cells[15] ?? null;
+            $entityData['directors'] = $cells[16] ? $cells[16] == 'Yes' : null;
+            $entityData['ein_number'] = $cells[17] ?? null;
+            $entityData['date_created'] = $cells[18] ? $this->convertDateString($cells[18]) : null;
+            $entityData['form_id'] = $cells[19] ? $cells[19] == 'Yes' : null;
+            $entityData['date_signed'] = $cells[20] ? $this->convertDateString($cells[20]) : null;
+            $entityData['person'] = $cells[21] ?? null;
+            $entityData['jurisdiction'] = $cells[22] ?? null;
+            $entityData['owners'] = $cells[23] ? explode(',', $cells[23]) : null;
+            $entityData['notes'] = $cells[25] ?? null;
+            $entityData['ref_by'] = $cells[26] ?? null;
+            $entityData['doing_business_as'] = $cells[27] ?? null;
+            $entityData['document_ids'] = $user->id;
+            $entityData['user_id'] = $user->id;
+
+            // Add the entity to the array
+            $entities[] = $entityData;
+        }
+
+        $count = 0;
+        DB::beginTransaction();
+        try {
+            foreach ($entities as $entityData) {
+                // Assuming 'Entity' is your Eloquent model
+                if ($entityData['firm_name']) {
+                    $count++;
+                    Entity::create($entityData);
+                    $type_name = $entityData['type'];
+                    if ($type_name) {
+                        $type = Type::where('name', $type_name)->first();
+                        if (!$type) {
+                            $type = new Type();
+                            $type->name = $type_name;
+                            $type->save();
+                        }
+                    }
+
+                    $person_type = $entityData['person'];
+                    $person_exist = Person::where('type', $person_type)->first();
+                    if (!$person_exist && $person_type) {
+                        $person = new Person();
+                        $person->type = $person_type;
+                        $person->save();
+                    }
+
+                    $refs = explode(',', $entityData['ref_by']) ?? [];
+                    foreach ($refs as $ref_name) {
+                        $ref_exist = Ref::where('name', $ref_name)->first();
+                        if (!$ref_exist && $ref_name) {
+                            $ref = new Ref();
+                            $ref->name = $ref_name;
+                            $ref->save();
+                        }
+                    }
+
+                    $services = explode(',', $entityData['services']) ?? [];
+                    foreach ($services as $service_name) {
+                        $service_exist = Service::where('name', $service_name)->first();
+                        if (!$service_exist && $service_name) {
+                            $service = new Service();
+                            $service->name = $service_name;
+                            $service->save();
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return response()->json(['message' => $count . ' entities added successfully!', 'entities' => $entities]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function delete($id)

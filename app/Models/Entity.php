@@ -26,6 +26,7 @@ class Entity extends Model
         'directors',
         'ein_number',
         'form_id',
+        'date_created',
         'date_signed',
         'person',
         'jurisdiction',

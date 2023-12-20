@@ -62,10 +62,13 @@ class OwnerController extends Controller
         $owner->user_id = $user->id;
 
         $owner->save();
+
+        $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
+
         if ($request->hasFile('document')) {
             $document = new Document();
             $document->owner_id = $owner->id;
-            $document->url = '/storage/' . $request->file('document')->store('documents', 'public');
+            $document->url = $pathPrefix . $request->file('document')->store('documents', 'public');
             $document->save();
             $owner->kyc_document = $document->id;
             $owner->save();
@@ -114,17 +117,18 @@ class OwnerController extends Controller
             $owner->ownership_stake = $request->input('ownership_stake', $owner->ownership_stake);
             $owner->document_type = $request->input('document_type', $owner->document_type);
             $owner->document_expiration = $request->input('document_expiration', $owner->document_expiration);
+            $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 
             // Handle avatar update if provided
             if ($request->hasFile('document')) {
                 if ($owner->kyc_document) {
                     $document = Document::find($owner->kyc_document);
-                    Storage::delete(str_replace('/storage/', '', $document->url));
+                    Storage::delete(str_replace($pathPrefix, '', $document->url));
                     Document::find($owner->kyc_document)->delete();
                 }
                 $document = new Document();
                 $document->owner_id = $owner->id;
-                $document->url = '/storage/' . $request->file('document')->store('documents', 'public');
+                $document->url = $pathPrefix . $request->file('document')->store('documents', 'public');
                 $document->save();
                 $owner->kyc_document = $document->id;
                 $owner->save();

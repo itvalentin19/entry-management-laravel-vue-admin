@@ -24,20 +24,20 @@ const gotoEntities = () => {
       <VCol cols="12" sm="8" order="2" order-sm="1">
         <VCardItem>
           <VCardTitle class="text-md-h5 text-primary">
-            Hello, {{ user?.name }}! 👋
+            Hello, {{ user?.name }}!
           </VCardTitle>
         </VCardItem>
 
         <VCardText>
-          <span> Welcome To <b>Eakav</b> 🎉🎉🎉 </span>
+          <span> Welcome To <b>Eakav</b> </span>
           <br />
           <br />
           <VBtn variant="tonal" class="mt-4" size="small" @click="gotoEntities">
-            View Companies
+            Add Companies
           </VBtn>
         </VCardText>
       </VCol>
-
+      <!-- 
       <VCol cols="12" sm="4" order="1" order-sm="2" class="text-center">
         <img
           :src="illustrationJohn"
@@ -45,7 +45,7 @@ const gotoEntities = () => {
           :class="$vuetify.display.xs ? 'mt-6 mb-n2' : 'position-absolute'"
           class="john-illustration flip-in-rtl"
         />
-      </VCol>
+      </VCol> -->
     </VRow>
   </VCard>
 </template>

@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function () {
         Route::get('entities', [EntityController::class, 'list']);
         Route::get('entities/props', [EntityController::class, 'getProps']);
         Route::post('entity', [EntityController::class, 'store']);
+        Route::post('entity/bulk-upload', [EntityController::class, 'bulkUpload']);
         Route::get('entity/{id}', [EntityController::class, 'index']);
         Route::post('entity/{id}', [EntityController::class, 'update']);
         Route::delete('entity/{id}', [EntityController::class, 'delete']);
