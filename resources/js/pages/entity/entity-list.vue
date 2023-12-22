@@ -30,10 +30,20 @@ let ownerIdToDelete = ref(null);
 const loaded = ref(false);
 const loading = ref(false);
 const searchText = ref("");
+const sort = reactive({
+  field: "id",
+  order: "asc",
+});
 
 // Fetch users method
 async function fetchEntities() {
-  const params = "page=" + state.current_page;
+  const params =
+    "page=" +
+    state.current_page +
+    "&field=" +
+    sort.field +
+    "&order=" +
+    sort.order;
   const response = await ApiService.getEntities(params);
   if (response.data) {
     Object.keys(response.data).map((key) => {
@@ -51,7 +61,15 @@ function goToCreateUser() {
 async function searchEntities() {
   loading.value = true;
 
-  const params = "page=" + state.current_page + "&search=" + searchText.value;
+  const params =
+    "page=" +
+    state.current_page +
+    "&search=" +
+    searchText.value +
+    "&field=" +
+    sort.field +
+    "&order=" +
+    sort.order;
   const response = await ApiService.getEntities(params);
   if (response.data) {
     Object.keys(response.data).map((key) => {
@@ -60,6 +78,10 @@ async function searchEntities() {
   }
   loading.value = false;
 }
+
+const handleView = (id) => {
+  router.push("entities/entity/" + id);
+};
 
 const handleEdit = (id) => {
   router.push("entities/entity?id=" + id);
@@ -70,6 +92,11 @@ const handleDelete = (id) => {
   ownerIdToDelete.value = id;
   dialog.value = true;
   // Logic to handle user deletion
+};
+const handleSort = ({ field, order }) => {
+  sort.field = field;
+  sort.order = order;
+  searchEntities();
 };
 const confirmDelete = async () => {
   if (ownerIdToDelete.value) {
@@ -172,6 +199,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="d-flex align-center">
+    <VBtn variant="text" class="ms-n3 mb-3" to="/">
+      <VIcon icon="bx-arrow-back" />
+      Go To Home
+    </VBtn>
+  </div>
   <VRow>
     <VCol cols="12">
       <div class="d-flex align-center justify-space-between gap-10">
@@ -199,8 +232,10 @@ onMounted(() => {
         </template>
         <EntitiesTable
           :data="state.data"
+          @view="handleView"
           @edit="handleEdit"
           @delete="handleDelete"
+          @sort="handleSort"
         />
         <VPagination
           v-model="state.current_page"

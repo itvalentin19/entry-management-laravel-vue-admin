@@ -37,6 +37,10 @@ const router = createRouter({
           component: () => import('../pages/entity/entity-create-edit.vue'),
         },
         {
+          path: 'entities/entity/:id',
+          component: () => import('../pages/entity/entity-view.vue'),
+        },
+        {
           path: 'account-settings',
           component: () => import('../pages/account-settings.vue'),
         },

@@ -16,7 +16,7 @@ const props = defineProps({
 
 const onMenuItemClick = (item) => {
   if (typeof item.action === "function") {
-    if (item.text == "Edit" || item.text == "Delete") {
+    if (item.text == "Edit" || item.text == "View" || item.text == "Delete") {
       item.action(props.data?.id);
     }
   }

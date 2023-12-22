@@ -6,7 +6,7 @@ const theme = {
     light: {
       dark: false,
       colors: {
-        'primary': '#696CFF',
+        'primary': '#696CDD',
         'on-primary': '#fff',
         'secondary': '#8592A3',
         'on-secondary': '#fff',
@@ -44,7 +44,8 @@ const theme = {
         'tooltip-background': '#262732',
         'tooltip-opacity': 0.9,
         'table-header-background': '#F5F5F7',
-
+        'emphasis-opacity': 1,
+        
         // Shadows
         'shadow-key-umbra-opacity': 'rgba(var(--v-theme-on-surface), 0.06)',
         'shadow-key-penumbra-opacity': 'rgba(var(--v-theme-on-surface), 0.04)',

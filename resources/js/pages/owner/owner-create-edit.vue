@@ -133,6 +133,12 @@ watch(
 </script>
 
 <template>
+  <div class="d-flex align-center">
+    <VBtn variant="text" class="ms-n3 mb-3" to="/">
+      <VIcon icon="bx-arrow-back" />
+      Go To Home
+    </VBtn>
+  </div>
   <VRow>
     <VCol cols="12">
       <VCard :title="ownerId ? 'Edit Owner Detail' : 'Add Owner Detail'">

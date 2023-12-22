@@ -72,6 +72,7 @@ class UserController extends Controller
 				'email' => 'string|email|max:255|unique:users,email,' . $user->id,
 				'phone' => 'string|max:255',
 				'address' => 'string|max:255',
+				'address2' => 'string|max:255',
 				'role' => 'in:admin,user',
 				'avatar' => 'sometimes|file|image|max:2048', // 2MB Max
 			]);
@@ -81,6 +82,7 @@ class UserController extends Controller
 			$user->email = $request->input('email', $user->email);
 			$user->phone = $request->input('phone', $user->phone);
 			$user->address = $request->input('address', $user->address);
+			$user->address2 = $request->input('address2', $user->address2);
 			$user->role = $request->input('role', $user->role);
 
 			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
@@ -169,6 +171,53 @@ class UserController extends Controller
 		return response()->json(['message' => 'Password updated successfully']);
 	}
 
+	public function generatePersonName($name)
+	{
+		// Remove whitespace and convert to uppercase
+		$name = strtoupper(str_replace(' ', '', $name));
+
+		// Take the first 2 letters
+		$personName = substr($name, 0, 2);
+
+		// Check if this personName is unique (you need to implement this function)
+		while (!$this->isUniquePersonName($personName)) {
+			// If not unique, try adding another letter or changing letters
+			$personName = $this->modifyPersonName($personName, $name);
+		}
+
+		return $personName;
+	}
+
+	private function isUniquePersonName($personName)
+	{
+		// Implement a check to see if $personName is unique in your system
+		// For example, querying your database
+		// Return true if unique, false otherwise
+		$nameExist = User::where('person', $personName)->first();
+		if ($nameExist)
+			return false;
+		else
+			return true;
+	}
+
+	private function modifyPersonName($currentName, $fullName)
+	{
+		static $counter = 0;
+
+		// Simple strategy to modify the name:
+		// Cycle through letters of the full name
+		if ($counter < strlen($fullName)) {
+			$newName = substr($currentName, 0, 1) . $fullName[$counter];
+		} else {
+			// If cycled through all letters, start adding a third letter
+			$newName = substr($fullName, 0, 2) . $fullName[$counter - strlen($fullName)];
+		}
+
+		$counter++;
+		return $newName;
+	}
+
+
 	public function store(Request $request)
 	{
 		$request->validate([
@@ -176,12 +225,15 @@ class UserController extends Controller
 			'email' => 'required|string|email|max:255|unique:users',
 			'phone' => 'required|string|max:255',
 			'address' => 'required|string|max:255',
+			'address2' => 'required|string|max:255',
 			'avatar' => 'sometimes|file|image|max:2048',
 			// 2MB Max
 			'role' => 'required|in:admin,user', // Ensure role is either 'admin' or 'user'
 		]);
 
-		$user = new User($request->only(['name', 'email', 'phone', 'address', 'role']));
+		$user = new User($request->only(['name', 'email', 'phone', 'address', 'address2', 'role']));
+		$person = $this->generatePersonName($request->get('name'));
+		$user->person = $person;
 		$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 
 		if ($request->hasFile('avatar')) {
@@ -220,6 +272,7 @@ class UserController extends Controller
 				'email' => 'string|email|max:255|unique:users,email,' . $id,
 				'phone' => 'string|max:255',
 				'address' => 'string|max:255',
+				'address2' => 'string|max:255',
 				'role' => 'in:admin,user',
 				'avatar' => 'sometimes|file|image|max:2048', // 2MB Max
 			]);
@@ -229,6 +282,7 @@ class UserController extends Controller
 			$user->email = $request->input('email', $user->email);
 			$user->phone = $request->input('phone', $user->phone);
 			$user->address = $request->input('address', $user->address);
+			$user->address2 = $request->input('address2', $user->address2);
 			$user->role = $request->input('role', $user->role);
 
 			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
@@ -257,6 +311,9 @@ class UserController extends Controller
 	{
 		$query = User::query();
 		$query = $query->where('is_deleted', false);
+		$field = $request->input('field');
+		$order = $request->input('order');
+		$query->orderBy($field, $order);
 
 		// Add filters based on query parameters
 		if ($request->has('search')) {
@@ -289,6 +346,10 @@ class UserController extends Controller
 			$stats['admins'] = $admins;
 			$stats['own_companies'] = $own_companies;
 			$stats['other_companies'] = $other_companies;
+
+			$query = $user->role == 'admin' ? Entity::query()->orderBy('created_at', 'desc') : Entity::where('person', $user->person)->orderBy('created_at', 'desc');
+			$entities = $query->paginate(10);
+			$stats['entities'] = $entities;
 
 			return response()->json($stats);
 		} catch (\Throwable $th) {

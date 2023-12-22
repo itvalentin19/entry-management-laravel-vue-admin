@@ -11,7 +11,11 @@ const props = defineProps({
     required: true,
   },
 });
-const emit = defineEmits(["edit", "delete"]);
+const sort = reactive({
+  field: "id",
+  order: "asc",
+});
+const emit = defineEmits(["edit", "delete", "sort"]);
 
 const editUser = (user) => {
   emit("edit", user);
@@ -24,25 +28,51 @@ const deleteUser = (userId) => {
 const isAdmin = (user) => {
   return user.role === "admin"; // Adjust according to how roles are defined in your data
 };
+
+const handleSort = (field) => {
+  sort.order =
+    sort.field == field ? (sort.order == "asc" ? "desc" : "asc") : "asc";
+  sort.field = field;
+  emit("sort", sort);
+};
+
+const menuList = ref([
+  {
+    text: "Edit",
+    action: editUser,
+  },
+  {
+    text: "Delete",
+    action: deleteUser,
+  },
+]);
 </script>
 
 <template>
   <VTable fixed-header>
     <thead>
       <tr>
-        <th class="text-uppercase">Id</th>
+        <th v-if="_user?.admin == true"></th>
+        <th class="text-uppercase sortable-header" @click="handleSort('id')">
+          Id
+        </th>
         <th>Photo</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Created At</th>
-        <th>Role</th>
-        <th v-if="_user?.admin == true">Actions</th>
+        <th class="sortable-header" @click="handleSort('name')">Name</th>
+        <th class="sortable-header" @click="handleSort('email')">Email</th>
+        <th class="sortable-header" @click="handleSort('phone')">Phone</th>
+        <th class="sortable-header" @click="handleSort('address')">Address</th>
+        <th class="sortable-header" @click="handleSort('created_at')">
+          Created At
+        </th>
+        <th class="sortable-header" @click="handleSort('role')">Role</th>
       </tr>
     </thead>
 
     <tbody v-if="props.userList">
       <tr v-for="user in props.userList" :key="user.id">
+        <td class="text-center" v-if="_user?.admin == true">
+          <MoreBtn :menu-list="menuList" :data="user" />
+        </td>
         <td>
           {{ user.id }}
         </td>
@@ -63,16 +93,12 @@ const isAdmin = (user) => {
         <td class="text-center">
           {{ user.phone }}
         </td>
+        <td class="text-center">{{ user.address }} {{ user.address2 }}</td>
         <td class="text-center">
           {{ moment(user.created_at).format("YYYY-MM-DD HH:mm:ss") }}
         </td>
         <td class="text-center">
           {{ isAdmin(user) ? "Admin" : "" }}
-        </td>
-        <td class="text-center" v-if="_user?.admin == true">
-          <!-- Edit and Delete Buttons -->
-          <VBtn small color="primary" @click="editUser(user)">Edit</VBtn>
-          <VBtn small color="error" @click="deleteUser(user.id)">Delete</VBtn>
         </td>
       </tr>
     </tbody>

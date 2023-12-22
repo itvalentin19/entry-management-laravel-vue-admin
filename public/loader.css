@@ -77,3 +77,24 @@ html {
     transform: rotate(1turn);
   }
 }
+
+.v-table>.v-table__wrapper>table tbody tr,
+.sortable-header {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sortable-header::after {
+  content: "";
+  display: inline-block;
+  opacity: 0;
+  margin-left: 5px;
+  vertical-align: middle;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity)) !important;
+}
+
+.sortable-header:hover::after {
+  opacity: 1;
+}

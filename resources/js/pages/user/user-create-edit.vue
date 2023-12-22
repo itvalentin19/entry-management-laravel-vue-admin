@@ -10,6 +10,7 @@ const accountData = {
   email: "",
   phone: "",
   address: "",
+  address2: "",
   avatarImg: avatar1,
   role: "user",
 };
@@ -126,6 +127,12 @@ watch(
 </script>
 
 <template>
+  <div class="d-flex align-center">
+    <VBtn variant="text" class="ms-n3 mb-3" to="/">
+      <VIcon icon="bx-arrow-back" />
+      Go To Home
+    </VBtn>
+  </div>
   <VRow>
     <VCol cols="12">
       <VCard :title="userId ? 'Edit User Detail' : 'Add User Detail'">
@@ -217,15 +224,6 @@ watch(
                 />
               </VCol>
 
-              <!-- 👉 Address -->
-              <VCol cols="12" md="6">
-                <VTextField
-                  v-model="accountDataLocal.address"
-                  label="Address"
-                  placeholder="123 Main St, New York, NY 10001"
-                />
-              </VCol>
-
               <!-- 👉 Role -->
               <VCol cols="12" md="6">
                 <VSelect
@@ -233,6 +231,24 @@ watch(
                   :items="['admin', 'user']"
                   label="Role"
                   placeholder="Select a role"
+                />
+              </VCol>
+
+              <!-- 👉 Address -->
+              <VCol cols="12" md="6">
+                <VTextField
+                  v-model="accountDataLocal.address"
+                  label="Address 1"
+                  placeholder="123 Main St"
+                />
+              </VCol>
+
+              <!-- 👉 Address -->
+              <VCol cols="12" md="6">
+                <VTextField
+                  v-model="accountDataLocal.address2"
+                  label="Address 2"
+                  placeholder="New York, NY 10001"
                 />
               </VCol>
 

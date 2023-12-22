@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
+use App\Models\Director;
 use App\Models\Document;
 use App\Models\Entity;
 use App\Models\Owner;
@@ -9,6 +11,7 @@ use App\Models\Person;
 use App\Models\Ref;
 use App\Models\Service;
 use App\Models\Type;
+use App\Models\User;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +27,14 @@ class EntityController extends Controller
         if ($entity) {
             $owners = $entity['owner_ids'] ? $entity->get_owners($entity['owner_ids']) : [];
             // $documents = $entity['document_ids'] ? $entity->get_documents($entity['document_ids']) : [];
+            $person = User::where('person', $entity['person'])->first();
+            if ($person) {
+                $user = new UserResource($person);
+                $entity['contact_person'] = $user;
+            }
+            $directors = Director::where('entity_id', $id)->get();
             $entity['owners'] = $owners;
+            $entity['director_list'] = $directors;
             // $entity['documents'] = $documents;
             return response()->json($entity, 201);
         } else {
@@ -60,10 +70,11 @@ class EntityController extends Controller
 
         if ($request->input('directors') == "true") {
             $request->validate([
-                'contact_first_name' => 'required|string|max:255',
-                'contact_last_name' => 'required|string|max:255',
-                'contact_phone' => 'required|string|max:255',
-                'contact_email' => 'required|string|email|max:255',
+                // 'contact_first_name' => 'required|string|max:255',
+                // 'contact_last_name' => 'required|string|max:255',
+                // 'contact_phone' => 'required|string|max:255',
+                // 'contact_email' => 'required|string|email|max:255',
+                'director_list' => 'required|string',
             ]);
         }
 
@@ -84,6 +95,10 @@ class EntityController extends Controller
                     'annual_fees',
                     'first_tax_year',
                     'directors',
+                    'contact_first_name',
+                    'contact_last_name',
+                    'contact_phone',
+                    'contact_email',
                     'ein_number',
                     'form_id',
                     'date_created',
@@ -98,12 +113,6 @@ class EntityController extends Controller
 
         $entity->directors = $request->input('directors') == "true";
         $entity->form_id = $request->input('form_id') == "true";
-        if ($entity->directors) {
-            $entity->contact_first_name = $request->input('contact_first_name');
-            $entity->contact_last_name = $request->input('contact_last_name');
-            $entity->contact_phone = $request->input('contact_phone');
-            $entity->contact_email = $request->input('contact_email');
-        }
 
         $entity->owner_ids = array_map('intval', explode(',', $request->input('owner_ids')));
 
@@ -150,6 +159,46 @@ class EntityController extends Controller
         $user = auth()->user();
         $entity->user_id = $user->id;
         $entity->save();
+        if ($entity->directors) {
+            $entity->contact_first_name = $request->input('contact_first_name');
+            $entity->contact_last_name = $request->input('contact_last_name');
+            $entity->contact_phone = $request->input('contact_phone');
+            $entity->contact_email = $request->input('contact_email');
+            $request->validate([
+                'director_list' => 'required|string',
+            ]);
+            $director_list = json_decode($request->input('director_list'), true);
+            $director_ids = [];
+            foreach ($director_list as $item) {
+                $validator = validator($item, [
+                    'first_name' => 'required|string|max:255',
+                    'last_name' => 'required|string|max:255',
+                    'phone' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
+                ]);
+
+                if ($validator->fails()) {
+                    $errors = $validator->errors();
+                    $firstErrorMessage = $errors->first(); // Get the first error message
+
+                    return response()->json([
+                        'errors' => $errors,
+                        'message' => $firstErrorMessage
+                    ], 422);
+                }
+                $director = new Director();
+                $director->first_name = $item['first_name'];
+                $director->last_name = $item['last_name'];
+                $director->phone = $item['phone'];
+                $director->email = $item['email'];
+                $director->entity_id = $entity->id;
+                $director->save();
+                $director_ids[] = $director->id;
+            }
+            if (count($director_ids) > 0) {
+                $entity->director_ids = $director_ids;
+            }
+        }
         $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
         if ($request->hasFile('files')) {
             $document_ids = [];
@@ -161,8 +210,8 @@ class EntityController extends Controller
                 $document_ids[] = $document->id;
             }
             $entity->document_ids = $document_ids;
-            $entity->save();
         }
+        $entity->save();
 
 
         return response()->json($entity, 201);
@@ -180,26 +229,30 @@ class EntityController extends Controller
                 'firm_name' => 'string|max:255',
                 'doing_business_as' => 'string|max:255',
                 'entity_name' => 'string|max:255',
-                'address_1' => 'string|max:255',
-                'address_2' => 'string|max:255',
-                'city' => 'string|max:255',
-                'state' => 'string|max:255',
-                'zip' => 'string|max:255',
-                'country' => 'string|max:255',
-                'type' => 'string|max:255',
-                'services' => 'string|max:255',
-                'annual_fees' => 'string|max:255',
-                'first_tax_year' => 'string|max:255',
-                'ein_number' => 'string|max:255',
-                'date_created' => 'string|max:255',
-                'date_signed' => 'string|max:255',
-                'person' => 'string|max:255',
-                'jurisdiction' => 'string|max:255',
-                'owner_ids' => 'string|max:255',
-                'document_ids' => 'string|max:255',
-                'files.*' => 'sometimes|file|mimes:pdf',
-                'notes' => 'string',
-                'ref_by' => 'string|max:255',
+                'address_1' => 'string|max:255|nullable',
+                'address_2' => 'string|max:255|nullable',
+                'city' => 'string|max:255|nullable',
+                'state' => 'string|max:255|nullable',
+                'zip' => 'string|max:255|nullable',
+                'country' => 'string|max:255|nullable',
+                'type' => 'string|max:255|nullable',
+                'services' => 'string|max:255|nullable',
+                'annual_fees' => 'string|max:255|nullable',
+                'first_tax_year' => 'string|max:255|nullable',
+                'ein_number' => 'string|max:255|nullable',
+                'contact_first_name' => 'string|max:255|nullable',
+                'contact_last_name' => 'string|max:255|nullable',
+                'contact_phone' => 'string|max:255|nullable',
+                'contact_email' => 'string|email|max:255|nullable',
+                'date_created' => 'string|max:255|nullable',
+                'date_signed' => 'string|max:255|nullable',
+                'person' => 'string|max:255|nullable',
+                'jurisdiction' => 'string|max:255|nullable',
+                'owner_ids' => 'string|max:255|nullable',
+                'document_ids' => 'string|max:255|nullable',
+                'files.*' => 'sometimes|file|mimes:pdf|nullable',
+                'notes' => 'string|nullable',
+                'ref_by' => 'string|max:255|nullable',
             ]);
 
             // Update user's information
@@ -223,13 +276,77 @@ class EntityController extends Controller
             $entity->jurisdiction = $request->input('jurisdiction', $entity->jurisdiction);
             $entity->notes = $request->input('notes', $entity->notes);
             $entity->ref_by = $request->input('ref_by', $entity->ref_by);
+            $entity->contact_first_name = $request->input('contact_first_name', $entity->contact_first_name);
+            $entity->contact_last_name = $request->input('contact_last_name', $entity->contact_last_name);
+            $entity->contact_phone = $request->input('contact_phone', $entity->contact_phone);
+            $entity->contact_email = $request->input('contact_email', $entity->contact_email);
 
             $entity->directors = $request->input('directors') == "true";
             $entity->form_id = $request->input('form_id') == "true";
-            $entity->contact_first_name = $entity->directors ? $request->input('contact_first_name') : null;
-            $entity->contact_last_name = $entity->directors ? $request->input('contact_last_name') : null;
-            $entity->contact_phone = $entity->directors ? $request->input('contact_phone') : null;
-            $entity->contact_email = $entity->directors ? $request->input('contact_email') : null;
+            // $entity->contact_first_name = $request->input('contact_first_name');
+            // $entity->contact_last_name = $request->input('contact_last_name');
+            // $entity->contact_phone = $request->input('contact_phone');
+            // $entity->contact_email = $request->input('contact_email');
+            if ($entity->directors) {
+                $request->validate([
+                    'director_list' => 'required|string',
+                ]);
+                $director_list = json_decode($request->input('director_list'), true);
+                $director_ids = [];
+                $existing_ids = [];
+                foreach ($director_list as $item) {
+                    $validator = validator($item, [
+                        'first_name' => 'string|max:255',
+                        'last_name' => 'string|max:255',
+                        'phone' => 'string|max:255',
+                        'email' => 'string|email|max:255',
+                    ]);
+
+                    if ($validator->fails()) {
+                        $errors = $validator->errors();
+                        $firstErrorMessage = $errors->first(); // Get the first error message
+
+                        return response()->json([
+                            'errors' => $errors,
+                            'message' => $firstErrorMessage
+                        ], 422);
+                    }
+
+                    $director = Director::where('email', $item['email'])->where('entity_id', $entity->id)->first();
+                    if ($director) {
+                        $director->first_name = $item['first_name'];
+                        $director->last_name = $item['last_name'];
+                        $director->phone = $item['phone'];
+                        $director->save();
+                        $existing_ids[] = $director->id;
+                    } else {
+                        $director = new Director();
+                        $director->first_name = $item['first_name'];
+                        $director->last_name = $item['last_name'];
+                        $director->phone = $item['phone'];
+                        $director->email = $item['email'];
+                        $director->entity_id = $entity->id;
+                        $director->save();
+                    }
+                    $director_ids[] = $director->id;
+                }
+                if (count($director_ids) > 0) {
+                    $entity->director_ids = $director_ids;
+                }
+
+                $previous_ids = $request->input('director_ids') ? json_decode($request->input('director_ids'), true) : [];
+                $removed_ids = array_diff($previous_ids ?? [], $existing_ids);
+                if (count($removed_ids) > 0) {
+                    foreach ($removed_ids as $id) {
+                        try {
+                            Director::find($id)->delete();
+                        } catch (\Throwable $th) {
+                        }
+                    }
+                }
+            } else {
+                Director::where('entity_id', $entity->id)->delete();
+            }
 
             $entity->owner_ids = array_map('intval', explode(',', $request->input('owner_ids')));
 
@@ -315,6 +432,9 @@ class EntityController extends Controller
     {
         $query = Entity::query();
         $query = $query->with('documents')->where('is_deleted', false);
+        $field = $request->input('field');
+        $order = $request->input('order');
+        $query->orderBy($field, $order);
 
         // Add filters based on query parameters
         if ($request->has('search') && !empty($request->get('search'))) {
@@ -366,14 +486,14 @@ class EntityController extends Controller
         $services = Service::orderBy('name', 'ASC')->pluck('name')->all();
         $types = Type::orderBy('name', 'ASC')->pluck('name')->all();
         $refs = Ref::orderBy('name', 'ASC')->pluck('name')->all();
-        $person_types = Person::orderBy('type', 'ASC')->pluck('type')->all();
+        $users = User::whereNotNull('person')->orderBy('person', 'ASC')->pluck('person')->all();
         $owners = Owner::where('is_deleted', false)->select('id', 'first_name', 'last_name')->orderBy('first_name', 'ASC')->get();
 
         $data = [];
         $data['services'] = $services;
         $data['types'] = $types;
         $data['refs'] = $refs;
-        $data['person_types'] = $person_types;
+        $data['users'] = $users;
         $data['owners'] = $owners;
 
         return response()->json($data);

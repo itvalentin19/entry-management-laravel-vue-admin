@@ -10,8 +10,16 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  viewOnly: {
+    type: Boolean,
+    required: false,
+  },
 });
-const emit = defineEmits(["edit", "delete"]);
+const sort = reactive({
+  field: "id",
+  order: "asc",
+});
+const emit = defineEmits(["edit", "delete", "sort"]);
 
 const editUser = (userId) => {
   console.log(userId);
@@ -20,6 +28,13 @@ const editUser = (userId) => {
 
 const deleteUser = (userId) => {
   emit("delete", userId);
+};
+
+const handleSort = (field) => {
+  sort.order =
+    sort.field == field ? (sort.order == "asc" ? "desc" : "asc") : "asc";
+  sort.field = field;
+  emit("sort", sort);
 };
 
 const isAdmin = (user) => {
@@ -46,28 +61,52 @@ const menuList = ref([
   <VTable fixed-header>
     <thead>
       <tr>
-        <th class="text-uppercase">Id</th>
-        <th>FirstName</th>
-        <th>LastName</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Address 1</th>
-        <th>Address 2</th>
-        <th>City</th>
-        <th>State</th>
-        <th>Zip</th>
-        <th>Country</th>
-        <th>Ownership Stake</th>
-        <th>Document Type</th>
-        <th>Document Expiration</th>
-        <th>Document</th>
-        <th>Created At</th>
-        <th>Actions</th>
+        <th v-if="props.viewOnly == false"></th>
+        <th class="text-uppercase sortable-header" @click="handleSort('id')">
+          Id
+        </th>
+        <th class="sortable-header" @click="handleSort('first_name')">
+          FirstName
+        </th>
+        <th class="sortable-header" @click="handleSort('last_name')">
+          LastName
+        </th>
+        <th class="sortable-header" @click="handleSort('ownership_stake')">
+          Ownership (%)
+        </th>
+        <th class="sortable-header" @click="handleSort('address1')">
+          Address 1
+        </th>
+        <th class="sortable-header" @click="handleSort('address2')">
+          Address 2
+        </th>
+        <th class="sortable-header" @click="handleSort('city')">City</th>
+        <th class="sortable-header" @click="handleSort('state')">State</th>
+        <th class="sortable-header" @click="handleSort('zip')">Zip</th>
+        <th class="sortable-header" @click="handleSort('country')">Country</th>
+        <th class="sortable-header" @click="handleSort('email')">Email</th>
+        <th class="sortable-header" @click="handleSort('phone')">Phone</th>
+        <th v-if="props.viewOnly == false">Document Type</th>
+        <th v-if="props.viewOnly == false">Document Expiration</th>
+        <th v-if="props.viewOnly == false">Document</th>
+        <th
+          v-if="props.viewOnly == false"
+          class="sortable-header"
+          @click="handleSort('created_at')"
+        >
+          Created On
+        </th>
       </tr>
     </thead>
 
     <tbody v-if="props.userList">
       <tr v-for="owner in props.userList" :key="owner.id">
+        <td
+          class="text-center"
+          v-if="_user?.id == owner.user_id && props.viewOnly == false"
+        >
+          <MoreBtn :menu-list="menuList" :data="owner" />
+        </td>
         <td>
           {{ owner.id }}
         </td>
@@ -78,10 +117,7 @@ const menuList = ref([
           {{ owner.last_name }}
         </td>
         <td class="text-center">
-          {{ owner.email }}
-        </td>
-        <td class="text-center">
-          {{ owner.phone }}
+          {{ owner.ownership_stake }}
         </td>
         <td class="text-center">
           {{ owner.address1 }}
@@ -102,15 +138,18 @@ const menuList = ref([
           {{ owner.country }}
         </td>
         <td class="text-center">
-          {{ owner.ownership_stake }}
+          {{ owner.email }}
         </td>
         <td class="text-center">
+          {{ owner.phone }}
+        </td>
+        <td class="text-center" v-if="props.viewOnly == false">
           {{ owner.document_type }}
         </td>
-        <td class="text-center">
+        <td class="text-center" v-if="props.viewOnly == false">
           {{ moment(owner.document_expiration).format("YYYY-MM-DD HH:mm:ss") }}
         </td>
-        <td class="text-center">
+        <td class="text-center" v-if="props.viewOnly == false">
           <a
             v-if="owner.kyc_document?.url"
             target="_blank"
@@ -119,11 +158,8 @@ const menuList = ref([
             <VBtn color="transparent" size="small" icon="bx-link-alt" />
           </a>
         </td>
-        <td class="text-center">
-          {{ moment(owner.created_at).format("YYYY-MM-DD HH:mm:ss") }}
-        </td>
-        <td class="text-center" v-if="_user?.id == owner.user_id">
-          <MoreBtn :menu-list="menuList" :data="owner" />
+        <td class="text-center" v-if="props.viewOnly == false">
+          {{ moment(owner.created_at).format("YYYY-MM-DD") }}
         </td>
       </tr>
     </tbody>

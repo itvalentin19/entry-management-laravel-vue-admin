@@ -6,6 +6,7 @@ import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import EntityUpload from "@/layouts/components/EntityUpload.vue";
+import states from "@/pages/entity/us_states.json";
 
 const route = useRoute();
 const toast = useToast();
@@ -49,10 +50,20 @@ const serviceItem = {
 };
 const serviceFeeData = [serviceItem];
 const serviceFeeDataLocal = ref(structuredClone(serviceFeeData));
+
+const directorItem = {
+  first_name: null,
+  last_name: null,
+  email: null,
+  phone: null,
+};
+const directorListInitial = [directorItem];
+const directorList = ref(structuredClone(directorListInitial));
+
 const services = ref([]);
 const types = ref([]);
 const refers = ref([]);
-const person_types = ref([]);
+const users = ref([]);
 const owners = ref([]);
 const entityId = ref(null);
 const refInputEl = ref();
@@ -81,6 +92,7 @@ const tabs = [
 ];
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData);
+  serviceFeeDataLocal.value = structuredClone(serviceFeeData);
 };
 
 const addDocument = (event) => {
@@ -116,19 +128,23 @@ const onCreate = async () => {
       console.log(item.fee);
       if (item.service) {
         services.push(item.service.trim());
-        if (item.fee == null) {
-          toast.error(
-            "Please input the annual fee for the corresponding service name."
-          );
-          validate = false;
-          break;
-        }
+        // if (item.fee == null) {
+        //   toast.error(
+        //     "Please input the annual fee for the corresponding service name."
+        //   );
+        //   validate = false;
+        //   break;
+        // }
         annual_fees.push(item.fee);
       }
     }
     if (!validate) return;
     formData.append("services", services);
     formData.append("annual_fees", annual_fees);
+
+    if (accountDataLocal.value.directors) {
+      formData.append("director_list", JSON.stringify(directorList.value));
+    }
 
     console.log(accountDataLocal.value.files);
     if (accountDataLocal.value.files) {
@@ -194,6 +210,8 @@ watch(
         accountDataLocal.value.services = null;
         accountDataLocal.value.annual_fees = null;
         accountDataLocal.value.ref_by = response.data.ref_by?.split(",") || [];
+        // Update Director List
+        directorList.value = response.data.director_list || [];
       } catch (error) {
         toast.error("Failed to load entity data.");
         router.push("/entities/entity");
@@ -211,10 +229,19 @@ const addNewServiceFee = async () => {
   serviceFeeDataLocal.value.push(newServiceFeeItem);
 };
 
+const addNewDirector = async () => {
+  const newItem = structuredClone(directorItem);
+  directorList.value.push(newItem);
+};
+
 const removeServiceFee = (index) => {
-  console.log(index);
-  console.log(serviceFeeDataLocal.value);
   serviceFeeDataLocal.value.splice(index, 1);
+};
+
+const removeDirector = (index) => {
+  console.log(index);
+  console.log(directorList.value);
+  directorList.value.splice(index, 1);
 };
 
 const getProps = async () => {
@@ -223,7 +250,7 @@ const getProps = async () => {
     services.value = res.data.services;
     types.value = res.data.types;
     refers.value = res.data.refs;
-    person_types.value = res.data.person_types;
+    users.value = res.data.users;
     owners.value = res.data.owners.map((owner) => ({
       id: owner.id,
       name: owner.first_name + " " + owner.last_name,
@@ -272,6 +299,12 @@ const years = [
 </script>
 
 <template>
+  <div class="d-flex align-center">
+    <VBtn variant="text" class="ms-n3 mb-3" to="/">
+      <VIcon icon="bx-arrow-back" />
+      Go To Home
+    </VBtn>
+  </div>
   <VTabs v-model="activeTab" show-arrows>
     <VTab v-for="item in tabs" :key="item.icon" :value="item.tab">
       <VIcon size="20" start :icon="item.icon" />
@@ -381,10 +414,11 @@ const years = [
 
                   <!-- 👉 Person -->
                   <VCol cols="12" md="6">
-                    <VCombobox
+                    <VAutocomplete
                       v-model="accountDataLocal.person"
                       label="Person"
-                      :items="person_types"
+                      :items="users"
+                      clearable
                       placeholder="Select Person"
                     />
                   </VCol>
@@ -408,10 +442,13 @@ const years = [
                   </VCol>
                   <!-- 👉 Jurisdiction -->
                   <VCol cols="12" md="6">
-                    <VTextField
+                    <VAutocomplete
                       v-model="accountDataLocal.jurisdiction"
                       label="Jurisdiction"
                       placeholder=""
+                      item-title="name"
+                      item-value="name"
+                      :items="states"
                     />
                   </VCol>
                   <!-- 👉 Created Date -->
@@ -432,7 +469,7 @@ const years = [
 
                   <!-- 👉 Owners -->
                   <VCol cols="12" md="6">
-                    <VSelect
+                    <VAutocomplete
                       v-model="accountDataLocal.owner_ids"
                       label="Owners"
                       multiple
@@ -440,6 +477,42 @@ const years = [
                       item-value="id"
                       :items="owners"
                       placeholder="Select Owners"
+                    />
+                  </VCol>
+                  <!-- 👉 Contact First Name -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.contact_first_name"
+                      label="Contact First Name"
+                      placeholder="Daniel"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Contact Last Name -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.contact_last_name"
+                      label="Contact Last Name"
+                      placeholder="Strachman"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Contact Email -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.contact_email"
+                      label="Contact Email"
+                      placeholder="johndoe@gmail.com"
+                      type="email"
+                    />
+                  </VCol>
+
+                  <!-- 👉 Contact Phone -->
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model="accountDataLocal.contact_phone"
+                      label="Contact Phone"
+                      placeholder="+1 (917) 543-9876"
                     />
                   </VCol>
 
@@ -487,50 +560,72 @@ const years = [
 
                   <!-- 👉 Directors -->
                   <VCol cols="12">
-                    <VCheckbox
-                      v-model="accountDataLocal.directors"
-                      label="Directors"
-                    />
+                    <p class="directors">
+                      <VCheckbox
+                        v-model="accountDataLocal.directors"
+                        label="Directors"
+                        style="width: max-content"
+                      />
+                      <VIcon
+                        icon="bx-plus-circle"
+                        v-if="accountDataLocal.directors"
+                        @click="addNewDirector"
+                      />
+                    </p>
                   </VCol>
                   <VCol cols="12" v-if="accountDataLocal.directors">
-                    <VRow>
-                      <!-- 👉 Contact First Name -->
-                      <VCol cols="12" md="6">
-                        <VTextField
-                          v-model="accountDataLocal.contact_first_name"
-                          label="Contact First Name"
-                          placeholder="Daniel"
-                        />
-                      </VCol>
+                    <VCard
+                      v-for="(director, index) in directorList"
+                      :key="index"
+                      class="director-card"
+                    >
+                      <VIcon
+                        class="item-delete-button"
+                        icon="bx-minus-circle"
+                        color="#c93903"
+                        @click="removeDirector(index)"
+                      />
+                      <VCardText>
+                        <VRow>
+                          <!-- 👉 Contact First Name -->
+                          <VCol cols="12" md="3">
+                            <VTextField
+                              v-model="director.first_name"
+                              label="First Name"
+                              placeholder="Daniel"
+                            />
+                          </VCol>
 
-                      <!-- 👉 Contact Last Name -->
-                      <VCol cols="12" md="6">
-                        <VTextField
-                          v-model="accountDataLocal.contact_last_name"
-                          label="Contact Last Name"
-                          placeholder="Strachman"
-                        />
-                      </VCol>
+                          <!-- 👉 Last Name -->
+                          <VCol cols="12" md="3">
+                            <VTextField
+                              v-model="director.last_name"
+                              label="Last Name"
+                              placeholder="Strachman"
+                            />
+                          </VCol>
 
-                      <!-- 👉 Contact Email -->
-                      <VCol cols="12" md="6">
-                        <VTextField
-                          v-model="accountDataLocal.contact_email"
-                          label="Contact Email"
-                          placeholder="johndoe@gmail.com"
-                          type="email"
-                        />
-                      </VCol>
+                          <!-- 👉 Email -->
+                          <VCol cols="12" md="3">
+                            <VTextField
+                              v-model="director.email"
+                              label="Email"
+                              placeholder="johndoe@gmail.com"
+                              type="email"
+                            />
+                          </VCol>
 
-                      <!-- 👉 Contact Phone -->
-                      <VCol cols="12" md="6">
-                        <VTextField
-                          v-model="accountDataLocal.contact_phone"
-                          label="Contact Phone"
-                          placeholder="+1 (917) 543-9876"
-                        />
-                      </VCol>
-                    </VRow>
+                          <!-- 👉 Phone -->
+                          <VCol cols="12" md="3">
+                            <VTextField
+                              v-model="director.phone"
+                              label="Phone"
+                              placeholder="+1 (917) 543-9876"
+                            />
+                          </VCol>
+                        </VRow>
+                      </VCardText>
+                    </VCard>
                   </VCol>
                   <VDivider />
 
@@ -635,5 +730,20 @@ const years = [
   width: 100%;
   height: 200px; /* Adjust as needed */
   border: none;
+}
+.item-delete-button {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.directors {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0px;
+}
+.director-card {
+  margin-top: 10px;
 }
 </style>

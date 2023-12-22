@@ -148,6 +148,9 @@ class OwnerController extends Controller
     {
         $query = Owner::query();
         $query = $query->with('kycDocument')->where('is_deleted', false);
+        $field = $request->input('field');
+        $order = $request->input('order');
+        $query->orderBy($field, $order);
 
         // Add filters based on query parameters
         if ($request->has('search') && !empty($request->get('search'))) {

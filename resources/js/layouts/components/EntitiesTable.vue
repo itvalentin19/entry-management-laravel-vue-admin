@@ -1,9 +1,11 @@
 <script setup>
 import avatar1 from "@images/avatars/avatar-1.png";
 import moment from "moment";
+import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 
 const store = useStore();
+const router = useRouter();
 const _user = computed(() => store.getters.user);
 const props = defineProps({
   data: {
@@ -11,15 +13,32 @@ const props = defineProps({
     required: true,
   },
 });
-const emit = defineEmits(["edit", "delete"]);
+const sort = reactive({
+  field: "id",
+  order: "asc",
+});
+const emit = defineEmits(["view", "edit", "delete", "sort"]);
 
-const editUser = (userId) => {
-  console.log(userId);
-  emit("edit", userId);
+const viewUser = (id) => {
+  console.log(id);
+  // emit("view", id);
+  router.push("/entities/entity/" + id);
+};
+const editUser = (id) => {
+  console.log(id);
+  // emit("edit", id);
+  router.push("/entities/entity?id=" + id);
 };
 
-const deleteUser = (userId) => {
-  emit("delete", userId);
+const deleteUser = (id) => {
+  emit("delete", id);
+};
+
+const handleSort = (field) => {
+  sort.order =
+    sort.field == field ? (sort.order == "asc" ? "desc" : "asc") : "asc";
+  sort.field = field;
+  emit("sort", sort);
 };
 
 const isAdmin = (user) => {
@@ -31,6 +50,10 @@ const onClick = (item) => {
 };
 
 const menuList = ref([
+  {
+    text: "View",
+    action: viewUser,
+  },
   {
     text: "Edit",
     action: editUser,
@@ -62,17 +85,30 @@ function parseAndFormatDate(dateStr) {
   <VTable fixed-header>
     <thead>
       <tr>
-        <th class="text-uppercase">Id</th>
-        <th>Firm Name</th>
-        <th>DBA Name</th>
-        <th>Entity name</th>
-        <th>Address 1</th>
-        <th>Address 2</th>
-        <th>City</th>
-        <th>State</th>
-        <th>Zip</th>
-        <th>Country</th>
-        <th>Type</th>
+        <th></th>
+        <th class="text-uppercase sortable-header" @click="handleSort('id')">
+          Id
+        </th>
+        <th class="sortable-header" @click="handleSort('firm_name')">
+          Firm Name
+        </th>
+        <th class="sortable-header" @click="handleSort('entity_name')">
+          Entity name
+        </th>
+        <th class="sortable-header" @click="handleSort('doing_business_as')">
+          DBA Name
+        </th>
+        <th class="sortable-header" @click="handleSort('address_1')">
+          Address 1
+        </th>
+        <th class="sortable-header" @click="handleSort('address_2')">
+          Address 2
+        </th>
+        <th class="sortable-header" @click="handleSort('city')">City</th>
+        <th class="sortable-header" @click="handleSort('state')">State</th>
+        <th class="sortable-header" @click="handleSort('zip')">Zip</th>
+        <th class="sortable-header" @click="handleSort('country')">Country</th>
+        <!-- <th>Type</th>
         <th>Services</th>
         <th>First Tax Year</th>
         <th>Directors</th>
@@ -89,14 +125,20 @@ function parseAndFormatDate(dateStr) {
         <th>Owners</th>
         <th>Documents</th>
         <th>Notes</th>
-        <th>Ref By</th>
-        <th>Created At</th>
-        <th>Actions</th>
+        <th>Ref By</th> -->
+        <!-- <th>Created On</th> -->
       </tr>
     </thead>
 
     <tbody v-if="props.data">
-      <tr v-for="entity in props.data" :key="entity.id">
+      <tr
+        v-for="entity in props.data"
+        :key="entity.id"
+        @click="viewUser(entity.id)"
+      >
+        <td class="text-center text-sm" v-if="_user?.id == entity.user_id">
+          <MoreBtn :menu-list="menuList" :data="entity" />
+        </td>
         <td>
           {{ entity.id }}
         </td>
@@ -104,10 +146,10 @@ function parseAndFormatDate(dateStr) {
           {{ entity.firm_name }}
         </td>
         <td class="text-center text-sm">
-          {{ entity.doing_business_as }}
+          {{ entity.entity_name }}
         </td>
         <td class="text-center text-sm">
-          {{ entity.entity_name }}
+          {{ entity.doing_business_as }}
         </td>
         <td class="text-center text-sm">
           {{ entity.address_1 }}
@@ -127,7 +169,7 @@ function parseAndFormatDate(dateStr) {
         <td class="text-center text-sm">
           {{ entity.country }}
         </td>
-        <td class="text-center text-sm">
+        <!-- <td class="text-center text-sm">
           {{ entity.type }}
         </td>
         <td class="text-center text-sm">
@@ -213,10 +255,7 @@ function parseAndFormatDate(dateStr) {
         </td>
         <td class="text-center text-sm">
           {{ moment(entity.created_at).format("YYYY-MM-DD HH:mm:ss") }}
-        </td>
-        <td class="text-center text-sm" v-if="_user?.id == entity.user_id">
-          <MoreBtn :menu-list="menuList" :data="entity" />
-        </td>
+        </td> -->
       </tr>
     </tbody>
   </VTable>
