@@ -14,9 +14,11 @@ const props = defineProps({
   },
 });
 
+const actions = ["Edit", "Delete", "View", "Report"];
+
 const onMenuItemClick = (item) => {
   if (typeof item.action === "function") {
-    if (item.text == "Edit" || item.text == "View" || item.text == "Delete") {
+    if (actions.includes(item.text)) {
       item.action(props.data?.id);
     }
   }
@@ -29,14 +31,14 @@ const onMenuItemClick = (item) => {
 
     <VMenu v-if="props.menuList" activator="parent">
       <VCard>
-        <template v-for="(item, index) in props.menuList" :key="index">
-          <VListItem @click="() => onMenuItemClick(item)">
-            <VListItemIcon v-if="item.icon">
-              <VIcon :icon="item.icon" />
-            </VListItemIcon>
-            <VListItemContent>{{ item.text }}</VListItemContent>
-          </VListItem>
-        </template>
+        <VListItem
+          v-for="(item, index) in props.menuList"
+          :key="index"
+          @click="() => onMenuItemClick(item)"
+        >
+          <VIcon v-if="item.icon" :icon="item.icon" />
+          {{ item.text }}
+        </VListItem>
       </VCard>
     </VMenu>
   </IconBtn>

@@ -6,16 +6,19 @@ use App\Http\Resources\UserResource;
 use App\Models\Director;
 use App\Models\Document;
 use App\Models\Entity;
+use App\Models\Officer;
 use App\Models\Owner;
 use App\Models\Person;
 use App\Models\Ref;
 use App\Models\Service;
 use App\Models\Type;
 use App\Models\User;
+use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use PDF;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class EntityController extends Controller
@@ -32,9 +35,14 @@ class EntityController extends Controller
                 $user = new UserResource($person);
                 $entity['contact_person'] = $user;
             }
-            $directors = Director::where('entity_id', $id)->get();
             $entity['owners'] = $owners;
+
+            $directors = Director::where('entity_id', $id)->get();
             $entity['director_list'] = $directors;
+
+            $officers = Officer::where('entity_id', $id)->get();
+            $entity['officer_list'] = $officers;
+
             // $entity['documents'] = $documents;
             return response()->json($entity, 201);
         } else {
@@ -175,6 +183,12 @@ class EntityController extends Controller
                     'last_name' => 'required|string|max:255',
                     'phone' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255',
+                    'address1' => 'required|string|max:255',
+                    'address2' => 'required|string|max:255',
+                    'city' => 'required|string|max:255',
+                    'state' => 'required|string|max:255',
+                    'zip' => 'required|string|max:255',
+                    'country' => 'required|string|max:255',
                 ]);
 
                 if ($validator->fails()) {
@@ -191,6 +205,12 @@ class EntityController extends Controller
                 $director->last_name = $item['last_name'];
                 $director->phone = $item['phone'];
                 $director->email = $item['email'];
+                $director->address1 = $item['address1'];
+                $director->address2 = $item['address2'];
+                $director->city = $item['city'];
+                $director->state = $item['state'];
+                $director->zip = $item['zip'];
+                $director->country = $item['country'];
                 $director->entity_id = $entity->id;
                 $director->save();
                 $director_ids[] = $director->id;
@@ -199,6 +219,42 @@ class EntityController extends Controller
                 $entity->director_ids = $director_ids;
             }
         }
+
+        if ($request->has('officer_list')) {
+            $officer_list = json_decode($request->input('officer_list'), true);
+            foreach ($officer_list as $item) {
+                $validator = validator($item, [
+                    'first_name' => 'required|string|max:255',
+                    'last_name' => 'required|string|max:255',
+                    'phone' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255',
+                    'title' => 'required|string|max:255',
+                    'address1' => 'required|string|max:255',
+                    'address2' => 'required|string|max:255',
+                ]);
+
+                if ($validator->fails()) {
+                    $errors = $validator->errors();
+                    $firstErrorMessage = $errors->first(); // Get the first error message
+
+                    return response()->json([
+                        'errors' => $errors,
+                        'message' => $firstErrorMessage
+                    ], 422);
+                }
+                $officer = new Officer();
+                $officer->first_name = $item['first_name'];
+                $officer->last_name = $item['last_name'];
+                $officer->phone = $item['phone'];
+                $officer->email = $item['email'];
+                $officer->title = $item['title'];
+                $officer->address1 = $item['address1'];
+                $officer->address2 = $item['address2'];
+                $officer->entity_id = $entity->id;
+                $officer->save();
+            }
+        }
+
         $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
         if ($request->hasFile('files')) {
             $document_ids = [];
@@ -296,10 +352,16 @@ class EntityController extends Controller
                 $existing_ids = [];
                 foreach ($director_list as $item) {
                     $validator = validator($item, [
-                        'first_name' => 'string|max:255',
-                        'last_name' => 'string|max:255',
-                        'phone' => 'string|max:255',
+                        'first_name' => 'string|max:255|nullable',
+                        'last_name' => 'string|max:255|nullable',
+                        'phone' => 'string|max:255|nullable',
                         'email' => 'string|email|max:255',
+                        'address1' => 'string|max:255|nullable',
+                        'address2' => 'string|max:255|nullable',
+                        'city' => 'string|max:255|nullable',
+                        'state' => 'string|max:255|nullable',
+                        'zip' => 'string|max:255|nullable',
+                        'country' => 'string|max:255|nullable',
                     ]);
 
                     if ($validator->fails()) {
@@ -317,6 +379,12 @@ class EntityController extends Controller
                         $director->first_name = $item['first_name'];
                         $director->last_name = $item['last_name'];
                         $director->phone = $item['phone'];
+                        $director->address1 = $item['address1'];
+                        $director->address2 = $item['address2'];
+                        $director->city = $item['city'];
+                        $director->state = $item['state'];
+                        $director->zip = $item['zip'];
+                        $director->country = $item['country'];
                         $director->save();
                         $existing_ids[] = $director->id;
                     } else {
@@ -325,6 +393,12 @@ class EntityController extends Controller
                         $director->last_name = $item['last_name'];
                         $director->phone = $item['phone'];
                         $director->email = $item['email'];
+                        $director->address1 = $item['address1'];
+                        $director->address2 = $item['address2'];
+                        $director->city = $item['city'];
+                        $director->state = $item['state'];
+                        $director->zip = $item['zip'];
+                        $director->country = $item['country'];
                         $director->entity_id = $entity->id;
                         $director->save();
                     }
@@ -346,6 +420,69 @@ class EntityController extends Controller
                 }
             } else {
                 Director::where('entity_id', $entity->id)->delete();
+            }
+
+
+            if ($request->has('officer_list')) {
+                $officer_list = json_decode($request->input('officer_list'), true);
+                $existing_ids = [];
+                $previous_ids = Officer::where('entity_id', $entity->id)->pluck('id')->all();
+
+                foreach ($officer_list as $item) {
+                    $validator = validator($item, [
+                        'first_name' => 'string|max:255|nullable',
+                        'last_name' => 'string|max:255|nullable',
+                        'phone' => 'string|max:255|nullable',
+                        'email' => 'string|email|max:255',
+                        'title' => 'string|max:255|nullable',
+                        'address1' => 'string|max:255|nullable',
+                        'address2' => 'string|max:255|nullable',
+                    ]);
+
+                    if ($validator->fails()) {
+                        $errors = $validator->errors();
+                        $firstErrorMessage = $errors->first(); // Get the first error message
+
+                        return response()->json([
+                            'errors' => $errors,
+                            'message' => $firstErrorMessage
+                        ], 422);
+                    }
+
+                    $officer = Officer::where('email', $item['email'])->where('entity_id', $entity->id)->first();
+
+                    if ($officer) {
+                        $officer->first_name = $item['first_name'];
+                        $officer->last_name = $item['last_name'];
+                        $officer->phone = $item['phone'];
+                        $officer->title = $item['title'];
+                        $officer->address1 = $item['address1'];
+                        $officer->address2 = $item['address2'];
+                        $officer->save();
+                        $existing_ids[] = $officer->id;
+                    } else {
+                        $officer = new Officer();
+                        $officer->first_name = $item['first_name'];
+                        $officer->last_name = $item['last_name'];
+                        $officer->phone = $item['phone'];
+                        $officer->email = $item['email'];
+                        $officer->title = $item['title'];
+                        $officer->address1 = $item['address1'];
+                        $officer->address2 = $item['address2'];
+                        $officer->entity_id = $entity->id;
+                        $officer->save();
+                    }
+                }
+
+                $removed_ids = array_diff($previous_ids ?? [], $existing_ids);
+                if (count($removed_ids) > 0) {
+                    foreach ($removed_ids as $id) {
+                        try {
+                            Officer::find($id)->delete();
+                        } catch (\Throwable $th) {
+                        }
+                    }
+                }
             }
 
             $entity->owner_ids = array_map('intval', explode(',', $request->input('owner_ids')));
@@ -629,6 +766,59 @@ class EntityController extends Controller
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function getReport($id)
+    {
+        $entity = Entity::find($id);
+        if (!$entity) {
+            return response()->json([
+                'message' => 'Not found'
+            ], 422);
+        }
+
+        $owners = $entity['owner_ids'] ? $entity->get_owners($entity['owner_ids']) : [];
+        $officers = Officer::where('entity_id', $id)->get();
+        // $formattedDate = Carbon::parse($entity->date_created)->format('m/d/Y');
+        $dateString = $entity->date_created;
+        // Remove the timezone abbreviation
+        $dateString = preg_replace('/\s\(.+\)$/', '', $dateString);
+        $formattedDate = Carbon::parse($dateString)->format('Y-m-d H:i:s');
+
+        $logoPath = public_path('img/logo.png');
+        $logoData = base64_encode(file_get_contents($logoPath));
+        $logoBase64 = 'data:image/png;base64,' . $logoData;
+
+        $data = [
+            'firm_name' => $entity->firm_name,
+            'doing_business_as' => $entity->doing_business_as,
+            'entity_name' => $entity->entity_name,
+            'address_1' => $entity->address_1,
+            'address_2' => $entity->address_2,
+            'city' => $entity->city,
+            'state' => $entity->state,
+            'zip' => $entity->zip,
+            'country' => $entity->country,
+            'type' => $entity->type,
+            'services' => $entity->services,
+            'annual_fees' => $entity->annual_fees,
+            'first_tax_year' => $entity->first_tax_year,
+            'ein_number' => $entity->ein_number,
+            'date_created' => $formattedDate,
+            'date_signed' => $entity->date_signed,
+            'person' => $entity->person,
+            'jurisdiction' => $entity->jurisdiction,
+            'owners' => $owners,
+            'officers' => $officers,
+            'logoBase64' => $logoBase64
+        ];
+        $pdf = PDF::loadView('pdf.report', $data);
+
+        // If you want to store the PDF as a file
+        $pdf->save(storage_path('app/public/reports/' . $id . '.pdf'));
+
+        // Or return the PDF as a download
+        return $pdf->download('report.pdf');
     }
 
     public function delete($id)

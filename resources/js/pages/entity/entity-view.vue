@@ -362,6 +362,32 @@ const headerTitle = () => {
                       readonly
                     />
                   </VCol>
+
+                  <VCol cols="12">
+                    Officers
+                    <VTable>
+                      <thead>
+                        <tr>
+                          <th class="text-left">First Name</th>
+                          <th class="text-left">Last Name</th>
+                          <th class="text-left">Title</th>
+                          <th class="text-left">Email</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="item in accountDataLocal.officer_list"
+                          :key="item.email"
+                        >
+                          <td class="text-left">{{ item.first_name }}</td>
+                          <td class="text-center">{{ item.last_name }}</td>
+                          <td class="text-center">{{ item.title }}</td>
+                          <td class="text-center">{{ item.email }}</td>
+                        </tr>
+                      </tbody>
+                    </VTable>
+                  </VCol>
+
                   <!-- 👉 Person -->
                   <VCol cols="12">
                     <VTextField
@@ -406,7 +432,7 @@ const headerTitle = () => {
                     <VTextField
                       v-model="accountDataLocal.contact_phone"
                       label="Contact Phone"
-                      placeholder="+1 (917) 543-9876"
+                      placeholder="1-917-543-9876"
                       readonly
                     />
                   </VCol>
@@ -479,6 +505,12 @@ const headerTitle = () => {
                     <th class="text-left">Last Name</th>
                     <th class="text-left">Email</th>
                     <th class="text-left">Phone</th>
+                    <th class="text-left">Address 1</th>
+                    <th class="text-left">Address 2</th>
+                    <th class="text-left">City</th>
+                    <th class="text-left">State</th>
+                    <th class="text-left">Zip</th>
+                    <th class="text-left">Country</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -490,6 +522,12 @@ const headerTitle = () => {
                     <td class="text-center">{{ item.last_name }}</td>
                     <td class="text-center">{{ item.email }}</td>
                     <td class="text-center">{{ item.phone }}</td>
+                    <td class="text-center">{{ item.address1 }}</td>
+                    <td class="text-center">{{ item.address2 }}</td>
+                    <td class="text-center">{{ item.city }}</td>
+                    <td class="text-center">{{ item.state }}</td>
+                    <td class="text-center">{{ item.zip }}</td>
+                    <td class="text-center">{{ item.country }}</td>
                   </tr>
                 </tbody>
               </VTable>

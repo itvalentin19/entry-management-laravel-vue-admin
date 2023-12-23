@@ -248,7 +248,7 @@ const handleUpdatePassword = async () => {
                       <VTextField
                         v-model="accountDataLocal.phone"
                         label="Phone Number"
-                        placeholder="+1 (917) 543-9876"
+                        placeholder="1-917-543-9876"
                       />
                     </VCol>
 

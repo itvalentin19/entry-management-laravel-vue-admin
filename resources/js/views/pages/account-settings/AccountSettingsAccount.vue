@@ -7,7 +7,7 @@ const accountData = {
   lastName: "Doe",
   email: "johnDoe@example.com",
   org: "ThemeSelection",
-  phone: "+1 (917) 543-9876",
+  phone: "1-917-543-9876",
   address: "123 Main St, New York, NY 10001",
   state: "New York",
   zip: "10001",
@@ -195,7 +195,7 @@ const currencies = [
                 <VTextField
                   v-model="accountDataLocal.phone"
                   label="Phone Number"
-                  placeholder="+1 (917) 543-9876"
+                  placeholder="1-917-543-9876"
                 />
               </VCol>
 

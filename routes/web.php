@@ -14,7 +14,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Exclude specific routes for assets
+Route::get('entity/report', function () {
+    return view('pdf.report');
+});
+Route::get('entity/report/{id}', [EntityController::class, 'getReport']);
+
 Route::get('/{path}', function () {
     return view('application');
-})->where('path', '^(?!avatars|css|js|images).*$'); // Exclude these directories
+})->where('path', '^(?!avatars|css|js|images|report).*$'); // Exclude these directories
 

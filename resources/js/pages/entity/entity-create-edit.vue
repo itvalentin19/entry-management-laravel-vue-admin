@@ -31,6 +31,7 @@ const accountData = {
   annual_fees: null,
   first_tax_year: null,
   directors: null,
+  officers: null,
   ein_number: null,
   form_id: false,
   date_created: null,
@@ -56,9 +57,27 @@ const directorItem = {
   last_name: null,
   email: null,
   phone: null,
+  address1: null,
+  address2: null,
+  city: null,
+  state: null,
+  zip: null,
+  country: null,
 };
 const directorListInitial = [directorItem];
 const directorList = ref(structuredClone(directorListInitial));
+
+const officerItem = {
+  first_name: null,
+  last_name: null,
+  title: null,
+  email: null,
+  phone: null,
+  address1: null,
+  address2: null,
+};
+const officerListInitial = [];
+const officerList = ref(structuredClone(officerListInitial));
 
 const services = ref([]);
 const types = ref([]);
@@ -146,6 +165,10 @@ const onCreate = async () => {
       formData.append("director_list", JSON.stringify(directorList.value));
     }
 
+    if (officerList.value.length > 0) {
+      formData.append("officer_list", JSON.stringify(officerList.value));
+    }
+
     console.log(accountDataLocal.value.files);
     if (accountDataLocal.value.files) {
       // Append each document file to formData
@@ -212,6 +235,8 @@ watch(
         accountDataLocal.value.ref_by = response.data.ref_by?.split(",") || [];
         // Update Director List
         directorList.value = response.data.director_list || [];
+        // Update Officer List
+        officerList.value = response.data.officer_list || [];
       } catch (error) {
         toast.error("Failed to load entity data.");
         router.push("/entities/entity");
@@ -234,6 +259,11 @@ const addNewDirector = async () => {
   directorList.value.push(newItem);
 };
 
+const addNewOfficer = async () => {
+  const newItem = structuredClone(officerItem);
+  officerList.value.push(newItem);
+};
+
 const removeServiceFee = (index) => {
   serviceFeeDataLocal.value.splice(index, 1);
 };
@@ -242,6 +272,12 @@ const removeDirector = (index) => {
   console.log(index);
   console.log(directorList.value);
   directorList.value.splice(index, 1);
+};
+
+const removeOfficer = (index) => {
+  console.log(index);
+  console.log(officerList.value);
+  officerList.value.splice(index, 1);
 };
 
 const getProps = async () => {
@@ -278,9 +314,72 @@ const confirmDelete = () => {
   documentIdToDelete.value = null;
 };
 
-onMounted(() => {
-  getProps();
-});
+const formatEIN = (value) => {
+  if (!value) return "";
+  const numericValue = value.replace(/\D/g, "");
+  if (numericValue.length <= 2) {
+    return numericValue;
+  } else {
+    return `${numericValue.slice(0, 2)}-${numericValue.slice(2)}`;
+  }
+};
+
+const formatPhone = (value) => {
+  if (!value) return "";
+  let numericValue = value.replace(/\D/g, "");
+  let formatted = "";
+
+  if (numericValue.length > 1) {
+    formatted += `${numericValue.charAt(0)}-`;
+    numericValue = numericValue.substring(1);
+  }
+  if (numericValue.length > 3) {
+    formatted += `${numericValue.substring(0, 3)}-`;
+    numericValue = numericValue.substring(3);
+  }
+  if (numericValue.length > 3) {
+    formatted += `${numericValue.substring(0, 3)}-${numericValue.substring(3)}`;
+  } else {
+    formatted += numericValue;
+  }
+  return formatted;
+};
+
+watch(
+  () => accountDataLocal.value.ein_number,
+  (newValue) => {
+    accountDataLocal.value.ein_number = formatEIN(newValue);
+  },
+  { immediate: true }
+);
+
+watch(
+  () => accountDataLocal.value.contact_phone,
+  (newValue) => {
+    accountDataLocal.value.contact_phone = formatPhone(newValue);
+  },
+  { immediate: true }
+);
+
+watch(
+  directorList,
+  (newDirectors) => {
+    newDirectors?.forEach((director) => {
+      director.phone = formatPhone(director.phone);
+    });
+  },
+  { deep: true }
+);
+
+watch(
+  officerList,
+  (newOfficers) => {
+    newOfficers.forEach((officer) => {
+      officer.phone = formatPhone(officer.phone);
+    });
+  },
+  { deep: true }
+);
 
 const years = [
   "2020",
@@ -296,6 +395,10 @@ const years = [
   "2030",
   "2031",
 ];
+
+onMounted(() => {
+  getProps();
+});
 </script>
 
 <template>
@@ -324,7 +427,7 @@ const years = [
               <VForm class="mt-6">
                 <VRow>
                   <!-- 👉 Firm Name -->
-                  <VCol md="6" cols="12">
+                  <VCol md="6" sm="6" lg="3" cols="12">
                     <VTextField
                       v-model="accountDataLocal.firm_name"
                       placeholder="Vauban Technologies Ltd"
@@ -332,7 +435,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 Doing Business Name -->
-                  <VCol md="6" cols="12">
+                  <VCol md="6" sm="6" lg="3" cols="12">
                     <VTextField
                       v-model="accountDataLocal.doing_business_as"
                       placeholder="Vauban Ltd"
@@ -341,7 +444,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Entity Name -->
-                  <VCol md="6" cols="12">
+                  <VCol md="6" sm="6" lg="3" cols="12">
                     <VTextField
                       v-model="accountDataLocal.entity_name"
                       placeholder="Nano I a Series of S5V Coinvest"
@@ -350,7 +453,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Address 1 -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.address_1"
                       label="Address 1"
@@ -358,7 +461,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 Address 2 -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.address_2"
                       label="Address 2"
@@ -366,7 +469,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 City -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.city"
                       label="City"
@@ -375,16 +478,19 @@ const years = [
                   </VCol>
 
                   <!-- 👉 State -->
-                  <VCol cols="12" md="6">
-                    <VTextField
+                  <VCol cols="12" md="6" sm="6" lg="3">
+                    <VAutocomplete
                       v-model="accountDataLocal.state"
                       label="State"
                       placeholder="FL"
+                      item-title="name"
+                      item-value="abbreviation"
+                      :items="states"
                     />
                   </VCol>
 
                   <!-- 👉 Zip Code -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.zip"
                       label="Zip Code"
@@ -393,7 +499,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Country -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VSelect
                       v-model="accountDataLocal.country"
                       label="Country"
@@ -403,7 +509,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Type -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VCombobox
                       v-model="accountDataLocal.type"
                       label="Type"
@@ -413,7 +519,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Person -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VAutocomplete
                       v-model="accountDataLocal.person"
                       label="Person"
@@ -424,7 +530,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 First Tax Year -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VSelect
                       v-model="accountDataLocal.first_tax_year"
                       label="First Tax Year"
@@ -433,7 +539,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 EIN Number -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.ein_number"
                       label="EIN Number"
@@ -441,7 +547,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 Jurisdiction -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VAutocomplete
                       v-model="accountDataLocal.jurisdiction"
                       label="Jurisdiction"
@@ -452,7 +558,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 Created Date -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VueDatePicker
                       v-model="accountDataLocal.date_created"
                       placeholder="Created Date"
@@ -460,7 +566,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Signed Date -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VueDatePicker
                       v-model="accountDataLocal.date_signed"
                       placeholder="Signed Date"
@@ -468,7 +574,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Owners -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VAutocomplete
                       v-model="accountDataLocal.owner_ids"
                       label="Owners"
@@ -480,7 +586,7 @@ const years = [
                     />
                   </VCol>
                   <!-- 👉 Contact First Name -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.contact_first_name"
                       label="Contact First Name"
@@ -489,7 +595,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Contact Last Name -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.contact_last_name"
                       label="Contact Last Name"
@@ -498,7 +604,7 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Contact Email -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.contact_email"
                       label="Contact Email"
@@ -508,11 +614,11 @@ const years = [
                   </VCol>
 
                   <!-- 👉 Contact Phone -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.contact_phone"
                       label="Contact Phone"
-                      placeholder="+1 (917) 543-9876"
+                      placeholder="1-917-543-9876"
                     />
                   </VCol>
 
@@ -527,7 +633,7 @@ const years = [
                       v-for="(item, index) in serviceFeeDataLocal"
                       :key="index"
                     >
-                      <VCol cols="12" md="6">
+                      <VCol cols="12" md="6" sm="6">
                         <d class="d-flex align-center justify-center">
                           <VIcon
                             icon="bx-minus-circle"
@@ -544,7 +650,7 @@ const years = [
                       </VCol>
 
                       <!-- 👉 Contact First Name -->
-                      <VCol cols="12" md="6">
+                      <VCol cols="12" md="6" sm="6">
                         <VTextField
                           v-model="item.fee"
                           label="Annual Fee"
@@ -588,7 +694,7 @@ const years = [
                       <VCardText>
                         <VRow>
                           <!-- 👉 Contact First Name -->
-                          <VCol cols="12" md="3">
+                          <VCol cols="12" md="3" sm="6">
                             <VTextField
                               v-model="director.first_name"
                               label="First Name"
@@ -597,7 +703,7 @@ const years = [
                           </VCol>
 
                           <!-- 👉 Last Name -->
-                          <VCol cols="12" md="3">
+                          <VCol cols="12" md="3" sm="6">
                             <VTextField
                               v-model="director.last_name"
                               label="Last Name"
@@ -606,7 +712,7 @@ const years = [
                           </VCol>
 
                           <!-- 👉 Email -->
-                          <VCol cols="12" md="3">
+                          <VCol cols="12" md="3" sm="6">
                             <VTextField
                               v-model="director.email"
                               label="Email"
@@ -616,11 +722,157 @@ const years = [
                           </VCol>
 
                           <!-- 👉 Phone -->
-                          <VCol cols="12" md="3">
+                          <VCol cols="12" md="3" sm="6">
                             <VTextField
                               v-model="director.phone"
                               label="Phone"
-                              placeholder="+1 (917) 543-9876"
+                              placeholder="1-917-543-9876"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Email -->
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="director.address1"
+                              label="Address 1"
+                              placeholder="5645 Coral Ridge Drive"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="director.address2"
+                              label="Address 2"
+                              placeholder="Suite 410"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="director.city"
+                              label="City"
+                              placeholder="City"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VAutocomplete
+                              v-model="director.state"
+                              label="State"
+                              placeholder="FL"
+                              item-title="name"
+                              item-value="abbreviation"
+                              :items="states"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="director.zip"
+                              label="Zip"
+                              placeholder="23456"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VSelect
+                              v-model="director.country"
+                              label="Country"
+                              :items="[
+                                'USA',
+                                'Canada',
+                                'UK',
+                                'India',
+                                'Australia',
+                              ]"
+                              placeholder="Select Country"
+                            />
+                          </VCol>
+                        </VRow>
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+
+                  <VDivider />
+
+                  <!-- 👉 Directors -->
+                  <VCol cols="12">
+                    <p class="directors">
+                      Officers
+                      <VIcon icon="bx-plus-circle" @click="addNewOfficer" />
+                    </p>
+                  </VCol>
+                  <VCol cols="12">
+                    <VCard
+                      v-for="(officer, index) in officerList"
+                      :key="index"
+                      class="director-card"
+                    >
+                      <VIcon
+                        class="item-delete-button"
+                        icon="bx-minus-circle"
+                        color="#c93903"
+                        @click="removeOfficer(index)"
+                      />
+                      <VCardText>
+                        <VRow>
+                          <!-- 👉 Contact First Name -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="officer.first_name"
+                              label="First Name"
+                              placeholder="Daniel"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Last Name -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="officer.last_name"
+                              label="Last Name"
+                              placeholder="Strachman"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Email -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="officer.email"
+                              label="Email"
+                              placeholder="johndoe@gmail.com"
+                              type="email"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Phone -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="officer.phone"
+                              label="Phone"
+                              placeholder="1-917-543-9876"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Email -->
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="officer.title"
+                              label="Title"
+                              placeholder="Input Title"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Email -->
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="officer.address1"
+                              label="Address 1"
+                              placeholder="5645 Coral Ridge Drive"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="officer.address2"
+                              label="Address 2"
+                              placeholder="Suite 410"
                             />
                           </VCol>
                         </VRow>

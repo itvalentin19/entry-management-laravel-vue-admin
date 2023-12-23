@@ -17,7 +17,7 @@ const sort = reactive({
   field: "id",
   order: "asc",
 });
-const emit = defineEmits(["view", "edit", "delete", "sort"]);
+const emit = defineEmits(["view", "edit", "delete", "report", "sort"]);
 
 const viewUser = (id) => {
   console.log(id);
@@ -28,6 +28,11 @@ const editUser = (id) => {
   console.log(id);
   // emit("edit", id);
   router.push("/entities/entity?id=" + id);
+};
+
+const handleReport = (id) => {
+  // Download report for an entity
+  emit("report", id);
 };
 
 const deleteUser = (id) => {
@@ -57,6 +62,10 @@ const menuList = ref([
   {
     text: "Edit",
     action: editUser,
+  },
+  {
+    text: "Report",
+    action: handleReport,
   },
   {
     text: "Delete",

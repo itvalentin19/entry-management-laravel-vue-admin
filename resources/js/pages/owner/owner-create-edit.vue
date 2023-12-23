@@ -107,6 +107,35 @@ const onCreate = async () => {
   }
 };
 
+const formatPhone = (value) => {
+  if (!value) return "";
+  let numericValue = value.replace(/\D/g, "");
+  let formatted = "";
+
+  if (numericValue.length > 1) {
+    formatted += `${numericValue.charAt(0)}-`;
+    numericValue = numericValue.substring(1);
+  }
+  if (numericValue.length > 3) {
+    formatted += `${numericValue.substring(0, 3)}-`;
+    numericValue = numericValue.substring(3);
+  }
+  if (numericValue.length > 3) {
+    formatted += `${numericValue.substring(0, 3)}-${numericValue.substring(3)}`;
+  } else {
+    formatted += numericValue;
+  }
+  return formatted;
+};
+
+watch(
+  () => accountDataLocal.value.phone,
+  (newValue) => {
+    accountDataLocal.value.phone = formatPhone(newValue);
+  },
+  { immediate: true }
+);
+
 watch(
   route,
   async (currentRoute) => {
@@ -181,7 +210,7 @@ watch(
                 <VTextField
                   v-model="accountDataLocal.phone"
                   label="Phone Number"
-                  placeholder="+1 (917) 543-9876"
+                  placeholder="1-917-543-9876"
                 />
               </VCol>
 

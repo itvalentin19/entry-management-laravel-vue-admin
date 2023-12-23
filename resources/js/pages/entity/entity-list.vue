@@ -35,7 +35,7 @@ const sort = reactive({
   order: "asc",
 });
 
-// Fetch users method
+// Fetch entities method
 async function fetchEntities() {
   const params =
     "page=" +
@@ -57,7 +57,7 @@ function goToCreateUser() {
   router.push("/entities/entity");
 }
 
-// Search users method
+// Search entities method
 async function searchEntities() {
   loading.value = true;
 
@@ -98,6 +98,29 @@ const handleSort = ({ field, order }) => {
   sort.order = order;
   searchEntities();
 };
+
+const handleReport = async (id) => {
+  try {
+    toast.info(
+      "Your entity report is currently being generated. Please stand by for the download prompt."
+    );
+
+    const res = await ApiService.downloadReport(id);
+    const fileURL = window.URL.createObjectURL(new Blob([res.data]));
+    // Create a link element, hide it, direct it towards the blob, and then 'click' it programatically
+    const fileLink = document.createElement("a");
+    fileLink.href = fileURL;
+    fileLink.setAttribute("download", "report-" + id + ".pdf"); // or any other extension
+    document.body.appendChild(fileLink);
+    fileLink.click();
+
+    toast.success("Report generated successfully.");
+    // Clean up and remove the link
+    fileLink.parentNode.removeChild(fileLink);
+    window.URL.revokeObjectURL(fileURL);
+  } catch (error) {}
+};
+
 const confirmDelete = async () => {
   if (ownerIdToDelete.value) {
     try {
@@ -236,6 +259,7 @@ onMounted(() => {
           @edit="handleEdit"
           @delete="handleDelete"
           @sort="handleSort"
+          @report="handleReport"
         />
         <VPagination
           v-model="state.current_page"

@@ -132,6 +132,14 @@ export default {
     return apiClient.delete('/entity/' + id);
   },
 
+  // Download Report
+  downloadReport(id) {
+    return axios({
+      url: origin + '/entity/report/' + id,
+      method: "GET",
+      responseType: "blob",
+    });
+  },
 
 
   // 👉 Fetch Stats for Dashboard //
