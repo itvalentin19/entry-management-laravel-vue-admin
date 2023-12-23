@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use PDF;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -815,8 +816,15 @@ class EntityController extends Controller
         $pdf = PDF::loadView('pdf.report', $data);
 
         // If you want to store the PDF as a file
-        $pdf->save(storage_path('app/public/reports/' . $id . '.pdf'));
+        $reportsPath = storage_path('app/public/reports');
 
+        if (!File::exists($reportsPath)) {
+            // Create the directory if it doesn't exist
+            File::makeDirectory($reportsPath, 0755, true);
+        }
+
+        // Now save the PDF to the reports folder
+        $pdf->save($reportsPath . '/' . $id . '.pdf');
         // Or return the PDF as a download
         return $pdf->download('report.pdf');
     }
