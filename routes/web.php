@@ -18,6 +18,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('entity/report', function () {
     return view('pdf.report');
 });
+Route::get('reset-password', function () {
+    return view('application');
+})->name('password.reset');
+Route::get('welcome', function () {
+    return view('emails.welcome');
+})->name('welcome');
 Route::get('entity/report/{id}', [EntityController::class, 'getReport']);
 
 Route::get('/{path}', function () {

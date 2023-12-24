@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Mail\WelcomeUserMail;
 use App\Models\Entity;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -246,8 +249,43 @@ class UserController extends Controller
 		$user->password = Hash::make('Password'); // Set a default password or generate one
 		$user->save();
 
+		if ($user->role == 'user') {
+			// Generate a password reset token
+			$token = Password::getRepository()->create($user);
+
+			// Send the email
+			Mail::to($user->email)->send(new WelcomeUserMail($user, $token));
+		}
+
 		return response()->json(new UserResource($user), 201);
 	}
+
+	public function resetUserPassword(Request $request)
+	{
+		// Validate the request data
+		$request->validate([
+			'token' => 'required',
+			'email' => 'required|email',
+			'password' => 'required|confirmed|min:8',
+		]);
+
+		// Attempt to reset the user's password
+		$status = Password::reset(
+			$request->only('email', 'password', 'password_confirmation', 'token'),
+			function ($user, $password) {
+				// Save the new password and any other password-related cleanup tasks
+				$user->password = Hash::make($password);
+				$user->save();
+			}
+		);
+
+		if ($status == Password::PASSWORD_RESET) {
+			return $this->sendResponse(["success" => true], 'User Information');
+		} else {
+			return $this->sendError("Token Expired", 'Authentication Failed', 403);
+		}
+	}
+
 
 	public function getUser($id)
 	{

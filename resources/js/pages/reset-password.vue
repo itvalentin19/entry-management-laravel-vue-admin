@@ -3,30 +3,37 @@ import { ref, reactive, computed, onMounted } from "vue";
 import axios from "axios";
 import AuthProvider from "@/views/pages/authentication/AuthProvider.vue";
 import logo from "@images/logo.png";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import ApiService from "@/services/api";
 import { useStore } from "vuex";
+import { useToast } from "vue-toastification";
 
 const form = reactive({
-  email: "dev@gmail.com",
-  password: "test1234",
-  remember: false,
+  email: null,
+  password: null,
+  password_confirmation: null,
+  token: null,
 });
 const store = useStore();
 const router = useRouter();
+const toast = useToast();
+const route = useRoute();
 
 const isPasswordVisible = ref(false);
+const isPasswordConfirmVisible = ref(false);
 const errorMessage = ref("");
 
 const fieldTouched = reactive({
   email: false,
   password: false,
+  password_confirmation: false,
 });
 
 const isFormValid = computed(() => {
   const emailValid =
-    form.email == "" || (form.email.includes("@") && form.email.includes("."));
-  const passwordValid = form.password.length >= 8;
+    form.email == "" ||
+    (form.email?.includes("@") && form.email?.includes("."));
+  const passwordValid = form.password?.length >= 8;
   return emailValid && passwordValid;
 });
 
@@ -34,50 +41,40 @@ const handleBlur = (field) => {
   fieldTouched[field] = true;
 };
 
-const handleRememberme = (e) => {
-  if (localStorage.getItem("__rm") == "true" && localStorage.getItem("__t")) {
-    router.push("/");
-  }
-};
+const handleToken = (e) => {};
 
-const login = async () => {
-  console.log(form);
+const resetPassword = async () => {
   if (isFormValid.value) {
     try {
-      const response = await ApiService.login({
-        email: form.email,
-        password: form.password,
-        remember: form.remember,
-      });
+      const response = await ApiService.resetPassword(form);
 
       console.log(response.data);
       if (response.data.success) {
-        localStorage.setItem("__t", response.data.response.token);
-        const user = response.data.response.user;
-        localStorage.setItem("__u", JSON.stringify(user));
-        store.commit("SET_USER", user);
-        if (form.remember) {
-          /// Add handler for remember me here.
-          localStorage.setItem("__rm", form.remember);
-        }
-        router.push("/");
+        toast.success("Password updated successfully!");
+        router.push("/login");
       } else {
-        errorMessage.value =
-          "Login failed: " + (response.data.message || "Invalid credentials");
+        toast.error(response.data.message || "Invalid credentials");
       }
     } catch (error) {
       console.log(error);
-      errorMessage.value =
-        "Login failed: " + (error.message || "Network error");
+      toast.error(error.message || "Network error");
     }
   } else {
-    errorMessage.value = "Please correct the errors before submitting.";
+    toast.error("Please correct the errors before submitting.");
   }
 };
 
 onMounted(() => {
-  handleRememberme();
+  handleToken();
 });
+
+watch(
+  route,
+  async (currentRoute) => {
+    form.token = currentRoute.query.token || null;
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -92,26 +89,25 @@ onMounted(() => {
       </VCardItem>
 
       <VCardText class="pt-2">
-        <h5 class="text-h5 mb-1">Welcome to eakav!</h5>
+        <h5 class="text-h5 mb-1">Reset Password</h5>
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
       </VCardText>
 
       <VCardText>
-        <VForm @submit.prevent="login">
+        <VForm @submit.prevent="resetPassword">
           <VRow>
             <!-- email -->
             <VCol cols="12">
               <VTextField
                 v-model="form.email"
-                autofocus
                 placeholder="johndoe@email.com"
                 label="Email"
                 type="email"
                 required
                 @blur="handleBlur('email')"
                 :error-messages="
-                  form.email != '' &&
-                  (!form.email.includes('@') || !form.email.includes('.'))
+                  !form.email &&
+                  (!form.email?.includes('@') || !form.email?.includes('.'))
                     ? 'Invalid email'
                     : ''
                 "
@@ -130,28 +126,41 @@ onMounted(() => {
                 required
                 @blur="handleBlur('password')"
                 :error-messages="
-                  form.password != '' && form.password.length < 8
+                  form.password != '' && form.password?.length < 8
                     ? 'Password must be at least 8 characters long'
                     : ''
                 "
               />
+            </VCol>
 
-              <!-- remember me checkbox -->
-              <div
-                class="d-flex align-center justify-space-between flex-wrap mt-1 mb-4"
-              >
-                <VCheckbox v-model="form.remember" label="Remember me" />
+            <!-- confirm password -->
+            <VCol cols="12">
+              <VTextField
+                v-model="form.password_confirmation"
+                label="Confirm Password"
+                placeholder="············"
+                :type="isPasswordConfirmVisible ? 'text' : 'password'"
+                :append-inner-icon="
+                  isPasswordConfirmVisible ? 'bx-hide' : 'bx-show'
+                "
+                @click:append-inner="
+                  isPasswordConfirmVisible = !isPasswordConfirmVisible
+                "
+                required
+                @blur="handleBlur('password_confirmation')"
+                :error-messages="
+                  form.password_confirmation != '' &&
+                  form.password_confirmation?.length < 8
+                    ? 'Password must be at least 8 characters long'
+                    : ''
+                "
+              />
+            </VCol>
 
-                <!-- <RouterLink
-                  class="text-primary ms-2 mb-1"
-                  to="javascript:void(0)"
-                >
-                  Forgot Password?
-                </RouterLink> -->
-              </div>
-
-              <!-- login button -->
-              <VBtn block type="submit" :disabled="!isFormValid"> Login </VBtn>
+            <VCol cols="12">
+              <VBtn block type="submit" :disabled="!isFormValid">
+                Reset Password
+              </VBtn>
             </VCol>
           </VRow>
         </VForm>

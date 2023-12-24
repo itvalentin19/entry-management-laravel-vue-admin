@@ -41,6 +41,10 @@ export default {
   updatePassword(data) {
     return apiClient.post('/update-password', data);
   },
+  // Get Logged in User Information
+  resetPassword(data) {
+    return apiClient.post('/reset-password', data);
+  },
   // Logout
   logout() {
     return apiClient.post('/logout');
