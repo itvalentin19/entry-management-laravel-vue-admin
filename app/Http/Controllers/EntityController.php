@@ -10,6 +10,7 @@ use App\Models\Officer;
 use App\Models\Owner;
 use App\Models\Person;
 use App\Models\Ref;
+use App\Models\RegisteredAgent;
 use App\Models\Service;
 use App\Models\Type;
 use App\Models\User;
@@ -43,6 +44,9 @@ class EntityController extends Controller
 
             $officers = Officer::where('entity_id', $id)->get();
             $entity['officer_list'] = $officers;
+
+            $agents = RegisteredAgent::where('entity_id', $id)->get();
+            $entity['registered_agent_list'] = $agents;
 
             // $entity['documents'] = $documents;
             return response()->json($entity, 201);
@@ -256,6 +260,52 @@ class EntityController extends Controller
             }
         }
 
+        if ($request->has('registered_agent_list')) {
+            $registered_agent_list = json_decode($request->input('registered_agent_list'), true);
+            foreach ($registered_agent_list as $item) {
+                $validator = validator($item, [
+                    'entity_name' => 'required|string|max:100',
+                    'company_name' => 'required|string|max:100|nullable',
+                    'first_name' => 'required|string|max:50|nullable',
+                    'last_name' => 'required|string|max:50|nullable',
+                    'phone' => 'required|string|max:20|nullable',
+                    'email' => 'required|string|email|max:50',
+                    'address1' => 'required|string|max:255|nullable',
+                    'address2' => 'required|string|max:255|nullable',
+                    'city' => 'required|string|max:50',
+                    'state' => 'required|string|max:50',
+                    'zip' => 'required|string|max:10',
+                    'country' => 'required|string|max:50',
+                ]);
+
+                if ($validator->fails()) {
+                    $errors = $validator->errors();
+                    $firstErrorMessage = $errors->first(); // Get the first error message
+
+                    return response()->json([
+                        'errors' => $errors,
+                        'message' => $firstErrorMessage
+                    ], 422);
+                }
+
+                $agent = new RegisteredAgent();
+                $agent->entity_name = $item['entity_name'];
+                $agent->company_name = $item['company_name'];
+                $agent->first_name = $item['first_name'];
+                $agent->last_name = $item['last_name'];
+                $agent->email = $item['email'];
+                $agent->phone = $item['phone'];
+                $agent->address1 = $item['address1'];
+                $agent->address2 = $item['address2'];
+                $agent->city = $item['city'];
+                $agent->state = $item['state'];
+                $agent->zip = $item['zip'];
+                $agent->country = $item['country'];
+                $agent->entity_id = $entity->id;
+                $agent->save();
+            }
+        }
+
         $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
         if ($request->hasFile('files')) {
             $document_ids = [];
@@ -425,7 +475,7 @@ class EntityController extends Controller
 
 
             if ($request->has('officer_list')) {
-                $officer_list = json_decode($request->input('officer_list'), true);
+                $officer_list = json_decode($request->input('officer_list'), true) ?? [];
                 $existing_ids = [];
                 $previous_ids = Officer::where('entity_id', $entity->id)->pluck('id')->all();
 
@@ -480,6 +530,83 @@ class EntityController extends Controller
                     foreach ($removed_ids as $id) {
                         try {
                             Officer::find($id)->delete();
+                        } catch (\Throwable $th) {
+                        }
+                    }
+                }
+            }
+
+            if ($request->has('registered_agent_list')) {
+                $registered_agent_list = json_decode($request->input('registered_agent_list'), true) ?? [];
+                $existing_ids = [];
+                $previous_ids = RegisteredAgent::where('entity_id', $entity->id)->pluck('id')->all();
+
+                foreach ($registered_agent_list as $item) {
+                    $validator = validator($item, [
+                        'entity_name' => 'string|max:100',
+                        'company_name' => 'string|max:100|nullable',
+                        'first_name' => 'string|max:50|nullable',
+                        'last_name' => 'string|max:50|nullable',
+                        'phone' => 'string|max:20|nullable',
+                        'email' => 'string|email|max:50',
+                        'address1' => 'string|max:255|nullable',
+                        'address2' => 'string|max:255|nullable',
+                        'city' => 'string|max:50',
+                        'state' => 'string|max:50',
+                        'zip' => 'string|max:10',
+                        'country' => 'string|max:50',
+                    ]);
+
+                    if ($validator->fails()) {
+                        $errors = $validator->errors();
+                        $firstErrorMessage = $errors->first(); // Get the first error message
+
+                        return response()->json([
+                            'errors' => $errors,
+                            'message' => $firstErrorMessage
+                        ], 422);
+                    }
+
+                    $agent = RegisteredAgent::where('email', $item['email'])->where('entity_id', $entity->id)->first();
+
+                    if ($agent) {
+                        $agent->entity_name = $item['entity_name'];
+                        $agent->company_name = $item['company_name'];
+                        $agent->first_name = $item['first_name'];
+                        $agent->last_name = $item['last_name'];
+                        $agent->phone = $item['phone'];
+                        $agent->address1 = $item['address1'];
+                        $agent->address2 = $item['address2'];
+                        $agent->city = $item['city'];
+                        $agent->state = $item['state'];
+                        $agent->zip = $item['zip'];
+                        $agent->country = $item['country'];
+                        $agent->save();
+                        $existing_ids[] = $agent->id;
+                    } else {
+                        $agent = new RegisteredAgent();
+                        $agent->entity_name = $item['entity_name'];
+                        $agent->company_name = $item['company_name'];
+                        $agent->first_name = $item['first_name'];
+                        $agent->last_name = $item['last_name'];
+                        $agent->email = $item['email'];
+                        $agent->phone = $item['phone'];
+                        $agent->address1 = $item['address1'];
+                        $agent->address2 = $item['address2'];
+                        $agent->city = $item['city'];
+                        $agent->state = $item['state'];
+                        $agent->zip = $item['zip'];
+                        $agent->country = $item['country'];
+                        $agent->entity_id = $entity->id;
+                        $agent->save();
+                    }
+                }
+
+                $removed_ids = array_diff($previous_ids ?? [], $existing_ids);
+                if (count($removed_ids) > 0) {
+                    foreach ($removed_ids as $id) {
+                        try {
+                            RegisteredAgent::find($id)->delete();
                         } catch (\Throwable $th) {
                         }
                     }

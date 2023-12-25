@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
-use App\Mail\ForgotPassword;
+use App\Mail\ForgotPasswordMail;
 use App\Mail\WelcomeUserMail;
 use App\Models\Entity;
 use App\Models\User;
@@ -302,7 +302,7 @@ class UserController extends Controller
 		$token = Password::getRepository()->create($user);
 
 		// Send the email
-		Mail::to($user->email)->send(new ForgotPassword($user, $token));
+		Mail::to($user->email)->send(new ForgotPasswordMail($user, $token));
 
 		return $this->sendResponse(["success" => true, 'user' => $user], 'User Information');
 	}

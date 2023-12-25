@@ -80,6 +80,11 @@ const tabs = [
     tab: "directors",
   },
   {
+    title: "Registered Agent/Office",
+    icon: "bx-group",
+    tab: "registered_agents",
+  },
+  {
     title: "Services",
     icon: "bx-building-house",
     tab: "services",
@@ -528,6 +533,45 @@ const headerTitle = () => {
                     <td class="text-center">{{ item.state }}</td>
                     <td class="text-center">{{ item.zip }}</td>
                     <td class="text-center">{{ item.country }}</td>
+                  </tr>
+                </tbody>
+              </VTable>
+            </VWindowItem>
+            <VWindowItem value="registered_agents">
+              <VTable>
+                <thead>
+                  <tr>
+                    <th class="text-left">Entity Name</th>
+                    <th class="text-left">Company Name</th>
+                    <th class="text-left">Contact First Name</th>
+                    <th class="text-left">Contact Last Name</th>
+                    <th class="text-left">Address 1</th>
+                    <th class="text-left">Address 2</th>
+                    <th class="text-left">City</th>
+                    <th class="text-left">State</th>
+                    <th class="text-left">Zip</th>
+                    <th class="text-left">Country</th>
+                    <th class="text-left">Email</th>
+                    <th class="text-left">Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="item in accountDataLocal.registered_agent_list"
+                    :key="item.email"
+                  >
+                    <td class="text-left">{{ item.entity_name }}</td>
+                    <td class="text-left">{{ item.company_name }}</td>
+                    <td class="text-left">{{ item.first_name }}</td>
+                    <td class="text-center">{{ item.last_name }}</td>
+                    <td class="text-center">{{ item.address1 }}</td>
+                    <td class="text-center">{{ item.address2 }}</td>
+                    <td class="text-center">{{ item.city }}</td>
+                    <td class="text-center">{{ item.state }}</td>
+                    <td class="text-center">{{ item.zip }}</td>
+                    <td class="text-center">{{ item.country }}</td>
+                    <td class="text-center">{{ item.email }}</td>
+                    <td class="text-center">{{ item.phone }}</td>
                   </tr>
                 </tbody>
               </VTable>

@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ForgotPassword extends Mailable
+class ForgotPasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -24,22 +24,13 @@ class ForgotPassword extends Mailable
         $this->token = $token;
     }
 
-
-    public function build()
-    {
-        return $this->markdown('emails.forgotpassword')
-            ->with([
-                'user' => $this->user,
-                'token' => $this->token,
-            ]);
-    }
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Forgot Password',
+            subject: 'Forgot Password Mail',
         );
     }
 
@@ -49,7 +40,7 @@ class ForgotPassword extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.forgotpassword',
+            view: 'emails.forgot_password',
         );
     }
 

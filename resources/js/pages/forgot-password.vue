@@ -44,7 +44,9 @@ const sendResetPasswordLink = async () => {
       const response = await ApiService.sendResetPasswordLink(form);
 
       if (response.data.success) {
-        toast.success("Reset Password Link sent successfully!");
+        toast.success(
+          "Your request to reset your password has been processed successfully. Please check your email for the link to reset your password."
+        );
         router.push("/login");
       } else {
         toast.error(response.data.message || "Invalid credentials");

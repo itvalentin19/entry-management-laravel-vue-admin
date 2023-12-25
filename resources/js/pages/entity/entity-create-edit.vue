@@ -79,6 +79,23 @@ const officerItem = {
 const officerListInitial = [];
 const officerList = ref(structuredClone(officerListInitial));
 
+const registeredAgentItem = {
+  entity_name: null,
+  company_name: null,
+  first_name: null,
+  last_name: null,
+  address1: null,
+  address2: null,
+  city: null,
+  state: null,
+  zip: null,
+  country: null,
+  email: null,
+  phone: null,
+};
+const registeredAgentListInitial = [];
+const registeredAgentList = ref(structuredClone(registeredAgentListInitial));
+
 const services = ref([]);
 const types = ref([]);
 const refers = ref([]);
@@ -169,6 +186,13 @@ const onCreate = async () => {
       formData.append("officer_list", JSON.stringify(officerList.value));
     }
 
+    if (registeredAgentList.value.length > 0) {
+      formData.append(
+        "registered_agent_list",
+        JSON.stringify(registeredAgentList.value)
+      );
+    }
+
     console.log(accountDataLocal.value.files);
     if (accountDataLocal.value.files) {
       // Append each document file to formData
@@ -237,6 +261,8 @@ watch(
         directorList.value = response.data.director_list || [];
         // Update Officer List
         officerList.value = response.data.officer_list || [];
+        // Update Registered Agent List
+        registeredAgentList.value = response.data.registered_agent_list || [];
       } catch (error) {
         toast.error("Failed to load entity data.");
         router.push("/entities/entity");
@@ -264,6 +290,11 @@ const addNewOfficer = async () => {
   officerList.value.push(newItem);
 };
 
+const addNewAgent = async () => {
+  const newItem = structuredClone(registeredAgentItem);
+  registeredAgentList.value.push(newItem);
+};
+
 const removeServiceFee = (index) => {
   serviceFeeDataLocal.value.splice(index, 1);
 };
@@ -278,6 +309,12 @@ const removeOfficer = (index) => {
   console.log(index);
   console.log(officerList.value);
   officerList.value.splice(index, 1);
+};
+
+const removeRegisteredAgent = (index) => {
+  console.log(index);
+  console.log(registeredAgentList.value);
+  registeredAgentList.value.splice(index, 1);
 };
 
 const getProps = async () => {
@@ -376,6 +413,16 @@ watch(
   (newOfficers) => {
     newOfficers.forEach((officer) => {
       officer.phone = formatPhone(officer.phone);
+    });
+  },
+  { deep: true }
+);
+
+watch(
+  registeredAgentList,
+  (newAgents) => {
+    newAgents.forEach((agent) => {
+      agent.phone = formatPhone(agent.phone);
     });
   },
   { deep: true }
@@ -873,6 +920,138 @@ onMounted(() => {
                               v-model="officer.address2"
                               label="Address 2"
                               placeholder="Suite 410"
+                            />
+                          </VCol>
+                        </VRow>
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+                  <VDivider />
+
+                  <!-- 👉 Registered Offices -->
+                  <VCol cols="12">
+                    <p class="directors">
+                      Registered Office/Agent
+                      <VIcon icon="bx-plus-circle" @click="addNewAgent" />
+                    </p>
+                  </VCol>
+                  <VCol cols="12">
+                    <VCard
+                      v-for="(agent, index) in registeredAgentList"
+                      :key="index"
+                      class="director-card"
+                    >
+                      <VIcon
+                        class="item-delete-button"
+                        icon="bx-minus-circle"
+                        color="#c93903"
+                        @click="removeRegisteredAgent(index)"
+                      />
+                      <VCardText>
+                        <VRow>
+                          <!-- 👉 Contact First Name -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="agent.entity_name"
+                              label="Entity Name"
+                              placeholder="Nano I a Series of S5V Coinvest"
+                            />
+                          </VCol>
+                          <!-- 👉 Contact First Name -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="agent.company_name"
+                              label="Company Name"
+                              placeholder="Nano I a Series of S5V Coinvest"
+                            />
+                          </VCol>
+                          <!-- 👉 Contact First Name -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="agent.first_name"
+                              label="First Name"
+                              placeholder="Daniel"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Last Name -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="agent.last_name"
+                              label="Last Name"
+                              placeholder="Strachman"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="agent.address1"
+                              label="Address 1"
+                              placeholder="5645 Coral Ridge Drive"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="agent.address2"
+                              label="Address 2"
+                              placeholder="Suite 410"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="agent.city"
+                              label="City"
+                              placeholder="City"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VAutocomplete
+                              v-model="agent.state"
+                              label="State"
+                              placeholder="FL"
+                              item-title="name"
+                              item-value="abbreviation"
+                              :items="states"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="agent.zip"
+                              label="Zip"
+                              placeholder="23456"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VSelect
+                              v-model="agent.country"
+                              label="Country"
+                              :items="[
+                                'USA',
+                                'Canada',
+                                'UK',
+                                'India',
+                                'Australia',
+                              ]"
+                              placeholder="Select Country"
+                            />
+                          </VCol>
+                          <!-- 👉 Email -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="agent.email"
+                              label="Email"
+                              placeholder="johndoe@gmail.com"
+                              type="email"
+                            />
+                          </VCol>
+
+                          <!-- 👉 Phone -->
+                          <VCol cols="12" md="3" sm="6">
+                            <VTextField
+                              v-model="agent.phone"
+                              label="Phone"
+                              placeholder="1-917-543-9876"
                             />
                           </VCol>
                         </VRow>

@@ -34,6 +34,6 @@
 
     <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
 
-    <p>Thank you,<br>The {{ config('app.name') }} Team</p>
+    <p>Thank you,<br>The Eakav Team</p>
 </body>
 </html>

@@ -23,6 +23,7 @@ const toast = useToast();
 const router = useRouter();
 const store = useStore();
 const _user = computed(() => store.getters.user);
+const loading = ref(false);
 
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData);
@@ -71,6 +72,7 @@ const onCreateUser = async () => {
         "Content-Type": "multipart/form-data",
       },
     };
+    loading.value = true;
     if (userId.value) {
       // Update existing user
       res = await ApiService.updateUser(userId.value, formData, config);
@@ -80,9 +82,11 @@ const onCreateUser = async () => {
       res = await ApiService.createUser(formData, config);
       toast.success("User created successfully!");
     }
+    loading.value = false;
 
     router.push("/users");
   } catch (error) {
+    loading.value = false;
     if (error.response) {
       // Handle HTTP errors
       const errorMsg =
@@ -283,7 +287,7 @@ watch(
 
               <!-- 👉 Form Actions -->
               <VCol cols="12" class="d-flex flex-wrap gap-4">
-                <VBtn @click="onCreateUser">
+                <VBtn @click="onCreateUser" :loading="loading">
                   {{ userId ? "Update User" : "Create User" }}
                 </VBtn>
 
