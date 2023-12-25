@@ -33,15 +33,19 @@ export default {
   authentication() {
     return apiClient.get('/user');
   },
-  // Get Logged in User Information
+  // Update User Information
   updateAccount(data, config) {
     return apiClient.post('/update-account', data, config);
   },
-  // Get Logged in User Information
+  // Update User Password in profile page
   updatePassword(data) {
     return apiClient.post('/update-password', data);
   },
-  // Get Logged in User Information
+  // Send Reset Password Link
+  sendResetPasswordLink(data) {
+    return apiClient.post('/forgot-password', data);
+  },
+  // Reset Password without login
   resetPassword(data) {
     return apiClient.post('/reset-password', data);
   },

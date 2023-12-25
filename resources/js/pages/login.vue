@@ -142,12 +142,12 @@ onMounted(() => {
               >
                 <VCheckbox v-model="form.remember" label="Remember me" />
 
-                <!-- <RouterLink
+                <RouterLink
                   class="text-primary ms-2 mb-1"
-                  to="javascript:void(0)"
+                  to="/forgot-password"
                 >
                   Forgot Password?
-                </RouterLink> -->
+                </RouterLink>
               </div>
 
               <!-- login button -->

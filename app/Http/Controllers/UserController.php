@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Mail\ForgotPassword;
 use App\Mail\WelcomeUserMail;
 use App\Models\Entity;
 use App\Models\User;
@@ -286,6 +287,25 @@ class UserController extends Controller
 		}
 	}
 
+	public function forgotPassword(Request $request)
+	{
+		// Validate the request data
+		$request->validate([
+			'email' => 'required|email',
+		]);
+
+		$user = User::where('email', $request->input('email'))->first();
+		if (!$user) {
+			return $this->sendError("User Not Found", 'Authentication Failed', 403);
+		}
+		// Generate a password reset token
+		$token = Password::getRepository()->create($user);
+
+		// Send the email
+		Mail::to($user->email)->send(new ForgotPassword($user, $token));
+
+		return $this->sendResponse(["success" => true, 'user' => $user], 'User Information');
+	}
 
 	public function getUser($id)
 	{

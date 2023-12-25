@@ -20,6 +20,7 @@ Route::prefix('v1')->group(function () {
     Route::post('login', [UserController::class, 'login'])->name('user.login');
     Route::post('register', [UserController::class, 'register']);
     Route::post('reset-password', [UserController::class, 'resetUserPassword']);
+    Route::post('forgot-password', [UserController::class, 'forgotPassword']);
     Route::middleware('auth:sanctum')->group(function () {
         // Authenticate for current user
         Route::get('user', [UserController::class, 'index']);
