@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Ref extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['name'];
 }

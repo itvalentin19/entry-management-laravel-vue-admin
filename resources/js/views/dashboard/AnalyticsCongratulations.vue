@@ -14,7 +14,7 @@ const illustrationJohn = computed(() =>
 );
 
 const gotoEntities = () => {
-  router.push("/entities");
+  router.push("/entities/entity");
 };
 </script>
 
@@ -33,7 +33,7 @@ const gotoEntities = () => {
           <br />
           <br />
           <VBtn variant="tonal" class="mt-4" size="small" @click="gotoEntities">
-            Add Companies
+            Add Entity
           </VBtn>
         </VCardText>
       </VCol>

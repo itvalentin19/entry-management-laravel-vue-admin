@@ -135,7 +135,7 @@ const upgradeBanner = computed(() => {
       />
 
       <!-- 👉 Entities -->
-      <VerticalNavSectionTitle
+      <!-- <VerticalNavSectionTitle
         :item="{
           heading: 'Owners',
         }"
@@ -153,7 +153,7 @@ const upgradeBanner = computed(() => {
           icon: 'bx-user-plus',
           to: '/owners/owner',
         }"
-      />
+      /> -->
 
       <!-- 👉 Entities -->
       <VerticalNavSectionTitle

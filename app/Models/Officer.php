@@ -16,6 +16,10 @@ class Officer extends Model
         'title',
         'address1',
         'address2',
+        'city',
+        'state',
+        'zip',
+        'country',
         'entity_id',
     ];
 }

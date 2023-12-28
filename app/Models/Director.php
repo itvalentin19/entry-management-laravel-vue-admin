@@ -20,5 +20,6 @@ class Director extends Model
         'state',
         'zip',
         'country',
+        'entity_id',
     ];
 }

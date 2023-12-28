@@ -166,6 +166,15 @@ onMounted(() => {
     searchEntities();
   }
 });
+watch(
+  () => state.current_page,
+  (newPage, oldPage) => {
+    if (newPage !== oldPage) {
+      searchEntities();
+    }
+  },
+  { immediate: false } // Set to true if you also want to run on initial setup
+);
 </script>
 
 <template>

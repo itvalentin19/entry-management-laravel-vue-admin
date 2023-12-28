@@ -14,6 +14,10 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  actions: {
+    type: Array,
+    required: false,
+  },
 });
 const sort = reactive({
   field: "id",
@@ -46,10 +50,10 @@ const onClick = (item) => {
 };
 
 const menuList = ref([
-  {
-    text: "Edit",
-    action: editUser,
-  },
+  // {
+  //   text: "Edit",
+  //   action: editUser,
+  // },
   {
     text: "Delete",
     action: deleteUser,

@@ -43,6 +43,7 @@ const accountData = {
   files: [],
   notes: null,
   ref_by: null,
+  active: true,
 };
 const accountDataLocal = ref(structuredClone(accountData));
 const serviceItem = {
@@ -106,6 +107,35 @@ const refInputEl = ref();
 const menu = ref(true);
 const dialog = ref(false);
 const documentIdToDelete = ref(null);
+const addReferDialog = ref(false);
+const addOwnerDialog = ref(false);
+const loading = ref(false);
+
+const referredByItem = {
+  name: null,
+};
+const referredByListInitial = [referredByItem];
+const referredByList = ref(structuredClone(referredByListInitial));
+
+const ownerItem = {
+  first_name: null,
+  last_name: null,
+  email: null,
+  phone: null,
+  address1: null,
+  address2: null,
+  city: null,
+  state: null,
+  zip: null,
+  country: "USA",
+  ownership_stake: null,
+  document_type: "DL",
+  document_expiration: null,
+  document: null,
+  kyc_document: null,
+};
+const ownerListInitial = [ownerItem];
+const ownerList = ref(structuredClone(ownerListInitial));
 
 const activeTab = ref(0);
 // tabs
@@ -152,7 +182,7 @@ const onCreate = async () => {
     // Append entity data
     for (const key in accountDataLocal.value) {
       if (key !== "files") {
-        formData.append(key, accountDataLocal.value[key]);
+        formData.append(key, accountDataLocal.value[key] ?? "");
       }
     }
     let services = [];
@@ -254,6 +284,7 @@ watch(
           };
           serviceFeeDataLocal.value.push(serviceItem);
         });
+        accountDataLocal.value.form_id = response.data.form_id ? "yes" : "no";
         accountDataLocal.value.services = null;
         accountDataLocal.value.annual_fees = null;
         accountDataLocal.value.ref_by = response.data.ref_by?.split(",") || [];
@@ -382,6 +413,122 @@ const formatPhone = (value) => {
   return formatted;
 };
 
+const handleAddRefer = () => {
+  addReferDialog.value = true;
+};
+
+const addReferredByMore = () => {
+  referredByList.value.push(structuredClone(referredByItem));
+};
+
+const confirmAddReferredBy = async () => {
+  console.log(referredByList.value);
+  try {
+    if (referredByList.value.length && !referredByList.value[0].name) {
+      toast.error("Please enter the name correctly!");
+      return;
+    }
+    if (referredByList.value.length == 0) return;
+    loading.value = true;
+    const res = await ApiService.createReferredBy(referredByList.value);
+    console.log(res);
+    if (res.data.message) {
+      toast.success(res.data.message);
+    }
+    loading.value = false;
+    addReferDialog.value = false;
+    getProps();
+  } catch (error) {
+    loading.value = false;
+    if (error.response) {
+      // Handle HTTP errors
+      const errorMsg =
+        error.response.data.message ||
+        "An error occurred while creating the user.";
+      toast.error(errorMsg);
+    } else if (error.request) {
+      // The request was made but no response was received
+      toast.error("No response from server. Please try again later.");
+    } else {
+      // Something else happened in setting up the request
+      toast.error("Error: " + error.message);
+    }
+    console.error(error);
+  }
+};
+
+const removeReferredBy = (index) => {
+  referredByList.value.splice(index, 1);
+};
+
+const handleAddOwners = () => {
+  addOwnerDialog.value = true;
+};
+
+const addOwnerMore = () => {
+  ownerList.value.push(structuredClone(referredByItem));
+};
+
+const addOwnerDocument = (event) => {
+  const { files } = event.target;
+  console.log(files[0]);
+  if (files && files.length) {
+    ownerList.value[0].document = files[0];
+  }
+};
+
+const confirmAddOwner = async () => {
+  console.log(ownerList.value);
+  try {
+    const formData = new FormData();
+
+    // Append owner data
+    for (const key in ownerList.value[0]) {
+      if (key !== "document") {
+        formData.append(key, ownerList.value[0][key]);
+      }
+    }
+
+    // Append avatar image if it's a File object (not a URL string)
+    if (ownerList.value[0].document) {
+      formData.append("document", ownerList.value[0].document);
+    }
+
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    };
+    loading.value = true;
+    await ApiService.createOwner(formData, config);
+    toast.success("Owner created successfully!");
+    loading.value = false;
+    addOwnerDialog.value = false;
+    ownerList.value = structuredClone(ownerListInitial);
+    getProps();
+  } catch (error) {
+    loading.value = false;
+    if (error.response) {
+      // Handle HTTP errors
+      const errorMsg =
+        error.response.data.message ||
+        "An error occurred while creating the user.";
+      toast.error(errorMsg);
+    } else if (error.request) {
+      // The request was made but no response was received
+      toast.error("No response from server. Please try again later.");
+    } else {
+      // Something else happened in setting up the request
+      toast.error("Error: " + error.message);
+    }
+    console.error(error);
+  }
+};
+
+const removeOwner = (index) => {
+  ownerList.value.splice(index, 1);
+};
+
 watch(
   () => accountDataLocal.value.ein_number,
   (newValue) => {
@@ -423,6 +570,16 @@ watch(
   (newAgents) => {
     newAgents.forEach((agent) => {
       agent.phone = formatPhone(agent.phone);
+    });
+  },
+  { deep: true }
+);
+
+watch(
+  ownerList,
+  (newOwners) => {
+    newOwners.forEach((owner) => {
+      owner.phone = formatPhone(owner.phone);
     });
   },
   { deep: true }
@@ -565,17 +722,6 @@ onMounted(() => {
                     />
                   </VCol>
 
-                  <!-- 👉 Person -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
-                    <VAutocomplete
-                      v-model="accountDataLocal.person"
-                      label="Person"
-                      :items="users"
-                      clearable
-                      placeholder="Select Person"
-                    />
-                  </VCol>
-
                   <!-- 👉 First Tax Year -->
                   <VCol cols="12" md="6" sm="6" lg="3">
                     <VSelect
@@ -613,25 +759,13 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Signed Date -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <!-- <VCol cols="12" md="6" sm="6" lg="3">
                     <VueDatePicker
                       v-model="accountDataLocal.date_signed"
                       placeholder="Signed Date"
                     ></VueDatePicker>
-                  </VCol>
+                  </VCol> -->
 
-                  <!-- 👉 Owners -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
-                    <VAutocomplete
-                      v-model="accountDataLocal.owner_ids"
-                      label="Owners"
-                      multiple
-                      item-title="name"
-                      item-value="id"
-                      :items="owners"
-                      placeholder="Select Owners"
-                    />
-                  </VCol>
                   <!-- 👉 Contact First Name -->
                   <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
@@ -666,6 +800,22 @@ onMounted(() => {
                       v-model="accountDataLocal.contact_phone"
                       label="Contact Phone"
                       placeholder="1-917-543-9876"
+                    />
+                  </VCol>
+                  <VDivider />
+
+                  <!-- 👉 Owners -->
+                  <VCol cols="12" md="6" sm="6" lg="3">
+                    <VAutocomplete
+                      v-model="accountDataLocal.owner_ids"
+                      label="Select Owners"
+                      multiple
+                      item-title="name"
+                      item-value="id"
+                      :items="owners"
+                      placeholder="Select Owners"
+                      prepend-inner-icon="bx-plus"
+                      @click:prepend-inner="handleAddOwners"
                     />
                   </VCol>
 
@@ -922,6 +1072,44 @@ onMounted(() => {
                               placeholder="Suite 410"
                             />
                           </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="officer.city"
+                              label="City"
+                              placeholder="City"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VAutocomplete
+                              v-model="officer.state"
+                              label="State"
+                              placeholder="FL"
+                              item-title="name"
+                              item-value="abbreviation"
+                              :items="states"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VTextField
+                              v-model="officer.zip"
+                              label="Zip"
+                              placeholder="23456"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="4" sm="6">
+                            <VSelect
+                              v-model="officer.country"
+                              label="Country"
+                              :items="[
+                                'USA',
+                                'Canada',
+                                'UK',
+                                'India',
+                                'Australia',
+                              ]"
+                              placeholder="Select Country"
+                            />
+                          </VCol>
                         </VRow>
                       </VCardText>
                     </VCard>
@@ -1062,10 +1250,11 @@ onMounted(() => {
 
                   <!-- 👉 Directors -->
                   <VCol cols="12">
-                    <VCheckbox
-                      v-model="accountDataLocal.form_id"
-                      label="Form ID"
-                    />
+                    <VLabel>Form ID</VLabel>
+                    <VRadioGroup v-model="accountDataLocal.form_id" inline>
+                      <VRadio label="Yes" value="yes"></VRadio>
+                      <VRadio label="No" value="no"></VRadio>
+                    </VRadioGroup>
                   </VCol>
                   <VDivider />
 
@@ -1085,13 +1274,22 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Ref By -->
-                  <VCol cols="12" md="6">
+                  <VCol cols="12" md="4" sm="6">
                     <VCombobox
                       v-model="accountDataLocal.ref_by"
-                      label="Ref By"
+                      label="Referred By"
                       multiple
+                      prepend-inner-icon="bx-plus"
+                      @click:prepend-inner="handleAddRefer"
                       :items="refers"
                     />
+                  </VCol>
+                  <VCol cols="12" md="2" sm="6">
+                    <VCheckbox
+                      v-model="accountDataLocal.active"
+                      :label="accountDataLocal.active ? 'Active' : 'Inactive'"
+                    >
+                    </VCheckbox>
                   </VCol>
 
                   <VCol
@@ -1115,6 +1313,17 @@ onMounted(() => {
                       v-model="accountDataLocal.notes"
                       label="Notes"
                       placeholder="..."
+                    />
+                  </VCol>
+
+                  <!-- 👉 Person -->
+                  <VCol cols="12" md="6" sm="6" lg="3">
+                    <VAutocomplete
+                      v-model="accountDataLocal.person"
+                      label="Entered By"
+                      :items="users"
+                      clearable
+                      placeholder="Select Person"
                     />
                   </VCol>
 
@@ -1152,6 +1361,174 @@ onMounted(() => {
         <VSpacer></VSpacer>
         <VBtn color="green darken-1" text @click="dialog = false">Cancel</VBtn>
         <VBtn color="red darken-1" text @click="confirmDelete">Delete</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+  <VDialog v-model="addReferDialog" width="500">
+    <VCard :loading="loading">
+      <VCardTitle class="headline"
+        >Add Referred By
+        <VIcon icon="bx-plus-circle" @click="addReferredByMore"
+      /></VCardTitle>
+      <VCardText>
+        <VRow>
+          <VCol cols="12" v-for="(item, index) in referredByList" :key="index">
+            <VTextField
+              v-model="item.name"
+              label="Name"
+              placeholder="Enter Name"
+              append-icon="bx-minus-circle"
+              @click:append="removeReferredBy(index)"
+            />
+          </VCol>
+        </VRow>
+      </VCardText>
+      <VCardActions>
+        <VSpacer></VSpacer>
+        <VBtn color="green darken-1" text @click="addReferDialog = false"
+          >Cancel</VBtn
+        >
+        <VBtn color="red darken-1" text @click="confirmAddReferredBy">Add</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+  <VDialog v-model="addOwnerDialog" width="500">
+    <VCard :loading="loading">
+      <VCardTitle class="headline">Add Owner</VCardTitle>
+      <VCardText>
+        <VRow v-for="(item, index) in ownerList" :key="index">
+          <!-- 👉 First Name -->
+          <VCol md="6" cols="12">
+            <VTextField
+              v-model="item.first_name"
+              placeholder="John"
+              label="First Name"
+            />
+          </VCol>
+
+          <!-- 👉 Last Name -->
+          <VCol md="6" cols="12">
+            <VTextField
+              v-model="item.last_name"
+              placeholder="Doe"
+              label="Last Name"
+            />
+          </VCol>
+
+          <!-- 👉 Email -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.email"
+              label="E-mail"
+              placeholder="johndoe@gmail.com"
+              type="email"
+            />
+          </VCol>
+
+          <!-- 👉 Phone -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.phone"
+              label="Phone Number"
+              placeholder="1-917-543-9876"
+            />
+          </VCol>
+
+          <!-- 👉 Address 1 -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.address1"
+              label="Address 1"
+              placeholder="5645 Coral Ridge Drive"
+            />
+          </VCol>
+          <!-- 👉 Address 2 -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.address2"
+              label="Address 2"
+              placeholder="Suite 410"
+            />
+          </VCol>
+          <!-- 👉 Address 2 -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.city"
+              label="City"
+              placeholder="Coral Springs"
+            />
+          </VCol>
+
+          <!-- 👉 State -->
+          <VCol cols="12" md="6">
+            <VTextField v-model="item.state" label="State" placeholder="FL" />
+          </VCol>
+
+          <!-- 👉 Zip Code -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.zip"
+              label="Zip Code"
+              placeholder="10001"
+            />
+          </VCol>
+
+          <!-- 👉 Country -->
+          <VCol cols="12" md="6">
+            <VSelect
+              v-model="item.country"
+              label="Country"
+              :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+              placeholder="Select Country"
+            />
+          </VCol>
+
+          <!-- 👉 Ownership Stack -->
+          <VCol cols="12" md="6">
+            <VTextField
+              v-model="item.ownership_stake"
+              label="Ownership Stake"
+              placeholder="Ownership"
+            />
+          </VCol>
+
+          <!-- 👉 Document Type -->
+          <VCol cols="12" md="6">
+            <VSelect
+              v-model="item.document_type"
+              label="Document Type"
+              :items="['DL', 'Passport']"
+              placeholder="Select Country"
+            />
+          </VCol>
+
+          <!-- 👉 Document Expiration -->
+          <VCol cols="12" md="6">
+            <VueDatePicker
+              v-model="item.document_expiration"
+              placeholder="Document Expiration Date"
+            ></VueDatePicker>
+          </VCol>
+          <!-- 👉 Document -->
+          <VCol cols="12" md="6">
+            <VFileInput
+              :v-model="item.document"
+              clearable
+              label="Upload Document"
+              accept=".pdf"
+              variant="outlined"
+              show-size
+              @change="addOwnerDocument"
+            ></VFileInput>
+          </VCol>
+        </VRow>
+      </VCardText>
+      <VCardActions>
+        <VSpacer></VSpacer>
+        <VBtn color="green darken-1" text @click="addOwnerDialog = false"
+          >Cancel</VBtn
+        >
+        <VBtn color="red darken-1" text @click="confirmAddOwner">Add</VBtn>
       </VCardActions>
     </VCard>
   </VDialog>

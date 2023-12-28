@@ -57,28 +57,29 @@ class EntityController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'firm_name' => 'required|string|max:255',
-            'doing_business_as' => 'required|string|max:255',
-            'entity_name' => 'required|string|max:255',
-            'address_1' => 'required|string|max:255',
-            'address_2' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
-            'zip' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'services' => 'required|string|max:255',
-            'annual_fees' => 'required|string|max:255',
-            'first_tax_year' => 'sometimes|string|max:255',
-            'ein_number' => 'required|string|max:255',
-            'date_created' => 'required|string|max:255',
-            'date_signed' => 'required|string|max:255',
-            'person' => 'required|string|max:255',
-            'jurisdiction' => 'required|string|max:255',
-            'owner_ids' => 'required|string|max:255',
-            'files.*' => 'required|file|mimes:pdf|max:2048',
-            'notes' => 'sometimes|string',
-            'ref_by' => 'required|string|max:255',
+            'firm_name' => 'required|string|max:255|unique:entities,firm_name',
+            'doing_business_as' => 'sometimes|string|max:255|nullable|unique:entities,doing_business_as',
+            'entity_name' => 'required|string|max:255|unique:entities,entity_name',
+            'address_1' => 'sometimes|string|max:255|nullable',
+            'address_2' => 'sometimes|string|max:255|nullable',
+            'city' => 'sometimes|string|max:255|nullable',
+            'state' => 'sometimes|string|max:255|nullable',
+            'zip' => 'sometimes|string|max:255|nullable',
+            'country' => 'sometimes|string|max:255|nullable',
+            'type' => 'sometimes|string|max:255|nullable',
+            'services' => 'sometimes|string|max:255|nullable',
+            'annual_fees' => 'sometimes|string|max:255|nullable',
+            'first_tax_year' => 'sometimes|string|max:255|nullable',
+            'ein_number' => 'sometimes|string|max:255|nullable',
+            'date_created' => 'sometimes|string|max:255|nullable',
+            // 'date_signed' => 'sometimes|string|max:255|nullable',
+            'person' => 'sometimes|string|max:255|nullable',
+            'jurisdiction' => 'sometimes|string|max:255|nullable',
+            'owner_ids' => 'sometimes|string|max:255|nullable',
+            'files.*' => 'sometimes|file|mimes:pdf|max:2048|nullable',
+            'notes' => 'sometimes|string|nullable',
+            'ref_by' => 'sometimes|string|max:255|nullable',
+            'active' => 'sometimes|string|nullable',
         ]);
 
         if ($request->input('directors') == "true") {
@@ -115,7 +116,7 @@ class EntityController extends Controller
                     'ein_number',
                     'form_id',
                     'date_created',
-                    'date_signed',
+                    // 'date_signed',
                     'person',
                     'jurisdiction',
                     'notes',
@@ -125,13 +126,14 @@ class EntityController extends Controller
         );
 
         $entity->directors = $request->input('directors') == "true";
-        $entity->form_id = $request->input('form_id') == "true";
+        $entity->form_id = $request->input('form_id') == "yes";
+        $entity->active = $request->input('active') == "true";
 
-        $entity->owner_ids = array_map('intval', explode(',', $request->input('owner_ids')));
+        $entity->owner_ids = $request->input('owner_ids') ? array_map('intval', explode(',', $request->input('owner_ids'))) : [];
 
         $type_name = $request->input('type');
         $type_exist = Type::where('name', $type_name)->first();
-        if (!$type_exist) {
+        if (!$type_exist && $type_name) {
             $type = new Type();
             $type->name = $type_name;
             $type->save();
@@ -139,7 +141,7 @@ class EntityController extends Controller
 
         $person_type = $request->input('person');
         $person_exist = Person::where('type', $person_type)->first();
-        if (!$person_exist) {
+        if (!$person_exist && $person_type) {
             $person = new Person();
             $person->type = $person_type;
             $person->save();
@@ -236,6 +238,10 @@ class EntityController extends Controller
                     'title' => 'required|string|max:255',
                     'address1' => 'required|string|max:255',
                     'address2' => 'required|string|max:255',
+                    'city' => 'required|string|max:50',
+                    'state' => 'required|string|max:50',
+                    'zip' => 'required|string|max:10',
+                    'country' => 'required|string|max:50',
                 ]);
 
                 if ($validator->fails()) {
@@ -255,6 +261,10 @@ class EntityController extends Controller
                 $officer->title = $item['title'];
                 $officer->address1 = $item['address1'];
                 $officer->address2 = $item['address2'];
+                $officer->city = $item['city'];
+                $officer->state = $item['state'];
+                $officer->zip = $item['zip'];
+                $officer->country = $item['country'];
                 $officer->entity_id = $entity->id;
                 $officer->save();
             }
@@ -334,7 +344,7 @@ class EntityController extends Controller
             // Validate the incoming request data
             $request->validate([
                 'firm_name' => 'string|max:255',
-                'doing_business_as' => 'string|max:255',
+                'doing_business_as' => 'string|max:255|nullable',
                 'entity_name' => 'string|max:255',
                 'address_1' => 'string|max:255|nullable',
                 'address_2' => 'string|max:255|nullable',
@@ -352,7 +362,7 @@ class EntityController extends Controller
                 'contact_phone' => 'string|max:255|nullable',
                 'contact_email' => 'string|email|max:255|nullable',
                 'date_created' => 'string|max:255|nullable',
-                'date_signed' => 'string|max:255|nullable',
+                // 'date_signed' => 'string|max:255|nullable',
                 'person' => 'string|max:255|nullable',
                 'jurisdiction' => 'string|max:255|nullable',
                 'owner_ids' => 'string|max:255|nullable',
@@ -360,6 +370,7 @@ class EntityController extends Controller
                 'files.*' => 'sometimes|file|mimes:pdf|nullable',
                 'notes' => 'string|nullable',
                 'ref_by' => 'string|max:255|nullable',
+                'active' => 'string',
             ]);
 
             // Update user's information
@@ -378,7 +389,7 @@ class EntityController extends Controller
             $entity->first_tax_year = $request->input('first_tax_year', $entity->first_tax_year);
             $entity->ein_number = $request->input('ein_number', $entity->ein_number);
             $entity->date_created = $request->input('date_created', $entity->date_created);
-            $entity->date_signed = $request->input('date_signed', $entity->date_signed);
+            // $entity->date_signed = $request->input('date_signed', $entity->date_signed);
             $entity->person = $request->input('person', $entity->person);
             $entity->jurisdiction = $request->input('jurisdiction', $entity->jurisdiction);
             $entity->notes = $request->input('notes', $entity->notes);
@@ -389,7 +400,8 @@ class EntityController extends Controller
             $entity->contact_email = $request->input('contact_email', $entity->contact_email);
 
             $entity->directors = $request->input('directors') == "true";
-            $entity->form_id = $request->input('form_id') == "true";
+            $entity->form_id = $request->input('form_id') == "yes";
+            $entity->active = $request->input('active') == "true";
             // $entity->contact_first_name = $request->input('contact_first_name');
             // $entity->contact_last_name = $request->input('contact_last_name');
             // $entity->contact_phone = $request->input('contact_phone');
@@ -488,6 +500,10 @@ class EntityController extends Controller
                         'title' => 'string|max:255|nullable',
                         'address1' => 'string|max:255|nullable',
                         'address2' => 'string|max:255|nullable',
+                        'city' => 'string|max:255|nullable',
+                        'state' => 'string|max:255|nullable',
+                        'zip' => 'string|max:255|nullable',
+                        'country' => 'string|max:255|nullable',
                     ]);
 
                     if ($validator->fails()) {
@@ -509,6 +525,10 @@ class EntityController extends Controller
                         $officer->title = $item['title'];
                         $officer->address1 = $item['address1'];
                         $officer->address2 = $item['address2'];
+                        $officer->city = $item['city'];
+                        $officer->state = $item['state'];
+                        $officer->zip = $item['zip'];
+                        $officer->country = $item['country'];
                         $officer->save();
                         $existing_ids[] = $officer->id;
                     } else {
@@ -520,6 +540,10 @@ class EntityController extends Controller
                         $officer->title = $item['title'];
                         $officer->address1 = $item['address1'];
                         $officer->address2 = $item['address2'];
+                        $officer->city = $item['city'];
+                        $officer->state = $item['state'];
+                        $officer->zip = $item['zip'];
+                        $officer->country = $item['country'];
                         $officer->entity_id = $entity->id;
                         $officer->save();
                     }
@@ -613,7 +637,7 @@ class EntityController extends Controller
                 }
             }
 
-            $entity->owner_ids = array_map('intval', explode(',', $request->input('owner_ids')));
+            $entity->owner_ids = $request->input('owner_ids') ? array_map('intval', explode(',', $request->input('owner_ids'))) : [];
 
             $type_name = $request->input('type');
             $type_exist = Type::where('name', $type_name)->first();
@@ -695,11 +719,14 @@ class EntityController extends Controller
 
     public function list(Request $request)
     {
+        $user = auth()->user();
         $query = Entity::query();
         $query = $query->with('documents')->where('is_deleted', false);
         $field = $request->input('field');
         $order = $request->input('order');
         $query->orderBy($field, $order);
+        if ($user->role == 'user')
+            $query->where('person', $user->person);
 
         // Add filters based on query parameters
         if ($request->has('search') && !empty($request->get('search'))) {
@@ -827,7 +854,7 @@ class EntityController extends Controller
             $entityData['ein_number'] = $cells[17] ?? null;
             $entityData['date_created'] = $cells[18] ? $this->convertDateString($cells[18]) : null;
             $entityData['form_id'] = $cells[19] ? $cells[19] == 'Yes' : null;
-            $entityData['date_signed'] = $cells[20] ? $this->convertDateString($cells[20]) : null;
+            // $entityData['date_signed'] = $cells[20] ? $this->convertDateString($cells[20]) : null;
             $entityData['person'] = $cells[21] ?? null;
             $entityData['jurisdiction'] = $cells[22] ?? null;
             $entityData['owners'] = $cells[23] ? explode(',', $cells[23]) : null;
@@ -954,6 +981,50 @@ class EntityController extends Controller
         $pdf->save($reportsPath . '/' . $id . '.pdf');
         // Or return the PDF as a download
         return $pdf->download('report.pdf');
+    }
+
+    public function updateOwners(Request $request)
+    {
+        try {
+            $ids = $request->input('ids');
+            $entity_id = $request->input('entity_id');
+            $entity = Entity::find($entity_id);
+            if (!$entity) {
+                return response()->json(['message' => "Entity Not Found"], 405);
+            }
+
+            $entity->owner_ids = $ids;
+            $entity->save();
+
+            return response()->json(['message' => 'Owner was removed correctly'], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+
+    public function updateServices(Request $request)
+    {
+        try {
+            $request->validate([
+                'services' => 'required|string',
+                'annual_fees' => 'required|string',
+            ]);
+            $services = $request->input('services');
+            $annual_fees = $request->input('annual_fees');
+            $entity_id = $request->input('entity_id');
+            $entity = Entity::find($entity_id);
+            if (!$entity) {
+                return response()->json(['message' => "Entity Not Found"], 405);
+            }
+
+            $entity->services = $services;
+            $entity->annual_fees = $annual_fees;
+            $entity->save();
+
+            return response()->json(['message' => 'Owner was removed correctly'], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
     }
 
     public function delete($id)

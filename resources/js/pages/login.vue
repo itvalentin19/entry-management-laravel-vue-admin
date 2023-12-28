@@ -6,6 +6,7 @@ import logo from "@images/logo.png";
 import { useRouter } from "vue-router";
 import ApiService from "@/services/api";
 import { useStore } from "vuex";
+import { useToast } from "vue-toastification";
 
 const form = reactive({
   email: "dev@gmail.com",
@@ -14,6 +15,7 @@ const form = reactive({
 });
 const store = useStore();
 const router = useRouter();
+const toast = useToast();
 
 const isPasswordVisible = ref(false);
 const errorMessage = ref("");
@@ -67,8 +69,20 @@ const login = async () => {
       }
     } catch (error) {
       console.log(error);
-      errorMessage.value =
-        "Login failed: " + (error.message || "Network error");
+      if (error.response) {
+        // Handle HTTP errors
+        const errorMsg =
+          error.response.data.message ||
+          "An error occurred while creating the user.";
+        toast.error(errorMsg);
+      } else if (error.request) {
+        // The request was made but no response was received
+        toast.error("No response from server. Please try again later.");
+      } else {
+        // Something else happened in setting up the request
+        toast.error("Error: " + error.message);
+      }
+      console.error(error);
     }
   } else {
     errorMessage.value = "Please correct the errors before submitting.";

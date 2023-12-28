@@ -20,14 +20,14 @@ const router = createRouter({
           path: 'users/user',
           component: () => import('../pages/user/user-create-edit.vue'),
         },
-        {
-          path: 'owners',
-          component: () => import('../pages/owner/owner-list.vue'),
-        },
-        {
-          path: 'owners/owner',
-          component: () => import('../pages/owner/owner-create-edit.vue'),
-        },
+        // {
+        //   path: 'owners',
+        //   component: () => import('../pages/owner/owner-list.vue'),
+        // },
+        // {
+        //   path: 'owners/owner',
+        //   component: () => import('../pages/owner/owner-create-edit.vue'),
+        // },
         {
           path: 'entities',
           component: () => import('../pages/entity/entity-list.vue'),

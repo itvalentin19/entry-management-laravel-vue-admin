@@ -58,8 +58,11 @@ const owners = ref([]);
 const entityId = ref(null);
 const refInputEl = ref();
 const menu = ref(true);
-const dialog = ref(false);
-const documentIdToDelete = ref(null);
+const deleteOwnerDialog = ref(false);
+const ownerIdToDelete = ref(null);
+const loading = ref(false);
+const serviceIdToDelete = ref(null);
+const deleteServiceDialog = ref(false);
 
 const activeTab = ref(0);
 // tabs
@@ -124,6 +127,7 @@ watch(
           };
           serviceFeeDataLocal.value.push(serviceItem);
         });
+        accountDataLocal.value.form_id = response.data.form_id ? "Yes" : "No";
         accountDataLocal.value.services = null;
         accountDataLocal.value.annual_fees = null;
         accountDataLocal.value.ref_by = response.data.ref_by?.split(",") || [];
@@ -165,23 +169,91 @@ const getProps = async () => {
   } catch (error) {}
 };
 
-const removeDocument = (id) => {
-  documentIdToDelete.value = id;
-  dialog.value = true;
+const removeOwner = (id) => {
+  ownerIdToDelete.value = id;
+  deleteOwnerDialog.value = true;
 };
 
-const confirmDelete = () => {
-  accountDataLocal.value.document_ids =
-    accountDataLocal.value.document_ids.filter(
-      (item) => item != documentIdToDelete.value
+const confirmDeleteOwner = async () => {
+  try {
+    loading.value = true;
+    const updated_ids = accountDataLocal.value.owner_ids.filter(
+      (item) => item != ownerIdToDelete.value
     );
-  accountDataLocal.value.documents = accountDataLocal.value.documents.filter(
-    (item) => item.id !== documentIdToDelete.value
-  );
-  console.log(accountDataLocal.value.document_ids);
-  console.log(accountDataLocal.value.documents);
-  dialog.value = false;
-  documentIdToDelete.value = null;
+    const res = await ApiService.updateOwners({
+      ids: updated_ids,
+      entity_id: entityId.value,
+    });
+    if (res.data.message) toast.success(res.data.message);
+
+    accountDataLocal.value.owner_ids = updated_ids;
+    accountDataLocal.value.owners = accountDataLocal.value.owners.filter(
+      (item) => item.id !== ownerIdToDelete.value
+    );
+    console.log(accountDataLocal.value.owner_ids);
+    console.log(accountDataLocal.value.owners);
+    deleteOwnerDialog.value = false;
+    ownerIdToDelete.value = null;
+  } catch (error) {
+    loading.value = false;
+    if (error.response) {
+      // Handle HTTP errors
+      const errorMsg =
+        error.response.data.message ||
+        "An error occurred while creating the user.";
+      toast.error(errorMsg);
+    } else if (error.request) {
+      // The request was made but no response was received
+      toast.error("No response from server. Please try again later.");
+    } else {
+      // Something else happened in setting up the request
+      toast.error("Error: " + error.message);
+    }
+  }
+};
+
+const removeService = (id) => {
+  serviceIdToDelete.value = id;
+  deleteServiceDialog.value = true;
+};
+
+const confirmDeleteService = async () => {
+  try {
+    loading.value = true;
+    let serviceItems = [...serviceFeeDataLocal.value];
+    serviceItems.splice(serviceIdToDelete.value, 1);
+    const services = serviceItems.map((item) => item.service).join(",");
+    const annual_fees = serviceItems.map((item) => item.fee).join(",");
+    const data = {
+      services: services,
+      annual_fees: annual_fees,
+      entity_id: entityId.value,
+    };
+    const res = await ApiService.updateServices(data);
+    if (res.data.message) toast.success(res.data.message);
+
+    accountDataLocal.value.services = services;
+    accountDataLocal.value.annual_fees = annual_fees;
+    serviceFeeDataLocal.value = serviceItems;
+    deleteServiceDialog.value = false;
+    serviceIdToDelete.value = null;
+  } catch (error) {
+    deleteServiceDialog.value = false;
+    loading.value = false;
+    if (error.response) {
+      // Handle HTTP errors
+      const errorMsg =
+        error.response.data.message ||
+        "An error occurred while creating the user.";
+      toast.error(errorMsg);
+    } else if (error.request) {
+      // The request was made but no response was received
+      toast.error("No response from server. Please try again later.");
+    } else {
+      // Something else happened in setting up the request
+      toast.error("Error: " + error.message);
+    }
+  }
 };
 
 const editEntity = () => {
@@ -393,14 +465,6 @@ const headerTitle = () => {
                     </VTable>
                   </VCol>
 
-                  <!-- 👉 Person -->
-                  <VCol cols="12">
-                    <VTextField
-                      v-model="accountDataLocal.person"
-                      label="Contact Person"
-                      readonly
-                    />
-                  </VCol>
                   <!-- 👉 Contact First Name -->
                   <VCol cols="12" md="6" lg="3">
                     <VTextField
@@ -493,13 +557,22 @@ const headerTitle = () => {
                     <iframe :src="document.url" class="pdf-preview"></iframe>
                     <a :href="document.url" target="_blank">View Document</a>
                   </VCol>
+
+                  <!-- 👉 Person -->
+                  <VCol cols="12" md="3">
+                    <VTextField
+                      v-model="accountDataLocal.person"
+                      label="Entered By"
+                      readonly
+                    />
+                  </VCol>
                 </VRow>
               </VForm>
             </VWindowItem>
             <VWindowItem value="owners">
               <OwnersTable
                 :user-list="accountDataLocal.owners || []"
-                :view-only="true"
+                @delete="removeOwner"
               />
             </VWindowItem>
             <VWindowItem value="directors">
@@ -582,12 +655,19 @@ const headerTitle = () => {
                   <tr>
                     <th class="text-left">Service</th>
                     <th class="text-left">Annual Fee</th>
+                    <th class="text-left"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in serviceFeeDataLocal" :key="item.service">
+                  <tr
+                    v-for="(item, index) in serviceFeeDataLocal"
+                    :key="item.service"
+                  >
                     <td>{{ item.service }}</td>
                     <td class="text-center">{{ item.fee }}</td>
+                    <td class="text-center">
+                      <VIcon icon="bx-trash" @click="removeService(index)" />
+                    </td>
                   </tr>
                 </tbody>
               </VTable>
@@ -597,14 +677,61 @@ const headerTitle = () => {
       </VCard>
     </VCol>
   </VRow>
-  <VDialog v-model="dialog" width="500">
-    <VCard>
+  <VDialog v-model="deleteOwnerDialog" width="500">
+    <VCard :loading="loading">
       <VCardTitle class="headline">Confirm Deletion</VCardTitle>
-      <VCardText> Are you sure you want to delete this document? </VCardText>
+      <VCardText>
+        Are you sure you want to remove owner
+        <span style="color: black">
+          {{
+            accountDataLocal.owners.filter((i) => i.id == ownerIdToDelete)[0]
+              ?.first_name
+          }}
+
+          {{
+            accountDataLocal.owners.filter((i) => i.id == ownerIdToDelete)[0]
+              ?.last_name
+          }}
+        </span>
+        ?
+      </VCardText>
       <VCardActions>
         <VSpacer></VSpacer>
-        <VBtn color="green darken-1" text @click="dialog = false">Cancel</VBtn>
-        <VBtn color="red darken-1" text @click="confirmDelete">Delete</VBtn>
+        <VBtn color="green darken-1" text @click="deleteOwnerDialog = false"
+          >Cancel</VBtn
+        >
+        <VBtn
+          color="red darken-1"
+          text
+          @click="confirmDeleteOwner"
+          :loading="loading"
+          >Delete</VBtn
+        >
+      </VCardActions>
+    </VCard>
+  </VDialog>
+  <VDialog v-model="deleteServiceDialog" width="500">
+    <VCard :loading="loading">
+      <VCardTitle class="headline">Confirm Deletion</VCardTitle>
+      <VCardText>
+        Are you sure you want to remove service
+        <span style="color: black">
+          {{ serviceFeeDataLocal[serviceIdToDelete]?.service }}
+        </span>
+        ?
+      </VCardText>
+      <VCardActions>
+        <VSpacer></VSpacer>
+        <VBtn color="green darken-1" text @click="deleteServiceDialog = false"
+          >Cancel</VBtn
+        >
+        <VBtn
+          color="red darken-1"
+          text
+          @click="confirmDeleteService"
+          :loading="loading"
+          >Delete</VBtn
+        >
       </VCardActions>
     </VCard>
   </VDialog>

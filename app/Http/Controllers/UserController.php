@@ -7,6 +7,7 @@ use App\Mail\ForgotPasswordMail;
 use App\Mail\WelcomeUserMail;
 use App\Models\Entity;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -49,6 +50,9 @@ class UserController extends Controller
 			// Check if the user is marked as deleted
 			if ($user->is_deleted) {
 				return $this->sendError('Account not available', 'Your account is no longer active. Please contact support if you believe this is an error.', 401);
+			}
+			if (!$user->email_verified_at) {
+				return $this->sendError('Account Access Restricted', 'Your account cannot be accessed at this time. Please verify your email address to proceed. Verification instructions have been sent to your registered email.', 401);
 			}
 
 			// Check if 'remember_me' is true in the request
@@ -248,15 +252,14 @@ class UserController extends Controller
 		}
 
 		$user->password = Hash::make('Password'); // Set a default password or generate one
+		$user->email_verified_at = null;
 		$user->save();
 
-		if ($user->role == 'user') {
-			// Generate a password reset token
-			$token = Password::getRepository()->create($user);
+		// Generate a password reset token
+		$token = Password::getRepository()->create($user);
 
-			// Send the email
-			Mail::to($user->email)->send(new WelcomeUserMail($user, $token));
-		}
+		// Send the email
+		Mail::to($user->email)->send(new WelcomeUserMail($user, $token));
 
 		return response()->json(new UserResource($user), 201);
 	}
@@ -276,6 +279,7 @@ class UserController extends Controller
 			function ($user, $password) {
 				// Save the new password and any other password-related cleanup tasks
 				$user->password = Hash::make($password);
+				$user->email_verified_at = Carbon::now();
 				$user->save();
 			}
 		);

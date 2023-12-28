@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\OwnerController;
+use App\Http\Controllers\RefController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,8 +51,13 @@ Route::prefix('v1')->group(function () {
         Route::get('entity/{id}', [EntityController::class, 'index']);
         Route::post('entity/{id}', [EntityController::class, 'update']);
         Route::delete('entity/{id}', [EntityController::class, 'delete']);
+        Route::post('remove-owner', [EntityController::class, 'updateOwners']);
+        Route::post('remove-service', [EntityController::class, 'updateServices']);
 
         // Stats for Dashboard
         Route::get('stats', [UserController::class, 'stats']);
+
+        // Add Referred By
+        Route::post('add-referred-by', [RefController::class, 'store']);
     });
 });

@@ -33,6 +33,7 @@ class Entity extends Model
         'notes',
         'ref_by',
         'user_id',
+        'active',
     ];
     protected $casts = [
         'directors' => 'boolean',
@@ -42,6 +43,7 @@ class Entity extends Model
         'ref_by' => 'array',
         'services' => 'array',
         'annual_fees' => 'array',
+        'active' => 'boolean',
     ];
 
     // Relationship to Owner

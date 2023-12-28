@@ -135,6 +135,16 @@ export default {
     return apiClient.post('/entity/' + id, data, config);
   },
 
+  // Update Entity Data
+  updateOwners(data) {
+    return apiClient.post('/remove-owner', data);
+  },
+
+  // Update Entity Data
+  updateServices(data) {
+    return apiClient.post('/remove-service', data);
+  },
+
   // Delete Entity
   deleteEntity(id) {
     return apiClient.delete('/entity/' + id);
@@ -153,5 +163,10 @@ export default {
   // 👉 Fetch Stats for Dashboard //
   getStats() {
     return apiClient.get('/stats');
+  },
+
+  // Create Referred By
+  createReferredBy(data) {
+    return apiClient.post('/add-referred-by', data)
   }
 };
