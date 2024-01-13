@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" href="{{ asset('favicon.ico') }}" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eakav - Management Platform For Multiple Companies</title>
+  <title>EAKAV Management Platform</title>
   <link rel="stylesheet" type="text/css" href="{{ asset('loader.css') }}" />
   @vite(['resources/js/main.js'])
 </head>
@@ -27,7 +27,7 @@
   
   <script>
     const loaderColor = localStorage.getItem('sneat-initial-loader-bg') || '#FFFFFF'
-    const primaryColor = localStorage.getItem('sneat-initial-loader-color') || '#696CFF'
+    const primaryColor = localStorage.getItem('sneat-initial-loader-color') || '#2b85bb'
 
     if (loaderColor)
       document.documentElement.style.setProperty('--initial-loader-bg', loaderColor)

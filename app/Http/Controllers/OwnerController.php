@@ -22,25 +22,27 @@ class OwnerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'entity_id' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:owners',
-            'phone' => 'required|string|max:255',
-            'address1' => 'required|string|max:255',
-            'address2' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
-            'zip' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
-            'ownership_stake' => 'required|string|max:255',
-            'document_type' => 'required|string|max:255',
-            'document_expiration' => 'required|string|max:255',
-            'document' => 'sometimes|file|mimes:pdf',
+            'phone' => 'sometimes|nullable|string|max:255',
+            'address1' => 'sometimes|nullable|string|max:255',
+            'address2' => 'sometimes|nullable|string|max:255',
+            'city' => 'sometimes|nullable|string|max:255',
+            'state' => 'sometimes|nullable|string|max:255',
+            'zip' => 'sometimes|nullable|string|max:255',
+            'country' => 'sometimes|nullable|string|max:255',
+            'ownership_stake' => 'sometimes|nullable|string|max:255',
+            'document_type' => 'sometimes|nullable|string|max:255',
+            'document_expiration' => 'sometimes|nullable|string|max:255',
+            'document' => 'sometimes|nullable|file|mimes:pdf',
         ]);
 
         $owner = new Owner(
             $request->only(
                 [
+                    'entity_id',
                     'first_name',
                     'last_name',
                     'email',
@@ -87,20 +89,21 @@ class OwnerController extends Controller
 
             // Validate the incoming request data
             $request->validate([
+                'entity_id' => 'string|max:255',
                 'first_name' => 'string|max:255',
                 'last_name' => 'string|max:255',
-                'email' => 'string|email|max:255|unique:owners,email,' . $id,
-                'phone' => 'string|max:255',
-                'address1' => 'string|max:255',
-                'address2' => 'string|max:255',
-                'city' => 'string|max:255',
-                'state' => 'string|max:255',
-                'zip' => 'string|max:255',
-                'country' => 'string|max:255',
-                'ownership_stake' => 'string|max:255',
-                'document_type' => 'string|max:255',
-                'document_expiration' => 'string|max:255',
-                'document' => 'sometimes|file|mimes:pdf',
+                'email' => 'string|email|max:255',
+                'phone' => 'sometimes|nullable|max:255',
+                'address1' => 'sometimes|nullable|max:255',
+                'address2' => 'sometimes|nullable|max:255',
+                'city' => 'sometimes|nullable|max:255',
+                'state' => 'sometimes|nullable|max:255',
+                'zip' => 'sometimes|nullable|max:255',
+                'country' => 'sometimes|nullable|max:255',
+                'ownership_stake' => 'sometimes|nullable|max:255',
+                'document_type' => 'sometimes|nullable|max:255',
+                'document_expiration' => 'sometimes|nullable|max:255',
+                'document' => 'sometimes|nullable|file|mimes:pdf',
             ]);
 
             // Update user's information
@@ -179,8 +182,8 @@ class OwnerController extends Controller
     public function delete($id)
     {
         $owner = Owner::findOrFail($id);
-        $owner->is_deleted = true;
-        $owner->save();
+        // $owner->is_deleted = true;
+        $owner->delete();
 
         return response()->json(['message' => 'User marked as deleted successfully']);
     }

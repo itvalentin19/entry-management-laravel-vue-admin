@@ -145,8 +145,10 @@ function parseAndFormatDate(dateStr) {
         :key="entity.id"
         @click="viewUser(entity.id)"
       >
-        <td class="text-center text-sm" v-if="_user?.id == entity.user_id">
-          <MoreBtn :menu-list="menuList" :data="entity" />
+        <td class="text-center text-sm">
+          <div v-if="_user.admin || _user?.id == entity.user_id">
+            <MoreBtn :menu-list="menuList" :data="entity" />
+          </div>
         </td>
         <td>
           {{ entity.id }}

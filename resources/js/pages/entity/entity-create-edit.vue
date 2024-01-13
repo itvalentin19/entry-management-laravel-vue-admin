@@ -134,7 +134,7 @@ const ownerItem = {
   document: null,
   kyc_document: null,
 };
-const ownerListInitial = [ownerItem];
+const ownerListInitial = [];
 const ownerList = ref(structuredClone(ownerListInitial));
 
 const activeTab = ref(0);
@@ -241,11 +241,21 @@ const onCreate = async () => {
     if (entityId.value) {
       // Update existing Entity
       res = await ApiService.updateEntity(entityId.value, formData, config);
-      toast.success("Entity updated successfully!");
+      console.log(res);
+      if (res.data?.id) {
+        // ownerList.value.length && toast.info("Adding/Updating Owners!");
+        await addUpdateOwners(res.data?.id);
+        toast.success("Entity updated successfully!");
+      }
     } else {
       // Create new Entity
       res = await ApiService.createEntity(formData, config);
-      toast.success("Entity created successfully!");
+      console.log(res);
+      if (res.data?.id) {
+        // ownerList.value.length && toast.info("Adding Owners!");
+        await addUpdateOwners(res.data?.id);
+        toast.success("Entity created successfully!");
+      }
     }
 
     router.push("/entities");
@@ -264,6 +274,15 @@ const onCreate = async () => {
       toast.error("Error: " + error.message);
     }
     console.error(error);
+  }
+};
+
+const addUpdateOwners = async (entity_id) => {
+  for (let i = 0; i < ownerList.value.length; i++) {
+    const owner = ownerList.value[i];
+    owner.entity_id = entity_id;
+    const isLast = i == ownerList.value.length - 1;
+    await addOwner(owner, isLast);
   }
 };
 
@@ -294,6 +313,8 @@ watch(
         officerList.value = response.data.officer_list || [];
         // Update Registered Agent List
         registeredAgentList.value = response.data.registered_agent_list || [];
+        // Update Owner List
+        ownerList.value = response.data.owners || [];
       } catch (error) {
         toast.error("Failed to load entity data.");
         router.push("/entities/entity");
@@ -465,8 +486,8 @@ const handleAddOwners = () => {
   addOwnerDialog.value = true;
 };
 
-const addOwnerMore = () => {
-  ownerList.value.push(structuredClone(referredByItem));
+const addNewOwner = () => {
+  ownerList.value.push(structuredClone(ownerItem));
 };
 
 const addOwnerDocument = (event) => {
@@ -477,21 +498,22 @@ const addOwnerDocument = (event) => {
   }
 };
 
-const confirmAddOwner = async () => {
-  console.log(ownerList.value);
+const addOwner = async (owner, isLast) => {
+  console.log("Adding Owner");
+  console.log(owner);
   try {
     const formData = new FormData();
 
     // Append owner data
-    for (const key in ownerList.value[0]) {
+    for (const key in owner) {
       if (key !== "document") {
-        formData.append(key, ownerList.value[0][key]);
+        formData.append(key, owner[key] || "");
       }
     }
 
     // Append avatar image if it's a File object (not a URL string)
-    if (ownerList.value[0].document) {
-      formData.append("document", ownerList.value[0].document);
+    if (owner.document) {
+      formData.append("document", owner.document);
     }
 
     const config = {
@@ -499,13 +521,15 @@ const confirmAddOwner = async () => {
         "Content-Type": "multipart/form-data",
       },
     };
-    loading.value = true;
-    await ApiService.createOwner(formData, config);
-    toast.success("Owner created successfully!");
-    loading.value = false;
-    addOwnerDialog.value = false;
-    ownerList.value = structuredClone(ownerListInitial);
-    getProps();
+    // loading.value = true;
+    if (owner.id) {
+      await ApiService.updateOwner(owner.id, formData, config);
+    } else {
+      await ApiService.createOwner(formData, config);
+    }
+    // loading.value = false;
+    // addOwnerDialog.value = false;
+    // isLast && toast.success("Owner created successfully!");
   } catch (error) {
     loading.value = false;
     if (error.response) {
@@ -750,11 +774,11 @@ onMounted(() => {
                       :items="states"
                     />
                   </VCol>
-                  <!-- 👉 Created Date -->
+                  <!-- 👉 Launched Date -->
                   <VCol cols="12" md="6" sm="6" lg="3">
                     <VueDatePicker
                       v-model="accountDataLocal.date_created"
-                      placeholder="Created Date"
+                      placeholder="Launched Date"
                     ></VueDatePicker>
                   </VCol>
 
@@ -805,7 +829,7 @@ onMounted(() => {
                   <VDivider />
 
                   <!-- 👉 Owners -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <!-- <VCol cols="12" md="6" sm="6" lg="3">
                     <VAutocomplete
                       v-model="accountDataLocal.owner_ids"
                       label="Select Owners"
@@ -819,7 +843,7 @@ onMounted(() => {
                     />
                   </VCol>
 
-                  <VDivider />
+                  <VDivider /> -->
                   <VCol cols="12">
                     <p>
                       Services
@@ -981,6 +1005,157 @@ onMounted(() => {
                               ]"
                               placeholder="Select Country"
                             />
+                          </VCol>
+                        </VRow>
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+
+                  <VDivider />
+
+                  <!-- 👉 Directors -->
+                  <VCol cols="12">
+                    <p class="directors">
+                      Owners
+                      <VIcon icon="bx-plus-circle" @click="addNewOwner" />
+                    </p>
+                  </VCol>
+                  <VCol cols="12">
+                    <VCard
+                      v-for="(owner, index) in ownerList"
+                      :key="index"
+                      class="director-card"
+                    >
+                      <VIcon
+                        class="item-delete-button"
+                        icon="bx-minus-circle"
+                        color="#c93903"
+                        @click="removeOwner(index)"
+                      />
+                      <VCardText>
+                        <VRow>
+                          <VCol md="6" cols="12">
+                            <VTextField
+                              v-model="owner.first_name"
+                              placeholder="John"
+                              label="First Name"
+                            />
+                          </VCol>
+
+                          <VCol md="6" cols="12">
+                            <VTextField
+                              v-model="owner.last_name"
+                              placeholder="Doe"
+                              label="Last Name"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.email"
+                              label="E-mail"
+                              placeholder="johndoe@gmail.com"
+                              type="email"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.phone"
+                              label="Phone Number"
+                              placeholder="1-917-543-9876"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.address1"
+                              label="Address 1"
+                              placeholder="5645 Coral Ridge Drive"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.address2"
+                              label="Address 2"
+                              placeholder="Suite 410"
+                            />
+                          </VCol>
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.city"
+                              label="City"
+                              placeholder="Coral Springs"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VAutocomplete
+                              v-model="owner.state"
+                              label="State"
+                              placeholder="FL"
+                              item-title="name"
+                              item-value="abbreviation"
+                              :items="states"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.zip"
+                              label="Zip Code"
+                              placeholder="10001"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VSelect
+                              v-model="owner.country"
+                              label="Country"
+                              :items="[
+                                'USA',
+                                'Canada',
+                                'UK',
+                                'India',
+                                'Australia',
+                              ]"
+                              placeholder="Select Country"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VTextField
+                              v-model="owner.ownership_stake"
+                              label="Ownership Stake"
+                              placeholder="Ownership"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VSelect
+                              v-model="owner.document_type"
+                              label="Document Type"
+                              :items="['DL', 'Passport']"
+                              placeholder="Select Country"
+                            />
+                          </VCol>
+
+                          <VCol cols="12" md="6">
+                            <VueDatePicker
+                              v-model="owner.document_expiration"
+                              placeholder="Document Expiration Date"
+                            ></VueDatePicker>
+                          </VCol>
+                          <VCol cols="12" md="6">
+                            <VFileInput
+                              :v-model="owner.document"
+                              clearable
+                              label="Upload Document"
+                              accept=".pdf"
+                              variant="outlined"
+                              show-size
+                              @change="addOwnerDocument"
+                            ></VFileInput>
                           </VCol>
                         </VRow>
                       </VCardText>

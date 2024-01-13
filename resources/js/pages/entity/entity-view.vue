@@ -177,20 +177,17 @@ const removeOwner = (id) => {
 const confirmDeleteOwner = async () => {
   try {
     loading.value = true;
-    const updated_ids = accountDataLocal.value.owner_ids.filter(
-      (item) => item != ownerIdToDelete.value
-    );
-    const res = await ApiService.updateOwners({
-      ids: updated_ids,
-      entity_id: entityId.value,
-    });
+    // const updated_ids = accountDataLocal.value.owner_ids.filter(
+    //   (item) => item != ownerIdToDelete.value
+    // );
+    const res = await ApiService.deleteOwner(ownerIdToDelete.value);
     if (res.data.message) toast.success(res.data.message);
 
-    accountDataLocal.value.owner_ids = updated_ids;
+    // accountDataLocal.value.owner_ids = updated_ids;
     accountDataLocal.value.owners = accountDataLocal.value.owners.filter(
       (item) => item.id !== ownerIdToDelete.value
     );
-    console.log(accountDataLocal.value.owner_ids);
+    // console.log(accountDataLocal.value.owner_ids);
     console.log(accountDataLocal.value.owners);
     deleteOwnerDialog.value = false;
     ownerIdToDelete.value = null;

@@ -27,17 +27,23 @@ class EntityController extends Controller
 {
     public function index($id)
     {
-        $entity = Entity::with('documents')->findOrFail($id);
+        $entity = Entity::with(['documents', 'owners'])->findOrFail($id);
 
         if ($entity) {
-            $owners = $entity['owner_ids'] ? $entity->get_owners($entity['owner_ids']) : [];
+            $owners = $entity['owners'];
+            foreach ($owners as $owner) {
+                if ($owner->kyc_document) {
+                    $owner->kyc_document = Document::findOrFail($owner->kyc_document);
+                }
+            }
+            $entity['owners'] = $owners;
+
             // $documents = $entity['document_ids'] ? $entity->get_documents($entity['document_ids']) : [];
             $person = User::where('person', $entity['person'])->first();
             if ($person) {
                 $user = new UserResource($person);
                 $entity['contact_person'] = $user;
             }
-            $entity['owners'] = $owners;
 
             $directors = Director::where('entity_id', $id)->get();
             $entity['director_list'] = $directors;
@@ -721,7 +727,7 @@ class EntityController extends Controller
     {
         $user = auth()->user();
         $query = Entity::query();
-        $query = $query->with('documents')->where('is_deleted', false);
+        $query = $query->with(['documents', 'owners'])->where('is_deleted', false);
         $field = $request->input('field');
         $order = $request->input('order');
         $query->orderBy($field, $order);
@@ -754,20 +760,20 @@ class EntityController extends Controller
 
         // Pagination - 10 users per page
         $entities = $query->paginate(10);
-        $ownerIds = $entities->flatMap(function ($entity) {
-            return $entity->owner_ids ?? [];
-        })->unique()->all();
+        // $ownerIds = $entities->flatMap(function ($entity) {
+        //     return $entity->owner_ids ?? [];
+        // })->unique()->all();
         // Fetch owners in a single query
-        $owners = Owner::whereIn('id', $ownerIds)->get()->keyBy('id');
+        // $owners = Owner::whereIn('id', $ownerIds)->get()->keyBy('id');
 
-        // Attach owners to entities
-        foreach ($entities as $entity) {
-            $entityOwners = collect($entity->owner_ids)
-                ->map(function ($id) use ($owners) {
-                    return $owners->get($id);
-                })->filter();
-            $entity->owners = $entityOwners;
-        }
+        // // Attach owners to entities
+        // foreach ($entities as $entity) {
+        //     $entityOwners = collect($entity->owner_ids)
+        //         ->map(function ($id) use ($owners) {
+        //             return $owners->get($id);
+        //         })->filter();
+        //     $entity->owners = $entityOwners;
+        // }
 
 
         return response()->json($entities);
@@ -932,7 +938,8 @@ class EntityController extends Controller
             ], 422);
         }
 
-        $owners = $entity['owner_ids'] ? $entity->get_owners($entity['owner_ids']) : [];
+        // $owners = $entity['owner_ids'] ? $entity->get_owners($entity['owner_ids']) : [];
+        $owners = Owner::where('entity_id', $id)->get();
         $officers = Officer::where('entity_id', $id)->get();
         // $formattedDate = Carbon::parse($entity->date_created)->format('m/d/Y');
         $dateString = $entity->date_created;
@@ -1030,8 +1037,9 @@ class EntityController extends Controller
     public function delete($id)
     {
         $entity = Entity::findOrFail($id);
-        $entity->is_deleted = true;
-        $entity->save();
+        // $entity->is_deleted = true;
+        // $entity->save();
+        $entity->delete();
 
         return response()->json(['message' => 'User marked as deleted successfully']);
     }

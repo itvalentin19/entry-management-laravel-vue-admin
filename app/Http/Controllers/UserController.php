@@ -230,16 +230,20 @@ class UserController extends Controller
 	{
 		$request->validate([
 			'name' => 'required|string|max:255',
+			'company' => 'required|string|max:100',
 			'email' => 'required|string|email|max:255|unique:users',
 			'phone' => 'required|string|max:255',
 			'address' => 'required|string|max:255',
 			'address2' => 'required|string|max:255',
 			'avatar' => 'sometimes|file|image|max:2048',
-			// 2MB Max
+			'city' => 'required|string|max:50',
+			'state' => 'required|string|max:50',
+			'zip' => 'required|string|max:10',
+			'country' => 'required|string|max:50',
 			'role' => 'required|in:admin,user', // Ensure role is either 'admin' or 'user'
 		]);
 
-		$user = new User($request->only(['name', 'email', 'phone', 'address', 'address2', 'role']));
+		$user = new User($request->only(['name', 'company', 'email', 'phone', 'address', 'address2', 'role', 'city', 'state', 'zip', 'country']));
 		$person = $this->generatePersonName($request->get('name'));
 		$user->person = $person;
 		$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
@@ -331,20 +335,30 @@ class UserController extends Controller
 			// Validate the incoming request data
 			$request->validate([
 				'name' => 'string|max:255',
+				'company' => 'string|max:100',
 				'email' => 'string|email|max:255|unique:users,email,' . $id,
 				'phone' => 'string|max:255',
 				'address' => 'string|max:255',
 				'address2' => 'string|max:255',
 				'role' => 'in:admin,user',
+				'city' => 'string|max:50',
+				'state' => 'string|max:50',
+				'zip' => 'string|max:10',
+				'country' => 'string|max:50',
 				'avatar' => 'sometimes|file|image|max:2048', // 2MB Max
 			]);
 
 			// Update user's information
 			$user->name = $request->input('name', $user->name);
+			$user->company = $request->input('company', $user->company);
 			$user->email = $request->input('email', $user->email);
 			$user->phone = $request->input('phone', $user->phone);
 			$user->address = $request->input('address', $user->address);
 			$user->address2 = $request->input('address2', $user->address2);
+			$user->city = $request->input('city', $user->city);
+			$user->state = $request->input('state', $user->state);
+			$user->zip = $request->input('zip', $user->zip);
+			$user->country = $request->input('country', $user->country);
 			$user->role = $request->input('role', $user->role);
 
 			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
@@ -383,7 +397,13 @@ class UserController extends Controller
 			// Assuming you want to search across multiple properties
 			$query->where(function ($query) use ($search) {
 				$query->where('name', 'LIKE', "%{$search}%")
-					->orWhere('email', 'LIKE', "%{$search}%");
+					->orWhere('email', 'LIKE', "%{$search}%")
+					->orWhere('company', 'LIKE', "%{$search}%")
+					->orWhere('address', 'LIKE', "%{$search}%")
+					->orWhere('address2', 'LIKE', "%{$search}%")
+					->orWhere('city', 'LIKE', "%{$search}%")
+					->orWhere('state', 'LIKE', "%{$search}%")
+					->orWhere('country', 'LIKE', "%{$search}%");
 				// Add other properties you want to search by
 			});
 		}

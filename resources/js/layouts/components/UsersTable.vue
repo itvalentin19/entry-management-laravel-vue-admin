@@ -58,9 +58,16 @@ const menuList = ref([
         </th>
         <th>Photo</th>
         <th class="sortable-header" @click="handleSort('name')">Name</th>
+        <th class="sortable-header" @click="handleSort('company')">
+          Company Name
+        </th>
         <th class="sortable-header" @click="handleSort('email')">Email</th>
         <th class="sortable-header" @click="handleSort('phone')">Phone</th>
         <th class="sortable-header" @click="handleSort('address')">Address</th>
+        <th class="sortable-header" @click="handleSort('city')">City</th>
+        <th class="sortable-header" @click="handleSort('state')">State</th>
+        <th class="sortable-header" @click="handleSort('zip')">Zip</th>
+        <th class="sortable-header" @click="handleSort('country')">Country</th>
         <th class="sortable-header" @click="handleSort('created_at')">
           Created At
         </th>
@@ -88,12 +95,27 @@ const menuList = ref([
           {{ user.name }}
         </td>
         <td class="text-center">
+          {{ user.company }}
+        </td>
+        <td class="text-center">
           {{ user.email }}
         </td>
         <td class="text-center">
           {{ user.phone }}
         </td>
         <td class="text-center">{{ user.address }} {{ user.address2 }}</td>
+        <td class="text-center">
+          {{ user.city }}
+        </td>
+        <td class="text-center">
+          {{ user.state }}
+        </td>
+        <td class="text-center">
+          {{ user.zip }}
+        </td>
+        <td class="text-center">
+          {{ user.country }}
+        </td>
         <td class="text-center">
           {{ moment(user.created_at).format("YYYY-MM-DD HH:mm:ss") }}
         </td>

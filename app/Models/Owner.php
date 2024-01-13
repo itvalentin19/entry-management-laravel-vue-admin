@@ -9,6 +9,7 @@ class Owner extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'entity_id',
         'first_name',
         'last_name',
         'email',

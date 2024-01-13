@@ -28,5 +28,5 @@ Route::get('entity/report/{id}', [EntityController::class, 'getReport']);
 
 Route::get('/{path}', function () {
     return view('application');
-})->where('path', '^(?!avatars|css|js|images|report).*$'); // Exclude these directories
+})->where('path', '^(?!avatars|storage|css|js|images|report).*$'); // Exclude these directories
 

@@ -51,9 +51,9 @@ class Entity extends Model
     // {
     //     return $this->hasMany(Owner::class, 'id', 'owners');
     // }
-    public function get_owners($ids)
+    public function owners()
     {
-        return Owner::whereIn('id', $ids)->get();
+        return $this->hasMany(Owner::class, 'entity_id', 'id');
     }
 
     // Relationship to Document

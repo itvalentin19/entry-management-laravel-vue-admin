@@ -4,15 +4,21 @@ import ApiService from "@/services/api";
 import { useToast } from "vue-toastification";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
+import states from "@/pages/entity/us_states.json";
 
 const accountData = {
   name: "",
+  company: null,
   email: "",
   phone: "",
   address: "",
   address2: "",
   avatarImg: avatar1,
   role: "user",
+  city: null,
+  state: null,
+  zip: null,
+  country: "USA",
 };
 const route = useRoute();
 const userId = ref(null);
@@ -238,8 +244,17 @@ watch(
                 />
               </VCol>
 
+              <!-- 👉 Company Name -->
+              <VCol md="6" cols="12">
+                <VTextField
+                  v-model="accountDataLocal.company"
+                  placeholder="EAKAV LLC"
+                  label="Company Name"
+                />
+              </VCol>
+
               <!-- 👉 Email -->
-              <VCol cols="12" md="6">
+              <VCol cols="12" md="6" lg="3">
                 <VTextField
                   v-model="accountDataLocal.email"
                   label="E-mail"
@@ -249,7 +264,7 @@ watch(
               </VCol>
 
               <!-- 👉 Phone -->
-              <VCol cols="12" md="6">
+              <VCol cols="12" md="6" lg="3">
                 <VTextField
                   v-model="accountDataLocal.phone"
                   label="Phone Number"
@@ -258,7 +273,7 @@ watch(
               </VCol>
 
               <!-- 👉 Role -->
-              <VCol cols="12" md="6">
+              <VCol cols="12" md="6" lg="3">
                 <VSelect
                   v-model="accountDataLocal.role"
                   :items="['admin', 'user']"
@@ -282,6 +297,46 @@ watch(
                   v-model="accountDataLocal.address2"
                   label="Address 2"
                   placeholder="New York, NY 10001"
+                />
+              </VCol>
+
+              <!-- 👉 City -->
+              <VCol cols="12" md="6" sm="6" lg="3">
+                <VTextField
+                  v-model="accountDataLocal.city"
+                  label="City"
+                  placeholder="Coral Springs"
+                />
+              </VCol>
+
+              <!-- 👉 State -->
+              <VCol cols="12" md="6" sm="6" lg="3">
+                <VAutocomplete
+                  v-model="accountDataLocal.state"
+                  label="State"
+                  placeholder="FL"
+                  item-title="name"
+                  item-value="abbreviation"
+                  :items="states"
+                />
+              </VCol>
+
+              <!-- 👉 Zip Code -->
+              <VCol cols="12" md="6" sm="6" lg="3">
+                <VTextField
+                  v-model="accountDataLocal.zip"
+                  label="Zip Code"
+                  placeholder="10001"
+                />
+              </VCol>
+
+              <!-- 👉 Country -->
+              <VCol cols="12" md="6" sm="6" lg="3">
+                <VSelect
+                  v-model="accountDataLocal.country"
+                  label="Country"
+                  :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+                  placeholder="Select Country"
                 />
               </VCol>
 
