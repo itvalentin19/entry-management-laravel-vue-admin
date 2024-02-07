@@ -43,7 +43,7 @@
 
     <table>
         <tr>
-            <td>Company Name<br><span class="value">{{$entity_name ?? ''}}</span></td>
+            <td>Entity Name<br><span class="value">{{$entity_name ?? ''}}</span></td>
             <td>Date of Incorporation<br>
 						@if(isset($date_created))
 						<span class="value">{{ $date_created ? date('m/d/Y', strtotime($date_created)) : '' }}</span>
@@ -52,9 +52,14 @@
             <td>EIN<br><span class="value">{{$ein_number ?? ''}}</span></td>
         </tr>
         <tr>
-            <td>Company Address<br><span class="value">{{$address_1 ?? ''}}, {{$address_2 ?? ''}}</span></td>
-            <td>DBA<br><span class="value">{{$ein_number ?? ''}}</span></td>
+            <td>Address<br><span class="value">{{$address_1 ?? ''}}, {{$address_2 ?? ''}} {{$city ?? ''}} {{$state ?? ''}} {{$zip ?? ''}}</span></td>
+            <td>DBA<br><span class="value">{{$doing_business_as ?? ''}}</span></td>
             <td></td>
+        </tr>
+        <tr>
+            <td>Contact Name<br><span class="value">{{$contact_name ?? ''}}</span></td>
+            <td>Contact Phone<br><span class="value">{{$contact_phone ?? ''}}</span></td>
+            <td>Contact Email<br><span class="value">{{$contact_email ?? ''}}</span></td>
         </tr>
     </table>
 
@@ -76,7 +81,7 @@
 						<td>{{ $owner->last_name }}</td>
 						<td>{{ $owner->email }}</td>
 						<td>{{ $owner->phone }}</td>
-						<td>{{ $owner->address1 }}, {{ $owner->address2 }}</td>
+						<td>{{ $owner->address1 ?? "" }}, {{ $owner->address2 ?? "" }} {{ $owner->city ?? "" }} {{ $owner->state ?? "" }} {{ $owner->zip ?? "" }}</td>
 						<td>{{ $owner->ownership_stake }}%</td>
 				</tr>
 				@endforeach
@@ -102,7 +107,7 @@
 						<td>{{ $officer->title }}</td>
 						<td>{{ $officer->email }}</td>
 						<td>{{ $officer->phone }}</td>
-						<td>{{ $officer->address1 }}, {{ $officer->address2 }}</td>
+						<td>{{ $officer->address1 ?? "" }}, {{ $officer->address2 ?? "" }} {{ $officer->city ?? "" }} {{ $officer->state ?? "" }} {{ $officer->zip ?? "" }}</td>
 				</tr>
 				@endforeach
 				@endif
@@ -112,7 +117,7 @@
     <p>{{ $jurisdiction ?? '' }}</p>
 
     <div class="footer">
-        <p>Confidential Report as DATE</p>
+        <p>Confidential Report as {{ $today }}</p>
         <p>Report prepared by Eakav - All Rights Reserved</p>
         <p>Eakav LLC, 5645 Coral Ridge Drive Suite 410, Coral Springs FL 33076</p>
         <a href="https://www.eakav.com">www.eakav.com</a>

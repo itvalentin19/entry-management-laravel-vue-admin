@@ -203,7 +203,7 @@ const handleUpdatePassword = async () => {
 
                     <VBtn
                       type="reset"
-                      color="error"
+                      color="secondary"
                       variant="tonal"
                       @click="resetAvatar"
                     >

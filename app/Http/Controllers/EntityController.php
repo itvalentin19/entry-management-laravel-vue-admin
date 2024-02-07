@@ -961,6 +961,9 @@ class EntityController extends Controller
             'state' => $entity->state,
             'zip' => $entity->zip,
             'country' => $entity->country,
+            'contact_name' => $entity->contact_first_name . ' ' . $entity->contact_last_name,
+            'contact_email' => $entity->contact_email,
+            'contact_phone' => $entity->contact_phone,
             'type' => $entity->type,
             'services' => $entity->services,
             'annual_fees' => $entity->annual_fees,
@@ -972,7 +975,8 @@ class EntityController extends Controller
             'jurisdiction' => $entity->jurisdiction,
             'owners' => $owners,
             'officers' => $officers,
-            'logoBase64' => $logoBase64
+            'logoBase64' => $logoBase64,
+            'today' => Carbon::today()->format("m/d/Y")
         ];
         $pdf = PDF::loadView('pdf.report', $data);
 

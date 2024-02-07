@@ -441,8 +441,8 @@ class UserController extends Controller
 	public function delete($id)
 	{
 		$user = User::findOrFail($id);
-		$user->is_deleted = true;
-		$user->save();
+		// $user->is_deleted = true;
+		$user->delete();
 
 		return response()->json(['message' => 'User marked as deleted successfully']);
 	}

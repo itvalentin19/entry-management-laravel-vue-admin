@@ -203,7 +203,7 @@ watch(
 
               <VBtn
                 type="reset"
-                color="error"
+                color="secondary"
                 variant="tonal"
                 @click="resetAvatar"
               >
@@ -224,7 +224,7 @@ watch(
           <VAlert color="success" icon="mdi-info" text="Default Password: "
             ><span
               style="
-                color: red;
+                color: blue;
                 background: #e8e8e8;
                 padding: 4px;
                 border-radius: 20px;

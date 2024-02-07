@@ -774,11 +774,11 @@ onMounted(() => {
                       :items="states"
                     />
                   </VCol>
-                  <!-- 👉 Launched Date -->
+                  <!-- 👉 Date Incorporated -->
                   <VCol cols="12" md="6" sm="6" lg="3">
                     <VueDatePicker
                       v-model="accountDataLocal.date_created"
-                      placeholder="Launched Date"
+                      placeholder="Date Incorporated"
                     ></VueDatePicker>
                   </VCol>
 
@@ -858,7 +858,7 @@ onMounted(() => {
                         <d class="d-flex align-center justify-center">
                           <VIcon
                             icon="bx-minus-circle"
-                            color="#c93903"
+                            color="primary"
                             @click="removeServiceFee(index)"
                           />
                           <VCombobox
@@ -909,7 +909,7 @@ onMounted(() => {
                       <VIcon
                         class="item-delete-button"
                         icon="bx-minus-circle"
-                        color="#c93903"
+                        color="primary"
                         @click="removeDirector(index)"
                       />
                       <VCardText>
@@ -1029,7 +1029,7 @@ onMounted(() => {
                       <VIcon
                         class="item-delete-button"
                         icon="bx-minus-circle"
-                        color="#c93903"
+                        color="primary"
                         @click="removeOwner(index)"
                       />
                       <VCardText>
@@ -1180,7 +1180,7 @@ onMounted(() => {
                       <VIcon
                         class="item-delete-button"
                         icon="bx-minus-circle"
-                        color="#c93903"
+                        color="primary"
                         @click="removeOfficer(index)"
                       />
                       <VCardText>
@@ -1307,7 +1307,7 @@ onMounted(() => {
                       <VIcon
                         class="item-delete-button"
                         icon="bx-minus-circle"
-                        color="#c93903"
+                        color="primary"
                         @click="removeRegisteredAgent(index)"
                       />
                       <VCardText>
@@ -1477,7 +1477,7 @@ onMounted(() => {
                     <a :href="document.url" target="_blank">View Document</a>
                     <VIcon
                       icon="bx-minus-circle"
-                      color="#c93903"
+                      color="primary"
                       @click="removeDocument(document.id)"
                     />
                   </VCol>

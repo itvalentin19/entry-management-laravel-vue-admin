@@ -106,7 +106,7 @@ onMounted(() => {
       </VCardItem>
 
       <VCardText class="pt-2">
-        <h5 class="text-h5 mb-1">Welcome to eakav!</h5>
+        <h5 class="text-h5 mb-1">Welcome – Please login below</h5>
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
       </VCardText>
 
