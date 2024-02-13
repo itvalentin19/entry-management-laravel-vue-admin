@@ -5,6 +5,7 @@ import { useToast } from "vue-toastification";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import states from "@/pages/entity/us_states.json";
+import countries from "@/store/countries.json";
 
 const accountData = {
   name: "",
@@ -332,10 +333,10 @@ watch(
 
               <!-- 👉 Country -->
               <VCol cols="12" md="6" sm="6" lg="3">
-                <VSelect
+                <VCombobox
                   v-model="accountDataLocal.country"
                   label="Country"
-                  :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+                  :items="countries"
                   placeholder="Select Country"
                 />
               </VCol>

@@ -6,6 +6,7 @@ import { useRoute, useRouter } from "vue-router";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import { useStore } from "vuex";
 import { onMounted, watch } from "vue";
+import countries from "@/store/countries.json";
 
 const accountData = {
   first_name: null,
@@ -259,10 +260,10 @@ watch(
 
               <!-- 👉 Country -->
               <VCol cols="12" md="6">
-                <VSelect
+                <VCombobox
                   v-model="accountDataLocal.country"
                   label="Country"
-                  :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+                  :items="countries"
                   placeholder="Select Country"
                 />
               </VCol>

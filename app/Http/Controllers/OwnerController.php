@@ -35,7 +35,7 @@ class OwnerController extends Controller
             'country' => 'sometimes|nullable|string|max:255',
             'ownership_stake' => 'sometimes|nullable|string|max:255',
             'document_type' => 'sometimes|nullable|string|max:255',
-            'document_expiration' => 'sometimes|nullable|string|max:255',
+            'document_expiration' => 'sometimes|nullable|date|max:255',
             'document' => 'sometimes|nullable|file|mimes:pdf',
         ]);
 
@@ -102,7 +102,7 @@ class OwnerController extends Controller
                 'country' => 'sometimes|nullable|max:255',
                 'ownership_stake' => 'sometimes|nullable|max:255',
                 'document_type' => 'sometimes|nullable|max:255',
-                'document_expiration' => 'sometimes|nullable|max:255',
+                'document_expiration' => 'sometimes|nullable|date|max:255',
                 'document' => 'sometimes|nullable|file|mimes:pdf',
             ]);
 

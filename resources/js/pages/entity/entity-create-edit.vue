@@ -7,6 +7,7 @@ import { onMounted } from "vue";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import EntityUpload from "@/layouts/components/EntityUpload.vue";
 import states from "@/pages/entity/us_states.json";
+import countries from "@/store/countries.json";
 
 const route = useRoute();
 const toast = useToast();
@@ -108,7 +109,6 @@ const menu = ref(true);
 const dialog = ref(false);
 const documentIdToDelete = ref(null);
 const addReferDialog = ref(false);
-const addOwnerDialog = ref(false);
 const loading = ref(false);
 
 const referredByItem = {
@@ -482,10 +482,6 @@ const removeReferredBy = (index) => {
   referredByList.value.splice(index, 1);
 };
 
-const handleAddOwners = () => {
-  addOwnerDialog.value = true;
-};
-
 const addNewOwner = () => {
   ownerList.value.push(structuredClone(ownerItem));
 };
@@ -528,7 +524,6 @@ const addOwner = async (owner, isLast) => {
       await ApiService.createOwner(formData, config);
     }
     // loading.value = false;
-    // addOwnerDialog.value = false;
     // isLast && toast.success("Owner created successfully!");
   } catch (error) {
     loading.value = false;
@@ -728,10 +723,10 @@ onMounted(() => {
 
                   <!-- 👉 Country -->
                   <VCol cols="12" md="6" sm="6" lg="3">
-                    <VSelect
+                    <VCombobox
                       v-model="accountDataLocal.country"
                       label="Country"
-                      :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+                      :items="countries"
                       placeholder="Select Country"
                     />
                   </VCol>
@@ -776,19 +771,13 @@ onMounted(() => {
                   </VCol>
                   <!-- 👉 Date Incorporated -->
                   <VCol cols="12" md="6" sm="6" lg="3">
-                    <VueDatePicker
+                    <VTextField
                       v-model="accountDataLocal.date_created"
-                      placeholder="Date Incorporated"
-                    ></VueDatePicker>
+                      label="Date Incorporated"
+                      type="date"
+                      placeholder="MM/DD/YYYY"
+                    />
                   </VCol>
-
-                  <!-- 👉 Signed Date -->
-                  <!-- <VCol cols="12" md="6" sm="6" lg="3">
-                    <VueDatePicker
-                      v-model="accountDataLocal.date_signed"
-                      placeholder="Signed Date"
-                    ></VueDatePicker>
-                  </VCol> -->
 
                   <!-- 👉 Contact First Name -->
                   <VCol cols="12" md="6" sm="6" lg="3">
@@ -827,23 +816,6 @@ onMounted(() => {
                     />
                   </VCol>
                   <VDivider />
-
-                  <!-- 👉 Owners -->
-                  <!-- <VCol cols="12" md="6" sm="6" lg="3">
-                    <VAutocomplete
-                      v-model="accountDataLocal.owner_ids"
-                      label="Select Owners"
-                      multiple
-                      item-title="name"
-                      item-value="id"
-                      :items="owners"
-                      placeholder="Select Owners"
-                      prepend-inner-icon="bx-plus"
-                      @click:prepend-inner="handleAddOwners"
-                    />
-                  </VCol>
-
-                  <VDivider /> -->
                   <VCol cols="12">
                     <p>
                       Services
@@ -993,16 +965,10 @@ onMounted(() => {
                             />
                           </VCol>
                           <VCol cols="12" md="4" sm="6">
-                            <VSelect
+                            <VCombobox
                               v-model="director.country"
                               label="Country"
-                              :items="[
-                                'USA',
-                                'Canada',
-                                'UK',
-                                'India',
-                                'Australia',
-                              ]"
+                              :items="countries"
                               placeholder="Select Country"
                             />
                           </VCol>
@@ -1109,16 +1075,10 @@ onMounted(() => {
                           </VCol>
 
                           <VCol cols="12" md="6">
-                            <VSelect
+                            <VCombobox
                               v-model="owner.country"
                               label="Country"
-                              :items="[
-                                'USA',
-                                'Canada',
-                                'UK',
-                                'India',
-                                'Australia',
-                              ]"
+                              :items="countries"
                               placeholder="Select Country"
                             />
                           </VCol>
@@ -1141,10 +1101,12 @@ onMounted(() => {
                           </VCol>
 
                           <VCol cols="12" md="6">
-                            <VueDatePicker
+                            <VTextField
                               v-model="owner.document_expiration"
-                              placeholder="Document Expiration Date"
-                            ></VueDatePicker>
+                              label="Document Expiration Date"
+                              type="date"
+                              placeholder="MM/DD/YYYY"
+                            />
                           </VCol>
                           <VCol cols="12" md="6">
                             <VFileInput
@@ -1272,16 +1234,10 @@ onMounted(() => {
                             />
                           </VCol>
                           <VCol cols="12" md="4" sm="6">
-                            <VSelect
+                            <VCombobox
                               v-model="officer.country"
                               label="Country"
-                              :items="[
-                                'USA',
-                                'Canada',
-                                'UK',
-                                'India',
-                                'Australia',
-                              ]"
+                              :items="countries"
                               placeholder="Select Country"
                             />
                           </VCol>
@@ -1386,16 +1342,10 @@ onMounted(() => {
                             />
                           </VCol>
                           <VCol cols="12" md="4" sm="6">
-                            <VSelect
+                            <VCombobox
                               v-model="agent.country"
                               label="Country"
-                              :items="[
-                                'USA',
-                                'Canada',
-                                'UK',
-                                'India',
-                                'Australia',
-                              ]"
+                              :items="countries"
                               placeholder="Select Country"
                             />
                           </VCol>
@@ -1564,146 +1514,6 @@ onMounted(() => {
           >Cancel</VBtn
         >
         <VBtn color="red darken-1" text @click="confirmAddReferredBy">Add</VBtn>
-      </VCardActions>
-    </VCard>
-  </VDialog>
-  <VDialog v-model="addOwnerDialog" width="500">
-    <VCard :loading="loading">
-      <VCardTitle class="headline">Add Owner</VCardTitle>
-      <VCardText>
-        <VRow v-for="(item, index) in ownerList" :key="index">
-          <!-- 👉 First Name -->
-          <VCol md="6" cols="12">
-            <VTextField
-              v-model="item.first_name"
-              placeholder="John"
-              label="First Name"
-            />
-          </VCol>
-
-          <!-- 👉 Last Name -->
-          <VCol md="6" cols="12">
-            <VTextField
-              v-model="item.last_name"
-              placeholder="Doe"
-              label="Last Name"
-            />
-          </VCol>
-
-          <!-- 👉 Email -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.email"
-              label="E-mail"
-              placeholder="johndoe@gmail.com"
-              type="email"
-            />
-          </VCol>
-
-          <!-- 👉 Phone -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.phone"
-              label="Phone Number"
-              placeholder="1-917-543-9876"
-            />
-          </VCol>
-
-          <!-- 👉 Address 1 -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.address1"
-              label="Address 1"
-              placeholder="5645 Coral Ridge Drive"
-            />
-          </VCol>
-          <!-- 👉 Address 2 -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.address2"
-              label="Address 2"
-              placeholder="Suite 410"
-            />
-          </VCol>
-          <!-- 👉 Address 2 -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.city"
-              label="City"
-              placeholder="Coral Springs"
-            />
-          </VCol>
-
-          <!-- 👉 State -->
-          <VCol cols="12" md="6">
-            <VTextField v-model="item.state" label="State" placeholder="FL" />
-          </VCol>
-
-          <!-- 👉 Zip Code -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.zip"
-              label="Zip Code"
-              placeholder="10001"
-            />
-          </VCol>
-
-          <!-- 👉 Country -->
-          <VCol cols="12" md="6">
-            <VSelect
-              v-model="item.country"
-              label="Country"
-              :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
-              placeholder="Select Country"
-            />
-          </VCol>
-
-          <!-- 👉 Ownership Stack -->
-          <VCol cols="12" md="6">
-            <VTextField
-              v-model="item.ownership_stake"
-              label="Ownership Stake"
-              placeholder="Ownership"
-            />
-          </VCol>
-
-          <!-- 👉 Document Type -->
-          <VCol cols="12" md="6">
-            <VSelect
-              v-model="item.document_type"
-              label="Document Type"
-              :items="['DL', 'Passport']"
-              placeholder="Select Country"
-            />
-          </VCol>
-
-          <!-- 👉 Document Expiration -->
-          <VCol cols="12" md="6">
-            <VueDatePicker
-              v-model="item.document_expiration"
-              placeholder="Document Expiration Date"
-            ></VueDatePicker>
-          </VCol>
-          <!-- 👉 Document -->
-          <VCol cols="12" md="6">
-            <VFileInput
-              :v-model="item.document"
-              clearable
-              label="Upload Document"
-              accept=".pdf"
-              variant="outlined"
-              show-size
-              @change="addOwnerDocument"
-            ></VFileInput>
-          </VCol>
-        </VRow>
-      </VCardText>
-      <VCardActions>
-        <VSpacer></VSpacer>
-        <VBtn color="green darken-1" text @click="addOwnerDialog = false"
-          >Cancel</VBtn
-        >
-        <VBtn color="red darken-1" text @click="confirmAddOwner">Add</VBtn>
       </VCardActions>
     </VCard>
   </VDialog>

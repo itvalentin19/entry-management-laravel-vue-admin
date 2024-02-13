@@ -1,5 +1,6 @@
 <script setup>
 import avatar1 from "@images/avatars/avatar-1.png";
+import countries from "@/store/countries.json";
 
 const accountData = {
   avatarImg: avatar1,
@@ -228,10 +229,10 @@ const currencies = [
 
               <!-- 👉 Country -->
               <VCol cols="12" md="6">
-                <VSelect
+                <VCombobox
                   v-model="accountDataLocal.country"
                   label="Country"
-                  :items="['USA', 'Canada', 'UK', 'India', 'Australia']"
+                  :items="countries"
                   placeholder="Select Country"
                 />
               </VCol>
