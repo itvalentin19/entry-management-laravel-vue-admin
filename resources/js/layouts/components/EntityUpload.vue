@@ -81,13 +81,13 @@ async function handleUpload() {
               manually add documents for each entity.
             </span>
             <br />
-            <span>
+            <!-- <span>
               👉 You need to manually enter the owner IDs in the owners field
               before uploading the sheet file. Please refer to the
               <a href="/owners" target="_blank">Owners</a>
               table to create or find the appropriate owner.
             </span>
-            <br />
+            <br /> -->
             <a href="/entities_sample_sheet.xlsx" download="Sample_Sheet.xlsx">
               👉 Download the Sample Excel Sheet
             </a>

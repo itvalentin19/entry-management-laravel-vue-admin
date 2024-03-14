@@ -9,8 +9,8 @@ import { useStore } from "vuex";
 import { useToast } from "vue-toastification";
 
 const form = reactive({
-  email: "dev@gmail.com",
-  password: "test1234",
+  email: "",
+  password: "",
   remember: false,
 });
 const store = useStore();
