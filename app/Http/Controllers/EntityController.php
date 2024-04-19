@@ -82,7 +82,7 @@ class EntityController extends Controller
             'person' => 'sometimes|string|max:255|nullable',
             'jurisdiction' => 'sometimes|string|max:255|nullable',
             'owner_ids' => 'sometimes|string|max:255|nullable',
-            'files.*' => 'sometimes|file|mimes:pdf|max:2048|nullable',
+            'files.*' => 'sometimes|file|mimes:pdf,jpeg,jpg,xls,xlsx|max:2048|nullable',
             'notes' => 'sometimes|string|nullable',
             'ref_by' => 'sometimes|string|max:255|nullable',
             'active' => 'sometimes|string|nullable',
@@ -117,7 +117,7 @@ class EntityController extends Controller
                     'directors',
                     'contact_first_name',
                     'contact_last_name',
-                    'contact_phone',
+                    // 'contact_phone',
                     'contact_email',
                     'ein_number',
                     'form_id',
@@ -183,7 +183,7 @@ class EntityController extends Controller
         if ($entity->directors) {
             $entity->contact_first_name = $request->input('contact_first_name');
             $entity->contact_last_name = $request->input('contact_last_name');
-            $entity->contact_phone = $request->input('contact_phone');
+            // $entity->contact_phone = $request->input('contact_phone');
             $entity->contact_email = $request->input('contact_email');
             $request->validate([
                 'director_list' => 'required|string',
@@ -365,7 +365,7 @@ class EntityController extends Controller
                 'ein_number' => 'string|max:255|nullable',
                 'contact_first_name' => 'string|max:255|nullable',
                 'contact_last_name' => 'string|max:255|nullable',
-                'contact_phone' => 'string|max:255|nullable',
+                // 'contact_phone' => 'string|max:255|nullable',
                 'contact_email' => 'string|email|max:255|nullable',
                 'date_created' => 'date|max:255|nullable',
                 // 'date_signed' => 'string|max:255|nullable',
@@ -373,7 +373,7 @@ class EntityController extends Controller
                 'jurisdiction' => 'string|max:255|nullable',
                 'owner_ids' => 'string|max:255|nullable',
                 'document_ids' => 'string|max:255|nullable',
-                'files.*' => 'sometimes|file|mimes:pdf|nullable',
+                'files.*' => 'sometimes|file|mimes:pdf,jpeg,jpg,xls,xlsx|nullable',
                 'notes' => 'string|nullable',
                 'ref_by' => 'string|max:255|nullable',
                 'active' => 'string',
@@ -402,7 +402,7 @@ class EntityController extends Controller
             $entity->ref_by = $request->input('ref_by', $entity->ref_by);
             $entity->contact_first_name = $request->input('contact_first_name', $entity->contact_first_name);
             $entity->contact_last_name = $request->input('contact_last_name', $entity->contact_last_name);
-            $entity->contact_phone = $request->input('contact_phone', $entity->contact_phone);
+            // $entity->contact_phone = $request->input('contact_phone', $entity->contact_phone);
             $entity->contact_email = $request->input('contact_email', $entity->contact_email);
 
             $entity->directors = $request->input('directors') == "true";
@@ -851,7 +851,7 @@ class EntityController extends Controller
             $entityData['type'] = $cells[8] ?? null;
             $entityData['contact_first_name'] = $cells[9] ?? null;
             $entityData['contact_last_name'] = $cells[10] ?? null;
-            $entityData['contact_phone'] = $cells[11] ?? null;
+            // $entityData['contact_phone'] = $cells[11] ?? null;
             $entityData['contact_email'] = $cells[12] ?? null;
             $entityData['services'] = $cells[13] ?? null;
             $entityData['annual_fees'] = $cells[14] ?? null;
@@ -963,7 +963,7 @@ class EntityController extends Controller
             'country' => $entity->country,
             'contact_name' => $entity->contact_first_name . ' ' . $entity->contact_last_name,
             'contact_email' => $entity->contact_email,
-            'contact_phone' => $entity->contact_phone,
+            // 'contact_phone' => $entity->contact_phone,
             'type' => $entity->type,
             'services' => $entity->services,
             'annual_fees' => $entity->annual_fees,

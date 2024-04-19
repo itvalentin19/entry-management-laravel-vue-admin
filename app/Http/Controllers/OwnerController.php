@@ -25,7 +25,7 @@ class OwnerController extends Controller
             'entity_id' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:owners',
+            'email' => 'sometimes|string|email|max:255',
             'phone' => 'sometimes|nullable|string|max:255',
             'address1' => 'sometimes|nullable|string|max:255',
             'address2' => 'sometimes|nullable|string|max:255',
@@ -36,7 +36,7 @@ class OwnerController extends Controller
             'ownership_stake' => 'sometimes|nullable|string|max:255',
             'document_type' => 'sometimes|nullable|string|max:255',
             'document_expiration' => 'sometimes|nullable|date|max:255',
-            'document' => 'sometimes|nullable|file|mimes:pdf',
+            'document' => 'sometimes|nullable|file|mimes:pdf,jpeg,jpg,xls,xlsx',
         ]);
 
         $owner = new Owner(
@@ -92,7 +92,7 @@ class OwnerController extends Controller
                 'entity_id' => 'string|max:255',
                 'first_name' => 'string|max:255',
                 'last_name' => 'string|max:255',
-                'email' => 'string|email|max:255',
+                'email' => 'sometimes|string|email|max:255',
                 'phone' => 'sometimes|nullable|max:255',
                 'address1' => 'sometimes|nullable|max:255',
                 'address2' => 'sometimes|nullable|max:255',
@@ -103,7 +103,7 @@ class OwnerController extends Controller
                 'ownership_stake' => 'sometimes|nullable|max:255',
                 'document_type' => 'sometimes|nullable|max:255',
                 'document_expiration' => 'sometimes|nullable|date|max:255',
-                'document' => 'sometimes|nullable|file|mimes:pdf',
+                'document' => 'sometimes|nullable|file|mimes:pdf,jpeg,jpg,xls,xlsx',
             ]);
 
             // Update user's information

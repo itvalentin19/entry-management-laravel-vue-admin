@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Report</title>
@@ -7,34 +8,45 @@
         body {
             font-family: 'Arial', sans-serif;
         }
+
         .header,
         .footer {
             text-align: center;
             margin-bottom: 20px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        table, th, td {
+
+        table,
+        th,
+        td {
             border: 1px solid black;
         }
-        th, td {
+
+        th,
+        td {
             padding: 8px;
             text-align: left;
         }
+
         .footer {
             font-size: 0.8em;
         }
+
         .logo {
             width: 150px;
             height: auto;
         }
-				.value {
-					font-weight: 600;
-				}
+
+        .value {
+            font-weight: 600;
+        }
     </style>
 </head>
+
 <body>
     <div class="header">
         <img src="{{ $logoBase64 }}" alt="EAKVA LOGO" class="logo">
@@ -45,10 +57,10 @@
         <tr>
             <td>Entity Name<br><span class="value">{{$entity_name ?? ''}}</span></td>
             <td>Date of Incorporation<br>
-						@if(isset($date_created))
-						<span class="value">{{ $date_created ? date('m/d/Y', strtotime($date_created)) : '' }}</span>
-						@endif
-					</td>
+                @if(isset($date_created))
+                <span class="value">{{ $date_created ? date('m/d/Y', strtotime($date_created)) : '' }}</span>
+                @endif
+            </td>
             <td>EIN<br><span class="value">{{$ein_number ?? ''}}</span></td>
         </tr>
         <tr>
@@ -58,8 +70,8 @@
         </tr>
         <tr>
             <td>Contact Name<br><span class="value">{{$contact_name ?? ''}}</span></td>
-            <td>Contact Phone<br><span class="value">{{$contact_phone ?? ''}}</span></td>
             <td>Contact Email<br><span class="value">{{$contact_email ?? ''}}</span></td>
+            <td></td>
         </tr>
     </table>
 
@@ -74,18 +86,18 @@
             <th>Percent of Ownership</th>
         </tr>
         {{-- Loop through your ownership data here --}}
-				@if(isset($owners))
-				@foreach ($owners as $owner)
-				<tr>
-						<td>{{ $owner->first_name }}</td>
-						<td>{{ $owner->last_name }}</td>
-						<td>{{ $owner->email }}</td>
-						<td>{{ $owner->phone }}</td>
-						<td>{{ $owner->address1 ?? "" }}, {{ $owner->address2 ?? "" }} {{ $owner->city ?? "" }} {{ $owner->state ?? "" }} {{ $owner->zip ?? "" }}</td>
-						<td>{{ $owner->ownership_stake }}%</td>
-				</tr>
-				@endforeach
-				@endif
+        @if(isset($owners))
+        @foreach ($owners as $owner)
+        <tr>
+            <td>{{ $owner->first_name }}</td>
+            <td>{{ $owner->last_name }}</td>
+            <td>{{ $owner->email }}</td>
+            <td>{{ $owner->phone }}</td>
+            <td>{{ $owner->address1 ?? "" }}, {{ $owner->address2 ?? "" }} {{ $owner->city ?? "" }} {{ $owner->state ?? "" }} {{ $owner->zip ?? "" }}</td>
+            <td>{{ $owner->ownership_stake }}%</td>
+        </tr>
+        @endforeach
+        @endif
     </table>
 
     <h2>Officers</h2>
@@ -99,18 +111,18 @@
             <th>Address</th>
         </tr>
         {{-- Loop through your officers data here --}}
-				@if(isset($officers))
-				@foreach ($officers as $officer)
-				<tr>
-						<td>{{ $officer->first_name }}</td>
-						<td>{{ $officer->last_name }}</td>
-						<td>{{ $officer->title }}</td>
-						<td>{{ $officer->email }}</td>
-						<td>{{ $officer->phone }}</td>
-						<td>{{ $officer->address1 ?? "" }}, {{ $officer->address2 ?? "" }} {{ $officer->city ?? "" }} {{ $officer->state ?? "" }} {{ $officer->zip ?? "" }}</td>
-				</tr>
-				@endforeach
-				@endif
+        @if(isset($officers))
+        @foreach ($officers as $officer)
+        <tr>
+            <td>{{ $officer->first_name }}</td>
+            <td>{{ $officer->last_name }}</td>
+            <td>{{ $officer->title }}</td>
+            <td>{{ $officer->email }}</td>
+            <td>{{ $officer->phone }}</td>
+            <td>{{ $officer->address1 ?? "" }}, {{ $officer->address2 ?? "" }} {{ $officer->city ?? "" }} {{ $officer->state ?? "" }} {{ $officer->zip ?? "" }}</td>
+        </tr>
+        @endforeach
+        @endif
     </table>
 
     <h2>Jurisdiction</h2>
@@ -123,4 +135,5 @@
         <a href="https://www.eakav.com">www.eakav.com</a>
     </div>
 </body>
+
 </html>

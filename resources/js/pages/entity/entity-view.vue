@@ -1,12 +1,10 @@
 <script setup>
-import avatar1 from "@images/avatars/avatar-1.png";
-import ApiService from "@/services/api";
-import { useToast } from "vue-toastification";
-import { useRoute, useRouter } from "vue-router";
-import { onMounted } from "vue";
-import VueDatePicker from "@vuepic/vue-datepicker";
-import EntityUpload from "@/layouts/components/EntityUpload.vue";
+import XlsxViewer from "@/components/XlsxViewer.vue";
 import OwnersTable from "@/layouts/components/OwnersTable.vue";
+import ApiService from "@/services/api";
+import { onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
 
 const route = useRoute();
 const toast = useToast();
@@ -551,8 +549,16 @@ const headerTitle = () => {
                     v-for="document in accountDataLocal.documents"
                     :key="document.id"
                   >
-                    <iframe :src="document.url" class="pdf-preview"></iframe>
-                    <a :href="document.url" target="_blank">View Document</a>
+                    <div v-if="document.url.includes('xlsx')" class="pdf-preview">
+                      <XlsxViewer v-if="document.url.includes('xlsx')" :excelFile="document.url" />
+                    </div>
+                    <iframe v-if="document.url.includes('xlsx') == false" :src="document.url" class="pdf-preview"></iframe>
+                    <a :href="document.url" target="_blank">
+                      <VIcon
+                        icon="bx-link-external"
+                        color="primary"
+                      />
+                    </a>
                   </VCol>
 
                   <!-- 👉 Person -->

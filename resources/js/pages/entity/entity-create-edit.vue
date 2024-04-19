@@ -1,13 +1,12 @@
 <script setup>
-import avatar1 from "@images/avatars/avatar-1.png";
-import ApiService from "@/services/api";
-import { useToast } from "vue-toastification";
-import { useRoute, useRouter } from "vue-router";
-import { onMounted } from "vue";
-import VueDatePicker from "@vuepic/vue-datepicker";
+import XlsxViewer from "@/components/XlsxViewer.vue";
 import EntityUpload from "@/layouts/components/EntityUpload.vue";
 import states from "@/pages/entity/us_states.json";
+import ApiService from "@/services/api";
 import countries from "@/store/countries.json";
+import { onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
 
 const route = useRoute();
 const toast = useToast();
@@ -808,13 +807,13 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Contact Phone -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <!-- <VCol cols="12" md="6" sm="6" lg="3">
                     <VTextField
                       v-model="accountDataLocal.contact_phone"
                       label="Contact Phone"
                       placeholder="1-917-543-9876"
                     />
-                  </VCol>
+                  </VCol> -->
                   <VDivider />
                   <VCol cols="12">
                     <p>
@@ -1113,7 +1112,7 @@ onMounted(() => {
                               :v-model="owner.document"
                               clearable
                               label="Upload Document"
-                              accept=".pdf"
+                              accept=".pdf, .jpeg, .jpg, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                               variant="outlined"
                               show-size
                               @change="addOwnerDocument"
@@ -1389,7 +1388,7 @@ onMounted(() => {
                       :v-model="accountDataLocal.files"
                       clearable
                       label="Upload Document"
-                      accept=".pdf"
+                      accept=".pdf, .jpeg, .jpg, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                       variant="outlined"
                       show-size
                       chips
@@ -1423,8 +1422,14 @@ onMounted(() => {
                     v-for="document in accountDataLocal.documents"
                     :key="document.id"
                   >
-                    <iframe :src="document.url" class="pdf-preview"></iframe>
-                    <a :href="document.url" target="_blank">View Document</a>
+                    <XlsxViewer v-if="document.url.includes('xlsx')" :excelFile="document.url" />
+                    <iframe v-else :src="document.url" class="pdf-preview"></iframe>
+                    <a :href="document.url" target="_blank">
+                      <VIcon
+                        icon="bx-link-external"
+                        color="primary"
+                      />
+                    </a>
                     <VIcon
                       icon="bx-minus-circle"
                       color="primary"

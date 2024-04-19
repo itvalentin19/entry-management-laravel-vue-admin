@@ -1,27 +1,32 @@
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import laravel from 'laravel-vite-plugin'
 import { fileURLToPath } from 'node:url'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import vuetify from 'vite-plugin-vuetify'
-import laravel from 'laravel-vite-plugin'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     laravel({
-  input: ['resources/js/main.js'],
-  refresh: true,
-}),
+      input: ['resources/js/main.js'],
+      refresh: true,
+      // server: {
+      //   hmr: {
+      //       host: "localhost"
+      //   }
+      // }
+    }),
     vue({
-  template: {
-      transformAssetUrls: {
-          base: null,
-          includeAbsolute: false,
+      template: {
+          transformAssetUrls: {
+              base: null,
+              includeAbsolute: false,
+          },
       },
-  },
-}),
+    }),
     vueJsx(),
 
     // Docs: https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin
@@ -68,4 +73,7 @@ export default defineConfig({
       './resources/js/**/*.vue',
     ],
   },
+  server: {
+    host: 'localhost'
+  }
 })
