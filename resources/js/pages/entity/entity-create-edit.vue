@@ -1,5 +1,4 @@
 <script setup>
-import XlsxViewer from "@/components/XlsxViewer.vue";
 import EntityUpload from "@/layouts/components/EntityUpload.vue";
 import states from "@/pages/entity/us_states.json";
 import ApiService from "@/services/api";
@@ -76,6 +75,10 @@ const officerItem = {
   phone: null,
   address1: null,
   address2: null,
+  city: null,
+  state: null,
+  zip: null,
+  country: null,
 };
 const officerListInitial = [];
 const officerList = ref(structuredClone(officerListInitial));
@@ -109,6 +112,7 @@ const dialog = ref(false);
 const documentIdToDelete = ref(null);
 const addReferDialog = ref(false);
 const loading = ref(false);
+const isDragging = ref(false);
 
 const referredByItem = {
   name: null,
@@ -132,9 +136,11 @@ const ownerItem = {
   document_expiration: null,
   document: null,
   kyc_document: null,
+  isDragging: false
 };
 const ownerListInitial = [];
 const ownerList = ref(structuredClone(ownerListInitial));
+const ownerListOriginal = ref([]);
 
 const activeTab = ref(0);
 // tabs
@@ -163,6 +169,50 @@ const resetForm = () => {
 const addDocument = (event) => {
   const { files } = event.target;
   console.log(files[0]);
+  addFiles(files)
+};
+const handleDragOver = (event) => {
+  event.preventDefault();
+  isDragging.value = true;
+}
+const handleDragLeave = (event) => {
+  event.preventDefault();
+  isDragging.value = false;
+}
+const handleDrop = (event) => {
+  event.preventDefault();
+  isDragging.value = false;
+  const files = event.dataTransfer.files;
+  addFiles(files);
+}
+
+const handleDragOverOwner = (event, owner) => {
+  event.preventDefault();
+  owner.isDragging = true;
+}
+const handleDragLeaveOwner = (event, owner) => {
+  event.preventDefault();
+  owner.isDragging = false;
+}
+const handleDropOwner = (event, owner) => {
+  event.preventDefault();
+  isDragging.value = false;
+  console.log("event");
+  console.log(event);
+  console.log("owner");
+  console.log(owner);
+  const files = event.dataTransfer.files;
+  addFilesToOwner(files, owner);
+}
+
+const addFilesToOwner = (files, owner) => {
+  if (files.length > 0) {
+    owner.document = files[0];
+  }
+}
+
+const addFiles = (files) => {
+  // Convert FileList to Array and add to existing files
   if (files && files.length) {
     accountDataLocal.value.files = [];
     Object.keys(files).forEach((key) => {
@@ -170,7 +220,7 @@ const addDocument = (event) => {
       accountDataLocal.value.files.push(file);
     });
   }
-};
+}
 
 // handle save entity information
 
@@ -277,11 +327,32 @@ const onCreate = async () => {
 };
 
 const addUpdateOwners = async (entity_id) => {
+  console.log("Updated List");
+  console.log(ownerList.value);
+  console.log("Original List");
+  console.log(ownerListOriginal.value);
   for (let i = 0; i < ownerList.value.length; i++) {
     const owner = ownerList.value[i];
     owner.entity_id = entity_id;
     const isLast = i == ownerList.value.length - 1;
     await addOwner(owner, isLast);
+  }
+  let removedIds = [];
+  for (let i = 0; i < ownerListOriginal.value.length; i++) {
+    // Check if original item was removed
+    const originalOwnerId = ownerListOriginal.value[i].id;
+    const item = ownerList.value.find((owner) => owner.id === originalOwnerId);
+    
+    if (!item && originalOwnerId) {
+      // Item was removed
+      removedIds.push(originalOwnerId);
+    }
+  }
+
+  console.log("removedIds", removedIds);
+
+  if (removedIds.length > 0) {
+    await ApiService.deleteOwners(removedIds);
   }
 };
 
@@ -313,7 +384,8 @@ watch(
         // Update Registered Agent List
         registeredAgentList.value = response.data.registered_agent_list || [];
         // Update Owner List
-        ownerList.value = response.data.owners || [];
+        ownerList.value = [...(response.data.owners || [])];
+        ownerListOriginal.value = [...(response.data.owners || [])];
       } catch (error) {
         toast.error("Failed to load entity data.");
         router.push("/entities/entity");
@@ -485,11 +557,16 @@ const addNewOwner = () => {
   ownerList.value.push(structuredClone(ownerItem));
 };
 
-const addOwnerDocument = (event) => {
+const addOwnerDocument = (event, owner) => {
+  console.log("event");
+  console.log(event);
+  console.log("owner");
+  console.log(owner);
   const { files } = event.target;
   console.log(files[0]);
+  
   if (files && files.length) {
-    ownerList.value[0].document = files[0];
+    owner.document = files[0];
   }
 };
 
@@ -547,6 +624,33 @@ const removeOwner = (index) => {
   ownerList.value.splice(index, 1);
 };
 
+const onCopyAddress1FromEntity = (target) => {
+  target.address1 = accountDataLocal.value.address_1;
+}
+
+const onCopyAddress2FromEntity = (target) => {
+  target.address2 = accountDataLocal.value.address_2;
+}
+
+const getFileIcon = (url) => {
+  if (url.includes('xlsx')) {
+    return 'mdi-file-excel';
+  } else if (url.includes('pdf')) {
+    return 'mdi-file-pdf';
+  } else if (url.includes('jpeg') || url.includes('jpg')) {
+    return 'mdi-file-image';
+  } else if (url.includes('xls')) {
+    return 'mdi-file-excel';
+  } else {
+    return 'mdi-file-document';
+  }
+}
+const downloadDocument = (url, fileName) => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName ?? "download";
+  link.click();
+}
 watch(
   () => accountDataLocal.value.ein_number,
   (newValue) => {
@@ -625,19 +729,37 @@ onMounted(() => {
 
 <template>
   <div class="d-flex align-center">
-    <VBtn variant="text" class="ms-n3 mb-3" to="/">
+    <VBtn
+      variant="text"
+      class="ms-n3 mb-3"
+      to="/"
+    >
       <VIcon icon="bx-arrow-back" />
       Go To Home
     </VBtn>
   </div>
-  <VTabs v-model="activeTab" show-arrows>
-    <VTab v-for="item in tabs" :key="item.icon" :value="item.tab">
-      <VIcon size="20" start :icon="item.icon" />
+  <VTabs
+    v-model="activeTab"
+    show-arrows
+  >
+    <VTab
+      v-for="item in tabs"
+      :key="item.icon"
+      :value="item.tab"
+    >
+      <VIcon
+        size="20"
+        start
+        :icon="item.icon"
+      />
       {{ item.title }}
     </VTab>
   </VTabs>
   <VDivider />
-  <VWindow v-model="activeTab" class="mt-5 disable-tab-transition">
+  <VWindow
+    v-model="activeTab"
+    class="mt-5 disable-tab-transition"
+  >
     <VWindowItem value="add_entity">
       <VRow>
         <VCol cols="12">
@@ -649,7 +771,12 @@ onMounted(() => {
               <VForm class="mt-6">
                 <VRow>
                   <!-- 👉 Firm Name -->
-                  <VCol md="6" sm="6" lg="3" cols="12">
+                  <VCol
+                    md="6"
+                    sm="6"
+                    lg="3"
+                    cols="12"
+                  >
                     <VTextField
                       v-model="accountDataLocal.firm_name"
                       placeholder="Vauban Technologies Ltd"
@@ -657,7 +784,12 @@ onMounted(() => {
                     />
                   </VCol>
                   <!-- 👉 Doing Business Name -->
-                  <VCol md="6" sm="6" lg="3" cols="12">
+                  <VCol
+                    md="6"
+                    sm="6"
+                    lg="3"
+                    cols="12"
+                  >
                     <VTextField
                       v-model="accountDataLocal.doing_business_as"
                       placeholder="Vauban Ltd"
@@ -666,7 +798,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Entity Name -->
-                  <VCol md="6" sm="6" lg="3" cols="12">
+                  <VCol
+                    md="6"
+                    sm="6"
+                    lg="3"
+                    cols="12"
+                  >
                     <VTextField
                       v-model="accountDataLocal.entity_name"
                       placeholder="Nano I a Series of S5V Coinvest"
@@ -675,7 +812,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Address 1 -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.address_1"
                       label="Address 1"
@@ -683,7 +825,12 @@ onMounted(() => {
                     />
                   </VCol>
                   <!-- 👉 Address 2 -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.address_2"
                       label="Address 2"
@@ -691,7 +838,12 @@ onMounted(() => {
                     />
                   </VCol>
                   <!-- 👉 City -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.city"
                       label="City"
@@ -700,7 +852,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 State -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VAutocomplete
                       v-model="accountDataLocal.state"
                       label="State"
@@ -712,7 +869,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Zip Code -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.zip"
                       label="Zip Code"
@@ -721,7 +883,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Country -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VCombobox
                       v-model="accountDataLocal.country"
                       label="Country"
@@ -731,7 +898,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Type -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VCombobox
                       v-model="accountDataLocal.type"
                       label="Type"
@@ -741,7 +913,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 First Tax Year -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VSelect
                       v-model="accountDataLocal.first_tax_year"
                       label="First Tax Year"
@@ -750,7 +927,12 @@ onMounted(() => {
                     />
                   </VCol>
                   <!-- 👉 EIN Number -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.ein_number"
                       label="EIN Number"
@@ -758,7 +940,12 @@ onMounted(() => {
                     />
                   </VCol>
                   <!-- 👉 Jurisdiction -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VAutocomplete
                       v-model="accountDataLocal.jurisdiction"
                       label="Jurisdiction"
@@ -769,7 +956,12 @@ onMounted(() => {
                     />
                   </VCol>
                   <!-- 👉 Date Incorporated -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.date_created"
                       label="Date Incorporated"
@@ -779,7 +971,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Contact First Name -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_first_name"
                       label="Contact First Name"
@@ -788,7 +985,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Contact Last Name -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_last_name"
                       label="Contact Last Name"
@@ -797,7 +999,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Contact Email -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_email"
                       label="Contact Email"
@@ -818,14 +1025,21 @@ onMounted(() => {
                   <VCol cols="12">
                     <p>
                       Services
-                      <VIcon icon="bx-plus-circle" @click="addNewServiceFee" />
+                      <VIcon
+                        icon="bx-plus-circle"
+                        @click="addNewServiceFee"
+                      />
                     </p>
                     <!-- 👉 Services -->
                     <VRow
                       v-for="(item, index) in serviceFeeDataLocal"
                       :key="index"
                     >
-                      <VCol cols="12" md="6" sm="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                        sm="6"
+                      >
                         <d class="d-flex align-center justify-center">
                           <VIcon
                             icon="bx-minus-circle"
@@ -842,7 +1056,11 @@ onMounted(() => {
                       </VCol>
 
                       <!-- 👉 Contact First Name -->
-                      <VCol cols="12" md="6" sm="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                        sm="6"
+                      >
                         <VTextField
                           v-model="item.fee"
                           label="Annual Fee"
@@ -862,16 +1080,19 @@ onMounted(() => {
                       <VCheckbox
                         v-model="accountDataLocal.directors"
                         label="Directors"
-                        style="width: max-content"
+                        style="width: max-content;"
                       />
                       <VIcon
-                        icon="bx-plus-circle"
                         v-if="accountDataLocal.directors"
+                        icon="bx-plus-circle"
                         @click="addNewDirector"
                       />
                     </p>
                   </VCol>
-                  <VCol cols="12" v-if="accountDataLocal.directors">
+                  <VCol
+                    v-if="accountDataLocal.directors"
+                    cols="12"
+                  >
                     <VCard
                       v-for="(director, index) in directorList"
                       :key="index"
@@ -886,7 +1107,11 @@ onMounted(() => {
                       <VCardText>
                         <VRow>
                           <!-- 👉 Contact First Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.first_name"
                               label="First Name"
@@ -895,7 +1120,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Last Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.last_name"
                               label="Last Name"
@@ -904,7 +1133,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Email -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.email"
                               label="Email"
@@ -914,7 +1147,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Phone -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.phone"
                               label="Phone"
@@ -922,31 +1159,64 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <!-- 👉 Email -->
-                          <VCol cols="12" md="4" sm="6">
+                          <!-- 👉 Address 1 -->
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.address1"
                               label="Address 1"
                               placeholder="5645 Coral Ridge Drive"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress1FromEntity(director)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
 
-                          <VCol cols="12" md="4" sm="6">
+                          <!-- 👉 Address 2 -->
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.address2"
                               label="Address 2"
                               placeholder="Suite 410"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress2FromEntity(director)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
 
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.city"
                               label="City"
                               placeholder="City"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VAutocomplete
                               v-model="director.state"
                               label="State"
@@ -956,14 +1226,22 @@ onMounted(() => {
                               :items="states"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="director.zip"
                               label="Zip"
                               placeholder="23456"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VCombobox
                               v-model="director.country"
                               label="Country"
@@ -978,11 +1256,14 @@ onMounted(() => {
 
                   <VDivider />
 
-                  <!-- 👉 Directors -->
+                  <!-- 👉 Owners -->
                   <VCol cols="12">
                     <p class="directors">
                       Owners
-                      <VIcon icon="bx-plus-circle" @click="addNewOwner" />
+                      <VIcon
+                        icon="bx-plus-circle"
+                        @click="addNewOwner"
+                      />
                     </p>
                   </VCol>
                   <VCol cols="12">
@@ -999,7 +1280,10 @@ onMounted(() => {
                       />
                       <VCardText>
                         <VRow>
-                          <VCol md="6" cols="12">
+                          <VCol
+                            md="6"
+                            cols="12"
+                          >
                             <VTextField
                               v-model="owner.first_name"
                               placeholder="John"
@@ -1007,7 +1291,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol md="6" cols="12">
+                          <VCol
+                            md="6"
+                            cols="12"
+                          >
                             <VTextField
                               v-model="owner.last_name"
                               placeholder="Doe"
@@ -1015,7 +1302,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.email"
                               label="E-mail"
@@ -1024,7 +1314,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.phone"
                               label="Phone Number"
@@ -1032,21 +1325,46 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.address1"
                               label="Address 1"
                               placeholder="5645 Coral Ridge Drive"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress1FromEntity(owner)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.address2"
                               label="Address 2"
                               placeholder="Suite 410"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress2FromEntity(owner)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.city"
                               label="City"
@@ -1054,7 +1372,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VAutocomplete
                               v-model="owner.state"
                               label="State"
@@ -1065,7 +1386,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.zip"
                               label="Zip Code"
@@ -1073,7 +1397,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VCombobox
                               v-model="owner.country"
                               label="Country"
@@ -1082,7 +1409,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.ownership_stake"
                               label="Ownership Stake"
@@ -1090,7 +1420,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VSelect
                               v-model="owner.document_type"
                               label="Document Type"
@@ -1099,7 +1432,10 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="6">
+                          <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VTextField
                               v-model="owner.document_expiration"
                               label="Document Expiration Date"
@@ -1107,17 +1443,51 @@ onMounted(() => {
                               placeholder="MM/DD/YYYY"
                             />
                           </VCol>
-                          <VCol cols="12" md="6">
+                          <!-- <VCol
+                            cols="12"
+                            md="6"
+                          >
                             <VFileInput
+                              :key="index"
                               :v-model="owner.document"
                               clearable
                               label="Upload Document"
                               accept=".pdf, .jpeg, .jpg, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                               variant="outlined"
                               show-size
-                              @change="addOwnerDocument"
-                            ></VFileInput>
-                          </VCol>
+                              @change="(event) => addOwnerDocument(event, owner)"
+                            />
+                            <VCol
+                              v-if="owner.kyc_document != null && owner.kyc_document.id != null"
+                              cols="12"
+                            >
+                              <VRow
+                                align="center"
+                              >
+                                <VCol cols="1">
+                                  <VIcon
+                                    :icon="getFileIcon(owner.kyc_document.url)"
+                                    color="primary"
+                                  />
+                                </VCol>
+                                <VCol cols="10">
+                                  <a
+                                    :href="owner.kyc_document.url"
+                                    target="_blank"
+                                  >
+                                    {{ owner.kyc_document.file_name || owner.kyc_document.url.split('/').pop() }}
+                                  </a>
+                                </VCol>
+                                <VCol cols="1">
+                                  <VIcon
+                                    icon="mdi-download"
+                                    color="primary"
+                                    @click="downloadDocument(owner.kyc_document.url, owner.kyc_document.file_name)"
+                                  />
+                                </VCol>
+                              </VRow>
+                            </VCol>
+                          </VCol> -->
                         </VRow>
                       </VCardText>
                     </VCard>
@@ -1125,11 +1495,14 @@ onMounted(() => {
 
                   <VDivider />
 
-                  <!-- 👉 Directors -->
+                  <!-- 👉 Officers -->
                   <VCol cols="12">
                     <p class="directors">
                       Officers
-                      <VIcon icon="bx-plus-circle" @click="addNewOfficer" />
+                      <VIcon
+                        icon="bx-plus-circle"
+                        @click="addNewOfficer"
+                      />
                     </p>
                   </VCol>
                   <VCol cols="12">
@@ -1147,7 +1520,11 @@ onMounted(() => {
                       <VCardText>
                         <VRow>
                           <!-- 👉 Contact First Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.first_name"
                               label="First Name"
@@ -1156,7 +1533,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Last Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.last_name"
                               label="Last Name"
@@ -1165,7 +1546,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Email -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.email"
                               label="Email"
@@ -1175,7 +1560,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Phone -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.phone"
                               label="Phone"
@@ -1184,7 +1573,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Email -->
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.title"
                               label="Title"
@@ -1193,29 +1586,61 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Email -->
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.address1"
                               label="Address 1"
                               placeholder="5645 Coral Ridge Drive"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress1FromEntity(officer)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
 
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.address2"
                               label="Address 2"
                               placeholder="Suite 410"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress2FromEntity(officer)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.city"
                               label="City"
                               placeholder="City"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VAutocomplete
                               v-model="officer.state"
                               label="State"
@@ -1225,14 +1650,22 @@ onMounted(() => {
                               :items="states"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="officer.zip"
                               label="Zip"
                               placeholder="23456"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VCombobox
                               v-model="officer.country"
                               label="Country"
@@ -1250,7 +1683,10 @@ onMounted(() => {
                   <VCol cols="12">
                     <p class="directors">
                       Registered Office/Agent
-                      <VIcon icon="bx-plus-circle" @click="addNewAgent" />
+                      <VIcon
+                        icon="bx-plus-circle"
+                        @click="addNewAgent"
+                      />
                     </p>
                   </VCol>
                   <VCol cols="12">
@@ -1268,7 +1704,11 @@ onMounted(() => {
                       <VCardText>
                         <VRow>
                           <!-- 👉 Contact First Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.entity_name"
                               label="Entity Name"
@@ -1276,7 +1716,11 @@ onMounted(() => {
                             />
                           </VCol>
                           <!-- 👉 Contact First Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.company_name"
                               label="Company Name"
@@ -1284,7 +1728,11 @@ onMounted(() => {
                             />
                           </VCol>
                           <!-- 👉 Contact First Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.first_name"
                               label="First Name"
@@ -1293,7 +1741,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Last Name -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.last_name"
                               label="Last Name"
@@ -1301,29 +1753,61 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.address1"
                               label="Address 1"
                               placeholder="5645 Coral Ridge Drive"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress1FromEntity(agent)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
 
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.address2"
                               label="Address 2"
                               placeholder="Suite 410"
                             />
+                            <VBtn
+                              size="small"
+                              variant="outlined"
+                              style="margin-top: 4px;"
+                              @click="onCopyAddress2FromEntity(agent)"
+                            >
+                              Copy from Entity
+                            </VBtn>
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.city"
                               label="City"
                               placeholder="City"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VAutocomplete
                               v-model="agent.state"
                               label="State"
@@ -1333,14 +1817,22 @@ onMounted(() => {
                               :items="states"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.zip"
                               label="Zip"
                               placeholder="23456"
                             />
                           </VCol>
-                          <VCol cols="12" md="4" sm="6">
+                          <VCol
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
                             <VCombobox
                               v-model="agent.country"
                               label="Country"
@@ -1349,7 +1841,11 @@ onMounted(() => {
                             />
                           </VCol>
                           <!-- 👉 Email -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.email"
                               label="Email"
@@ -1359,7 +1855,11 @@ onMounted(() => {
                           </VCol>
 
                           <!-- 👉 Phone -->
-                          <VCol cols="12" md="3" sm="6">
+                          <VCol
+                            cols="12"
+                            md="3"
+                            sm="6"
+                          >
                             <VTextField
                               v-model="agent.phone"
                               label="Phone"
@@ -1375,65 +1875,122 @@ onMounted(() => {
                   <!-- 👉 Directors -->
                   <VCol cols="12">
                     <VLabel>Form ID</VLabel>
-                    <VRadioGroup v-model="accountDataLocal.form_id" inline>
-                      <VRadio label="Yes" value="yes"></VRadio>
-                      <VRadio label="No" value="no"></VRadio>
+                    <VRadioGroup
+                      v-model="accountDataLocal.form_id"
+                      inline
+                    >
+                      <VRadio
+                        label="Yes"
+                        value="yes"
+                      />
+                      <VRadio
+                        label="No"
+                        value="no"
+                      />
                     </VRadioGroup>
                   </VCol>
                   <VDivider />
 
                   <!-- 👉 Document -->
-                  <VCol cols="12" md="6">
-                    <VFileInput
-                      :v-model="accountDataLocal.files"
-                      clearable
-                      label="Upload Document"
-                      accept=".pdf, .jpeg, .jpg, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                      variant="outlined"
-                      show-size
-                      chips
-                      multiple
-                      @change="addDocument"
-                    ></VFileInput>
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <div
+                      class="drop-zone"
+                      :class="{ 'drop-zone-active': isDragging }"
+                      @dragover.prevent="handleDragOver"
+                      @dragleave.prevent="handleDragLeave"
+                      @drop.prevent="handleDrop"
+                    >
+                      <VFileInput
+                        v-model="accountDataLocal.files"
+                        clearable
+                        label="Upload Document"
+                        accept=".pdf, .jpeg, .jpg, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        variant="outlined"
+                        show-size
+                        chips
+                        multiple
+                        @change="addDocument"
+                      />
+                      <div class="drop-zone-text">
+                        Drag & Drop your files here or click to upload
+                      </div>
+                    </div>
+                    <div
+                      v-for="document in accountDataLocal.documents"
+                      :key="document.id"
+                      cols="12"
+                    >
+                      <!-- <XlsxViewer
+                      v-if="document.url.includes('xlsx')"
+                      :excel-file="document.url"
+                    />
+                    <iframe
+                      v-else
+                      :src="document.url"
+                      class="pdf-preview"
+                    /> -->
+                      <VRow 
+                        v-if="document.owner_id == null"
+                        align="center"
+                      >
+                        <VCol cols="1">
+                          <VIcon
+                            :icon="getFileIcon(document.url)"
+                            color="primary"
+                          />
+                        </VCol>
+                        <VCol cols="9">
+                          <a
+                            :href="document.url"
+                            target="_blank"
+                          >
+                            {{ document.file_name || document.url.split('/').pop() }}
+                          </a>
+                        </VCol>
+                        <VCol cols="1">
+                          <VIcon
+                            icon="mdi-download"
+                            color="primary"
+                            @click="downloadDocument(document.url, document.file_name)"
+                          />
+                        </VCol>
+                        <VCol cols="1">
+                          <VIcon
+                            icon="bx-minus-circle"
+                            color="primary"
+                            @click="removeDocument(document.id)"
+                          />
+                        </VCol>
+                      </VRow>
+                    </div>
                   </VCol>
 
                   <!-- 👉 Ref By -->
-                  <VCol cols="12" md="4" sm="6">
+                  <VCol
+                    cols="12"
+                    md="4"
+                    sm="6"
+                  >
                     <VCombobox
                       v-model="accountDataLocal.ref_by"
                       label="Referred By"
                       multiple
                       prepend-inner-icon="bx-plus"
-                      @click:prepend-inner="handleAddRefer"
                       :items="refers"
+                      @click:prepend-inner="handleAddRefer"
                     />
                   </VCol>
-                  <VCol cols="12" md="2" sm="6">
+                  <VCol
+                    cols="12"
+                    md="2"
+                    sm="6"
+                  >
                     <VCheckbox
                       v-model="accountDataLocal.active"
                       :label="accountDataLocal.active ? 'Active' : 'Inactive'"
-                    >
-                    </VCheckbox>
-                  </VCol>
-
-                  <VCol
-                    cols="4"
-                    md="3"
-                    v-for="document in accountDataLocal.documents"
-                    :key="document.id"
-                  >
-                    <XlsxViewer v-if="document.url.includes('xlsx')" :excelFile="document.url" />
-                    <iframe v-else :src="document.url" class="pdf-preview"></iframe>
-                    <a :href="document.url" target="_blank">
-                      <VIcon
-                        icon="bx-link-external"
-                        color="primary"
-                      />
-                    </a>
-                    <VIcon
-                      icon="bx-minus-circle"
-                      color="primary"
-                      @click="removeDocument(document.id)"
                     />
                   </VCol>
 
@@ -1447,7 +2004,12 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Person -->
-                  <VCol cols="12" md="6" sm="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    sm="6"
+                    lg="3"
+                  >
                     <VAutocomplete
                       v-model="accountDataLocal.person"
                       label="Entered By"
@@ -1458,7 +2020,10 @@ onMounted(() => {
                   </VCol>
 
                   <!-- 👉 Form Actions -->
-                  <VCol cols="12" class="d-flex flex-wrap gap-4">
+                  <VCol
+                    cols="12"
+                    class="d-flex flex-wrap gap-4"
+                  >
                     <VBtn @click="onCreate">
                       {{ entityId ? "Update Entity" : "Create Entity" }}
                     </VBtn>
@@ -1483,26 +2048,53 @@ onMounted(() => {
       <EntityUpload />
     </VWindowItem>
   </VWindow>
-  <VDialog v-model="dialog" width="500">
+  <VDialog
+    v-model="dialog"
+    width="500"
+  >
     <VCard>
-      <VCardTitle class="headline">Confirm Deletion</VCardTitle>
+      <VCardTitle class="headline">
+        Confirm Deletion
+      </VCardTitle>
       <VCardText> Are you sure you want to delete this document? </VCardText>
       <VCardActions>
-        <VSpacer></VSpacer>
-        <VBtn color="green darken-1" text @click="dialog = false">Cancel</VBtn>
-        <VBtn color="red darken-1" text @click="confirmDelete">Delete</VBtn>
+        <VSpacer />
+        <VBtn
+          color="green darken-1"
+          text
+          @click="dialog = false"
+        >
+          Cancel
+        </VBtn>
+        <VBtn
+          color="red darken-1"
+          text
+          @click="confirmDelete"
+        >
+          Delete
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
-  <VDialog v-model="addReferDialog" width="500">
+  <VDialog
+    v-model="addReferDialog"
+    width="500"
+  >
     <VCard :loading="loading">
-      <VCardTitle class="headline"
-        >Add Referred By
-        <VIcon icon="bx-plus-circle" @click="addReferredByMore"
-      /></VCardTitle>
+      <VCardTitle class="headline">
+        Add Referred By
+        <VIcon
+          icon="bx-plus-circle"
+          @click="addReferredByMore"
+        />
+      </VCardTitle>
       <VCardText>
         <VRow>
-          <VCol cols="12" v-for="(item, index) in referredByList" :key="index">
+          <VCol
+            v-for="(item, index) in referredByList"
+            :key="index"
+            cols="12"
+          >
             <VTextField
               v-model="item.name"
               label="Name"
@@ -1514,34 +2106,47 @@ onMounted(() => {
         </VRow>
       </VCardText>
       <VCardActions>
-        <VSpacer></VSpacer>
-        <VBtn color="green darken-1" text @click="addReferDialog = false"
-          >Cancel</VBtn
+        <VSpacer />
+        <VBtn
+          color="green darken-1"
+          text
+          @click="addReferDialog = false"
         >
-        <VBtn color="red darken-1" text @click="confirmAddReferredBy">Add</VBtn>
+          Cancel
+        </VBtn>
+        <VBtn
+          color="red darken-1"
+          text
+          @click="confirmAddReferredBy"
+        >
+          Add
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
 </template>
 <style scoped>
 .pdf-preview {
-  width: 100%;
-  height: 200px; /* Adjust as needed */
   border: none;
+  block-size: 200px; /* Adjust as needed */
+  inline-size: 100%;
 }
+
 .item-delete-button {
   position: absolute;
-  left: 0;
-  top: 0;
+  inset-block-start: 0;
+  inset-inline-start: 0;
 }
+
 .directors {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 0.5rem;
-  margin-bottom: 0px;
+  margin-block-end: 0;
 }
+
 .director-card {
-  margin-top: 10px;
+  margin-block-start: 10px;
 }
 </style>

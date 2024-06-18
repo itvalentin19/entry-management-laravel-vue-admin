@@ -1,10 +1,9 @@
 <script setup>
+import ApiService from "@/services/api";
 import avatar1 from "@images/avatars/avatar-1.png";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import axios from "axios";
-import ApiService from "@/services/api";
-import { computed, ref, watchEffect } from "vue";
 
 const router = useRouter();
 const store = useStore();
@@ -37,11 +36,20 @@ const logout = async () => {
     color="success"
     bordered
   >
-    <VAvatar class="cursor-pointer" color="primary" variant="tonal">
+    <VAvatar
+      class="cursor-pointer"
+      color="primary"
+      variant="tonal"
+    >
       <VImg :src="user?.photo || avatar1" />
 
       <!-- SECTION Menu -->
-      <VMenu activator="parent" width="230" location="bottom end" offset="14px">
+      <VMenu
+        activator="parent"
+        width="230"
+        location="bottom end"
+        offset="14px"
+      >
         <VList>
           <!-- 👉 User Avatar & Name -->
           <VListItem>
@@ -54,7 +62,10 @@ const logout = async () => {
                   offset-y="3"
                   color="success"
                 >
-                  <VAvatar color="primary" variant="tonal">
+                  <VAvatar
+                    color="primary"
+                    variant="tonal"
+                  >
                     <VImg :src="avatar1" />
                   </VAvatar>
                 </VBadge>
@@ -62,16 +73,25 @@ const logout = async () => {
             </template>
 
             <VListItemTitle class="font-weight-semibold">
-              {{ user?.name || "Unknown" }}
+              {{ user?.first_name }} {{ user?.last_name }}
             </VListItemTitle>
-            <VListItemSubtitle v-if="user?.admin">Admin</VListItemSubtitle>
+            <VListItemSubtitle v-if="user?.admin">
+              Admin
+            </VListItemSubtitle>
           </VListItem>
           <VDivider class="my-2" />
 
           <!-- 👉 Profile -->
-          <VListItem link to="/account-settings">
+          <VListItem
+            link
+            to="/account-settings"
+          >
             <template #prepend>
-              <VIcon class="me-2" icon="bx-user" size="22" />
+              <VIcon
+                class="me-2"
+                icon="bx-user"
+                size="22"
+              />
             </template>
 
             <VListItemTitle>Profile</VListItemTitle>
@@ -83,7 +103,11 @@ const logout = async () => {
           <!-- 👉 Logout -->
           <VListItem @click="logout">
             <template #prepend>
-              <VIcon class="me-2" icon="bx-log-out" size="22" />
+              <VIcon
+                class="me-2"
+                icon="bx-log-out"
+                size="22"
+              />
             </template>
 
             <VListItemTitle>Logout</VListItemTitle>

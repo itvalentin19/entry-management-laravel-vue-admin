@@ -52,33 +52,96 @@ const menuList = ref([
   <VTable fixed-header>
     <thead>
       <tr>
-        <th v-if="_user?.admin == true"></th>
-        <th class="text-uppercase sortable-header" @click="handleSort('id')">
+        <th v-if="_user?.admin == true" />
+        <th
+          class="text-uppercase sortable-header"
+          @click="handleSort('id')"
+        >
           Id
         </th>
         <th>Photo</th>
-        <th class="sortable-header" @click="handleSort('name')">Name</th>
-        <th class="sortable-header" @click="handleSort('company')">
+        <th
+          class="sortable-header"
+          @click="handleSort('first_name')"
+        >
+          Name
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('company')"
+        >
           Company Name
         </th>
-        <th class="sortable-header" @click="handleSort('email')">Email</th>
-        <th class="sortable-header" @click="handleSort('phone')">Phone</th>
-        <th class="sortable-header" @click="handleSort('address')">Address</th>
-        <th class="sortable-header" @click="handleSort('city')">City</th>
-        <th class="sortable-header" @click="handleSort('state')">State</th>
-        <th class="sortable-header" @click="handleSort('zip')">Zip</th>
-        <th class="sortable-header" @click="handleSort('country')">Country</th>
-        <th class="sortable-header" @click="handleSort('created_at')">
+        <th
+          class="sortable-header"
+          @click="handleSort('email')"
+        >
+          Email
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('phone')"
+        >
+          Phone
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('address')"
+        >
+          Address
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('city')"
+        >
+          City
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('state')"
+        >
+          State
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('zip')"
+        >
+          Zip
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('country')"
+        >
+          Country
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('created_at')"
+        >
           Created At
         </th>
-        <th class="sortable-header" @click="handleSort('role')">Role</th>
+        <th
+          class="sortable-header"
+          @click="handleSort('role')"
+        >
+          Role
+        </th>
       </tr>
     </thead>
 
     <tbody v-if="props.userList">
-      <tr v-for="user in props.userList" :key="user.id">
-        <td class="text-center" v-if="_user?.admin == true">
-          <MoreBtn :menu-list="menuList" :data="user" />
+      <tr
+        v-for="user in props.userList"
+        :key="user.id"
+      >
+        <td
+          v-if="_user?.admin == true"
+          class="text-center"
+        >
+          <MoreBtn
+            :menu-list="menuList"
+            :data="user"
+          />
         </td>
         <td>
           {{ user.id }}
@@ -92,7 +155,7 @@ const menuList = ref([
           />
         </td>
         <td class="text-center">
-          {{ user.name }}
+          {{ user.first_name }} {{ user.last_name }}
         </td>
         <td class="text-center">
           {{ user.company }}
@@ -103,7 +166,9 @@ const menuList = ref([
         <td class="text-center">
           {{ user.phone }}
         </td>
-        <td class="text-center">{{ user.address }} {{ user.address2 }}</td>
+        <td class="text-center">
+          {{ user.address }} {{ user.address2 }}
+        </td>
         <td class="text-center">
           {{ user.city }}
         </td>

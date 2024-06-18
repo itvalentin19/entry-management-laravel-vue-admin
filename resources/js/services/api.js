@@ -1,4 +1,5 @@
 // services/api.js
+// eslint-disable-next-line regex/invalid
 import axios from 'axios';
 
 const origin = window.location.origin
@@ -104,6 +105,11 @@ export default {
     return apiClient.delete('/owner/' + id);
   },
 
+  // Delete Owner
+  deleteOwners(ids) {
+    return apiClient.post('/delete-owners', {ids});
+  },
+
   // 👉 Entities Management //
   // Get Entity Information
   getEntity(id) {
@@ -168,5 +174,10 @@ export default {
   // Create Referred By
   createReferredBy(data) {
     return apiClient.post('/add-referred-by', data)
+  },
+
+  // Delete Document
+  deleteDocument(id) {
+    return apiClient.delete('/document/' + id)
   }
 };

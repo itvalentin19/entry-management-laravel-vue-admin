@@ -1,24 +1,25 @@
 <script setup>
-import avatar1 from "@images/avatars/avatar-1.png";
-import ApiService from "@/services/api";
-import { useToast } from "vue-toastification";
-import { useRoute, useRouter } from "vue-router";
-import { useStore } from "vuex";
 import states from "@/pages/entity/us_states.json";
+import ApiService from "@/services/api";
 import countries from "@/store/countries.json";
+import avatar1 from "@images/avatars/avatar-1.png";
+import { useRoute, useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
+import { useStore } from "vuex";
 
 const accountData = {
-  name: "",
-  company: null,
+  first_name: "",
+  last_name: "",
+  company: "A&C Corporate Services LLC",
   email: "",
   phone: "",
   address: "",
   address2: "",
   avatarImg: avatar1,
-  role: "user",
-  city: null,
-  state: null,
-  zip: null,
+  role: "User",
+  city: "",
+  state: "",
+  zip: "",
   country: "USA",
 };
 const route = useRoute();
@@ -63,7 +64,7 @@ const onCreateUser = async () => {
     // Append user data
     for (const key in accountDataLocal.value) {
       if (key !== "avatarImg") {
-        formData.append(key, accountDataLocal.value[key]);
+        formData.append(key, accountDataLocal.value[key] ?? "");
       }
     }
 
@@ -168,7 +169,11 @@ watch(
 
 <template>
   <div class="d-flex align-center">
-    <VBtn variant="text" class="ms-n3 mb-3" to="/">
+    <VBtn
+      variant="text"
+      class="ms-n3 mb-3"
+      to="/"
+    >
       <VIcon icon="bx-arrow-back" />
       Go To Home
     </VBtn>
@@ -188,8 +193,14 @@ watch(
           <!-- 👉 Upload Photo -->
           <form class="d-flex flex-column justify-center gap-5">
             <div class="d-flex flex-wrap gap-2">
-              <VBtn color="primary" @click="refInputEl?.click()">
-                <VIcon icon="bx-cloud-upload" class="d-sm-none" />
+              <VBtn
+                color="primary"
+                @click="refInputEl?.click()"
+              >
+                <VIcon
+                  icon="bx-cloud-upload"
+                  class="d-sm-none"
+                />
                 <span class="d-none d-sm-block">Upload new photo</span>
               </VBtn>
 
@@ -200,7 +211,7 @@ watch(
                 accept=".jpeg,.png,.jpg,GIF"
                 hidden
                 @input="changeAvatar"
-              />
+              >
 
               <VBtn
                 type="reset"
@@ -209,7 +220,10 @@ watch(
                 @click="resetAvatar"
               >
                 <span class="d-none d-sm-block">Reset</span>
-                <VIcon icon="bx-refresh" class="d-sm-none" />
+                <VIcon
+                  icon="bx-refresh"
+                  class="d-sm-none"
+                />
               </VBtn>
             </div>
 
@@ -222,31 +236,51 @@ watch(
         <VDivider />
 
         <VCardText>
-          <VAlert color="success" icon="mdi-info" text="Default Password: "
-            ><span
+          <VAlert
+            color="success"
+            icon="mdi-info"
+            text="Default Password: "
+          >
+            <span
               style="
-                color: blue;
-                background: #e8e8e8;
                 padding: 4px;
                 border-radius: 20px;
-              "
-              >Password</span
-            ></VAlert
-          >
+                background: #e8e8e8;
+                color: blue;
+"
+            >Password</span>
+          </VAlert>
           <!-- 👉 Form -->
           <VForm class="mt-6">
             <VRow>
-              <!-- 👉 Name -->
-              <VCol md="6" cols="12">
+              <!-- 👉 First Name -->
+              <VCol
+                md="3"
+                cols="6"
+              >
                 <VTextField
-                  v-model="accountDataLocal.name"
+                  v-model="accountDataLocal.first_name"
                   placeholder="John"
-                  label="Name"
+                  label="First Name"
+                />
+              </VCol>
+              <!-- 👉 Name -->
+              <VCol
+                md="3"
+                cols="6"
+              >
+                <VTextField
+                  v-model="accountDataLocal.last_name"
+                  placeholder="Doe"
+                  label="Last Name"
                 />
               </VCol>
 
               <!-- 👉 Company Name -->
-              <VCol md="6" cols="12">
+              <VCol
+                md="6"
+                cols="12"
+              >
                 <VTextField
                   v-model="accountDataLocal.company"
                   placeholder="EAKAV LLC"
@@ -255,7 +289,11 @@ watch(
               </VCol>
 
               <!-- 👉 Email -->
-              <VCol cols="12" md="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                lg="3"
+              >
                 <VTextField
                   v-model="accountDataLocal.email"
                   label="E-mail"
@@ -265,7 +303,11 @@ watch(
               </VCol>
 
               <!-- 👉 Phone -->
-              <VCol cols="12" md="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                lg="3"
+              >
                 <VTextField
                   v-model="accountDataLocal.phone"
                   label="Phone Number"
@@ -274,17 +316,24 @@ watch(
               </VCol>
 
               <!-- 👉 Role -->
-              <VCol cols="12" md="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                lg="3"
+              >
                 <VSelect
                   v-model="accountDataLocal.role"
-                  :items="['admin', 'user']"
+                  :items="['Admin', 'User']"
                   label="Role"
                   placeholder="Select a role"
                 />
               </VCol>
 
               <!-- 👉 Address -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.address"
                   label="Address 1"
@@ -293,7 +342,10 @@ watch(
               </VCol>
 
               <!-- 👉 Address -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VTextField
                   v-model="accountDataLocal.address2"
                   label="Address 2"
@@ -302,7 +354,12 @@ watch(
               </VCol>
 
               <!-- 👉 City -->
-              <VCol cols="12" md="6" sm="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                sm="6"
+                lg="3"
+              >
                 <VTextField
                   v-model="accountDataLocal.city"
                   label="City"
@@ -311,7 +368,12 @@ watch(
               </VCol>
 
               <!-- 👉 State -->
-              <VCol cols="12" md="6" sm="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                sm="6"
+                lg="3"
+              >
                 <VAutocomplete
                   v-model="accountDataLocal.state"
                   label="State"
@@ -323,7 +385,12 @@ watch(
               </VCol>
 
               <!-- 👉 Zip Code -->
-              <VCol cols="12" md="6" sm="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                sm="6"
+                lg="3"
+              >
                 <VTextField
                   v-model="accountDataLocal.zip"
                   label="Zip Code"
@@ -332,7 +399,12 @@ watch(
               </VCol>
 
               <!-- 👉 Country -->
-              <VCol cols="12" md="6" sm="6" lg="3">
+              <VCol
+                cols="12"
+                md="6"
+                sm="6"
+                lg="3"
+              >
                 <VCombobox
                   v-model="accountDataLocal.country"
                   label="Country"
@@ -342,8 +414,21 @@ watch(
               </VCol>
 
               <!-- 👉 Form Actions -->
-              <VCol cols="12" class="d-flex flex-wrap gap-4">
-                <VBtn @click="onCreateUser" :loading="loading">
+              <VCol
+                cols="12"
+                class="d-flex flex-wrap gap-4"
+              >
+                <VBtn
+                  :loading="loading"
+                  @click="onCreateUser"
+                >
+                  <template #loader>
+                    <v-progress-circular
+                      indeterminate
+                      size="23"
+                      color="red"
+                    />
+                  </template>
                   {{ userId ? "Update User" : "Create User" }}
                 </VBtn>
 

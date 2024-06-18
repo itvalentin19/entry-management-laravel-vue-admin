@@ -23,9 +23,9 @@ class OwnerController extends Controller
     {
         $request->validate([
             'entity_id' => 'required|string|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'sometimes|string|email|max:255',
+            'first_name' => 'sometimes|nullable|string|max:255',
+            'last_name' => 'sometimes|nullable|string|max:255',
+            'email' => 'sometimes|nullable|string|email|max:255',
             'phone' => 'sometimes|nullable|string|max:255',
             'address1' => 'sometimes|nullable|string|max:255',
             'address2' => 'sometimes|nullable|string|max:255',
@@ -68,9 +68,12 @@ class OwnerController extends Controller
         $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 
         if ($request->hasFile('document')) {
+            $file = $request->file('document');
             $document = new Document();
             $document->owner_id = $owner->id;
-            $document->url = $pathPrefix . $request->file('document')->store('documents', 'public');
+            $document->entity_id = $owner->entity_id;
+            $document->url = $pathPrefix . $file->store('documents', 'public');
+            $document->file_name = $file->getClientOriginalName();
             $document->save();
             $owner->kyc_document = $document->id;
             $owner->save();
@@ -90,9 +93,9 @@ class OwnerController extends Controller
             // Validate the incoming request data
             $request->validate([
                 'entity_id' => 'string|max:255',
-                'first_name' => 'string|max:255',
-                'last_name' => 'string|max:255',
-                'email' => 'sometimes|string|email|max:255',
+                'first_name' => 'sometimes|string|nullable|max:255',
+                'last_name' => 'sometimes|string|nullable|max:255',
+                'email' => 'sometimes|string|nullable|email|max:255',
                 'phone' => 'sometimes|nullable|max:255',
                 'address1' => 'sometimes|nullable|max:255',
                 'address2' => 'sometimes|nullable|max:255',
@@ -124,17 +127,34 @@ class OwnerController extends Controller
 
             // Handle avatar update if provided
             if ($request->hasFile('document')) {
+                $file = $request->file('document');
                 if ($owner->kyc_document) {
                     $document = Document::find($owner->kyc_document);
-                    Storage::delete(str_replace($pathPrefix, '', $document->url));
-                    Document::find($owner->kyc_document)->delete();
+                    // Ensure document exists
+                    if ($document) {
+                        // Extract the path from the document URL
+                        $path = str_replace($pathPrefix, '', $document->url);
+
+                        // Check if the file exists in storage
+                        if (Storage::disk('public')->exists($path)) {
+                            // Delete the file from storage
+                            Storage::disk('public')->delete($path);
+                        }
+                        $document->url = $pathPrefix . $file->store('documents', 'public');
+                        $document->file_name = $file->getClientOriginalName();
+                        $document->entity_id = $owner->entity_id;
+                        $document->save();
+                    }
+                } else {
+                    $document = new Document();
+                    $document->owner_id = $owner->id;
+                    $document->entity_id = $owner->entity_id;
+                    $document->url = $pathPrefix . $file->store('documents', 'public');
+                    $document->file_name = $file->getClientOriginalName();
+                    $document->save();
+                    $owner->kyc_document = $document->id;
+                    $owner->save();
                 }
-                $document = new Document();
-                $document->owner_id = $owner->id;
-                $document->url = $pathPrefix . $request->file('document')->store('documents', 'public');
-                $document->save();
-                $owner->kyc_document = $document->id;
-                $owner->save();
             }
 
             // Save the user
@@ -184,6 +204,39 @@ class OwnerController extends Controller
         $owner = Owner::findOrFail($id);
         // $owner->is_deleted = true;
         $owner->delete();
+
+        return response()->json(['message' => 'User marked as deleted successfully']);
+    }
+
+    public function deleteList(Request $request)
+    {
+        $request->validate([
+            'ids.*' => 'required|integer'
+        ]);
+        $ids = $request->get('ids') ?? [];
+        $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
+
+        foreach ($ids as $id) {
+            $owner = Owner::findOrFail($id);
+            if ($owner->kyc_document) {
+                $document = Document::find($owner->kyc_document);
+                // Ensure document exists
+                if ($document) {
+                    // Extract the path from the document URL
+                    $path = str_replace($pathPrefix, '', $document->url);
+
+                    // Check if the file exists in storage
+                    if (Storage::disk('public')->exists($path)) {
+                        // Delete the file from storage
+                        Storage::disk('public')->delete($path);
+                    }
+
+                    // Delete the Document record from database
+                    $document->delete();
+                }
+            }
+            $owner->delete();
+        }
 
         return response()->json(['message' => 'User marked as deleted successfully']);
     }

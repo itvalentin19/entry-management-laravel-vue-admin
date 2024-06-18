@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () {
         // Entity Owner Management
         Route::get('owners', [OwnerController::class, 'list']);
         Route::post('owner', [OwnerController::class, 'store']);
+        Route::post('delete-owners', [OwnerController::class, 'deleteList']);
         Route::get('owner/{id}', [OwnerController::class, 'index']);
         Route::post('owner/{id}', [OwnerController::class, 'update']);
         Route::delete('owner/{id}', [OwnerController::class, 'delete']);
@@ -59,5 +60,8 @@ Route::prefix('v1')->group(function () {
 
         // Add Referred By
         Route::post('add-referred-by', [RefController::class, 'store']);
+
+        // Delete Document
+        Route::delete('document/{id}', [EntityController::class, 'deleteDocument']);
     });
 });

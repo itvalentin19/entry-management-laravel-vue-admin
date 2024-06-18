@@ -82,7 +82,7 @@ class EntityController extends Controller
             'person' => 'sometimes|string|max:255|nullable',
             'jurisdiction' => 'sometimes|string|max:255|nullable',
             'owner_ids' => 'sometimes|string|max:255|nullable',
-            'files.*' => 'sometimes|file|mimes:pdf,jpeg,jpg,xls,xlsx|max:2048|nullable',
+            'files.*' => 'sometimes|file|mimes:pdf,jpeg,jpg,xls,xlsx|max:20480|nullable',
             'notes' => 'sometimes|string|nullable',
             'ref_by' => 'sometimes|string|max:255|nullable',
             'active' => 'sometimes|string|nullable',
@@ -94,7 +94,7 @@ class EntityController extends Controller
                 // 'contact_last_name' => 'required|string|max:255',
                 // 'contact_phone' => 'required|string|max:255',
                 // 'contact_email' => 'required|string|email|max:255',
-                'director_list' => 'required|string',
+                'director_list' => 'sometimes|string',
             ]);
         }
 
@@ -186,22 +186,22 @@ class EntityController extends Controller
             // $entity->contact_phone = $request->input('contact_phone');
             $entity->contact_email = $request->input('contact_email');
             $request->validate([
-                'director_list' => 'required|string',
+                'director_list' => 'sometimes|string|nullable',
             ]);
             $director_list = json_decode($request->input('director_list'), true);
             $director_ids = [];
             foreach ($director_list as $item) {
                 $validator = validator($item, [
-                    'first_name' => 'required|string|max:255',
-                    'last_name' => 'required|string|max:255',
-                    'phone' => 'required|string|max:255',
-                    'email' => 'required|string|email|max:255',
-                    'address1' => 'required|string|max:255',
-                    'address2' => 'required|string|max:255',
-                    'city' => 'required|string|max:255',
-                    'state' => 'required|string|max:255',
-                    'zip' => 'required|string|max:255',
-                    'country' => 'required|string|max:255',
+                    'first_name' => 'sometimes|string|nullable|max:255',
+                    'last_name' => 'sometimes|string|nullable|max:255',
+                    'phone' => 'sometimes|string|nullable|max:255',
+                    'email' => 'sometimes|string|nullable|email|max:255',
+                    'address1' => 'sometimes|string|nullable|max:255',
+                    'address2' => 'sometimes|string|nullable|max:255',
+                    'city' => 'sometimes|string|nullable|max:255',
+                    'state' => 'sometimes|string|nullable|max:255',
+                    'zip' => 'sometimes|string|nullable|max:255',
+                    'country' => 'sometimes|string|nullable|max:255',
                 ]);
 
                 if ($validator->fails()) {
@@ -237,17 +237,17 @@ class EntityController extends Controller
             $officer_list = json_decode($request->input('officer_list'), true);
             foreach ($officer_list as $item) {
                 $validator = validator($item, [
-                    'first_name' => 'required|string|max:255',
-                    'last_name' => 'required|string|max:255',
-                    'phone' => 'required|string|max:255',
-                    'email' => 'required|string|email|max:255',
-                    'title' => 'required|string|max:255',
-                    'address1' => 'required|string|max:255',
-                    'address2' => 'required|string|max:255',
-                    'city' => 'required|string|max:50',
-                    'state' => 'required|string|max:50',
-                    'zip' => 'required|string|max:10',
-                    'country' => 'required|string|max:50',
+                    'first_name' => 'sometimes|string|nullable|max:255',
+                    'last_name' => 'sometimes|string|nullable|max:255',
+                    'phone' => 'sometimes|string|nullable|max:255',
+                    'email' => 'sometimes|string|nullable|email|max:255',
+                    'title' => 'sometimes|string|nullable|max:255',
+                    'address1' => 'sometimes|string|nullable|max:255',
+                    'address2' => 'sometimes|string|nullable|max:255',
+                    'city' => 'sometimes|string|nullable|max:50',
+                    'state' => 'sometimes|string|nullable|max:50',
+                    'zip' => 'sometimes|string|nullable|max:10',
+                    'country' => 'sometimes|string|nullable|max:50',
                 ]);
 
                 if ($validator->fails()) {
@@ -280,18 +280,18 @@ class EntityController extends Controller
             $registered_agent_list = json_decode($request->input('registered_agent_list'), true);
             foreach ($registered_agent_list as $item) {
                 $validator = validator($item, [
-                    'entity_name' => 'required|string|max:100',
-                    'company_name' => 'required|string|max:100|nullable',
-                    'first_name' => 'required|string|max:50|nullable',
-                    'last_name' => 'required|string|max:50|nullable',
-                    'phone' => 'required|string|max:20|nullable',
-                    'email' => 'required|string|email|max:50',
-                    'address1' => 'required|string|max:255|nullable',
-                    'address2' => 'required|string|max:255|nullable',
-                    'city' => 'required|string|max:50',
-                    'state' => 'required|string|max:50',
-                    'zip' => 'required|string|max:10',
-                    'country' => 'required|string|max:50',
+                    'entity_name' => 'sometimes|string|nullable|max:100',
+                    'company_name' => 'sometimes|string|max:100|nullable',
+                    'first_name' => 'sometimes|string|max:50|nullable',
+                    'last_name' => 'sometimes|string|max:50|nullable',
+                    'phone' => 'sometimes|string|max:20|nullable',
+                    'email' => 'sometimes|string|nullable|email|max:50',
+                    'address1' => 'sometimes|string|max:255|nullable',
+                    'address2' => 'sometimes|string|max:255|nullable',
+                    'city' => 'sometimes|strin|nullableg|max:50',
+                    'state' => 'sometimes|string|nullable|max:50',
+                    'zip' => 'sometimes|string|nullable|max:10',
+                    'country' => 'sometimes|string|nullable|max:50',
                 ]);
 
                 if ($validator->fails()) {
@@ -329,6 +329,7 @@ class EntityController extends Controller
                 $document = new Document();
                 $document->entity_id = $entity->id;
                 $document->url = $pathPrefix . $file->store('documents', 'public');
+                $document->file_name = $file->getClientOriginalName();
                 $document->save();
                 $document_ids[] = $document->id;
             }
@@ -373,7 +374,7 @@ class EntityController extends Controller
                 'jurisdiction' => 'string|max:255|nullable',
                 'owner_ids' => 'string|max:255|nullable',
                 'document_ids' => 'string|max:255|nullable',
-                'files.*' => 'sometimes|file|mimes:pdf,jpeg,jpg,xls,xlsx|nullable',
+                'files.*' => 'sometimes|file|mimes:pdf,jpeg,jpg,xls,xlsx|max:20480|nullable',
                 'notes' => 'string|nullable',
                 'ref_by' => 'string|max:255|nullable',
                 'active' => 'string',
@@ -414,7 +415,7 @@ class EntityController extends Controller
             // $entity->contact_email = $request->input('contact_email');
             if ($entity->directors) {
                 $request->validate([
-                    'director_list' => 'required|string',
+                    'director_list' => 'sometimes|string',
                 ]);
                 $director_list = json_decode($request->input('director_list'), true);
                 $director_ids = [];
@@ -424,7 +425,7 @@ class EntityController extends Controller
                         'first_name' => 'string|max:255|nullable',
                         'last_name' => 'string|max:255|nullable',
                         'phone' => 'string|max:255|nullable',
-                        'email' => 'string|email|max:255',
+                        'email' => 'string|nullable|email|max:255',
                         'address1' => 'string|max:255|nullable',
                         'address2' => 'string|max:255|nullable',
                         'city' => 'string|max:255|nullable',
@@ -502,7 +503,7 @@ class EntityController extends Controller
                         'first_name' => 'string|max:255|nullable',
                         'last_name' => 'string|max:255|nullable',
                         'phone' => 'string|max:255|nullable',
-                        'email' => 'string|email|max:255',
+                        'email' => 'string|email|max:255|nullable',
                         'title' => 'string|max:255|nullable',
                         'address1' => 'string|max:255|nullable',
                         'address2' => 'string|max:255|nullable',
@@ -578,13 +579,13 @@ class EntityController extends Controller
                         'first_name' => 'string|max:50|nullable',
                         'last_name' => 'string|max:50|nullable',
                         'phone' => 'string|max:20|nullable',
-                        'email' => 'string|email|max:50',
+                        'email' => 'string|email|max:50|nullable',
                         'address1' => 'string|max:255|nullable',
                         'address2' => 'string|max:255|nullable',
-                        'city' => 'string|max:50',
-                        'state' => 'string|max:50',
-                        'zip' => 'string|max:10',
-                        'country' => 'string|max:50',
+                        'city' => 'string|max:50|nullable',
+                        'state' => 'string|max:50|nullable',
+                        'zip' => 'string|max:10|nullable',
+                        'country' => 'string|max:50|nullable',
                     ]);
 
                     if ($validator->fails()) {
@@ -707,6 +708,7 @@ class EntityController extends Controller
                     $document = new Document();
                     $document->entity_id = $entity->id;
                     $document->url = $pathPrefix . $file->store('documents', 'public');
+                    $document->file_name = $file->getClientOriginalName();
                     $document->save();
                     $document_ids[] = $document->id;
                 }
@@ -1036,6 +1038,40 @@ class EntityController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
         }
+    }
+
+    public function deleteDocument($id)
+    {
+        $document = Document::findOrFail($id);
+        $pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
+        if ($document) {
+            // Extract the path from the document URL
+            $path = str_replace($pathPrefix, '', $document->url);
+
+            // Check if the file exists in storage
+            if (Storage::disk('public')->exists($path)) {
+                // Delete the file from storage
+                Storage::disk('public')->delete($path);
+            }
+            if ($document->entity_id) {
+                $entity = Entity::find($document->entity_id);
+                if ($entity) {
+                    $document_ids = $entity->document_ids ?? [];
+                    $entity->document_ids = array_diff($document_ids, [$id]);
+                    $entity->save();
+                }
+            }
+            if ($document->owner_id) {
+                $owner = Owner::find($document->owner_id);
+                if ($owner) {
+                    $owner->kyc_document = null;
+                    $owner->save();
+                }
+            }
+            $document->delete();
+        }
+
+        return response()->json(['message' => 'User marked as deleted successfully']);
     }
 
     public function delete($id)

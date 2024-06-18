@@ -1,5 +1,4 @@
 <script setup>
-import XlsxViewer from "@/components/XlsxViewer.vue";
 import OwnersTable from "@/layouts/components/OwnersTable.vue";
 import ApiService from "@/services/api";
 import { onMounted } from "vue";
@@ -61,6 +60,8 @@ const ownerIdToDelete = ref(null);
 const loading = ref(false);
 const serviceIdToDelete = ref(null);
 const deleteServiceDialog = ref(false);
+const documentIdToDelete = ref(null);
+const deleteDocumentDialog = ref(false);
 
 const activeTab = ref(0);
 // tabs
@@ -89,6 +90,11 @@ const tabs = [
     title: "Services",
     icon: "bx-building-house",
     tab: "services",
+  },
+  {
+    title: "Files",
+    icon: "bx-file",
+    tab: "files",
   },
 ];
 const resetForm = () => {
@@ -255,6 +261,46 @@ const editEntity = () => {
   router.push("/entities/entity?id=" + entityId.value);
 };
 
+const getFileIcon = (url) => {
+  if (url.includes('xlsx')) {
+    return 'mdi-file-excel';
+  } else if (url.includes('pdf')) {
+    return 'mdi-file-pdf';
+  } else if (url.includes('jpeg') || url.includes('jpg')) {
+    return 'mdi-file-image';
+  } else if (url.includes('xls')) {
+    return 'mdi-file-excel';
+  } else {
+    return 'mdi-file-document';
+  }
+};
+
+const downloadDocument = (url, fileName) => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName ?? "download";
+  link.click();
+};
+const removeDocument = (id) => {
+  console.log("delete document: ", id);
+  documentIdToDelete.value = id;
+  deleteDocumentDialog.value = true;
+};
+const confirmDelete = async () => {
+  try {
+    var id = documentIdToDelete.value;
+    if (!id) return;
+    await ApiService.deleteDocument(id);
+    deleteDocumentDialog.value = false;
+    documentIdToDelete.value = null;
+    accountDataLocal.value.documents = accountDataLocal.value.documents.filter(item => item.id != id);
+    toast.success("Document was deleted correctly.");
+  } catch (error) {
+    console.log(error);
+    toast.error("No response from server. Please try again later.");
+  }
+};
+
 onMounted(() => {
   getProps();
 });
@@ -279,20 +325,35 @@ const headerTitle = () => {
   if (activeTab.value == "owners") title = "Owners";
   if (activeTab.value == "directors") title = "Directors";
   if (activeTab.value == "services") title = "Services";
+  if (activeTab.value == "files") title = "Files";
   return title;
 };
 </script>
 
 <template>
-  <VTabs v-model="activeTab" show-arrows>
-    <VTab v-for="item in tabs" :key="item.icon" :value="item.tab">
-      <VIcon size="20" start :icon="item.icon" />
+  <VTabs
+    v-model="activeTab"
+    show-arrows
+  >
+    <VTab
+      v-for="item in tabs"
+      :key="item.icon"
+      :value="item.tab"
+    >
+      <VIcon
+        size="20"
+        start
+        :icon="item.icon"
+      />
       {{ item.title }}
     </VTab>
   </VTabs>
   <VDivider />
   <VRow>
-    <VCol cols="12" class="mt-6">
+    <VCol
+      cols="12"
+      class="mt-6"
+    >
       <VCard>
         <VCardTitle>
           {{ headerTitle() }}
@@ -306,13 +367,20 @@ const headerTitle = () => {
         </VCardTitle>
         <VDivider />
         <VCardText>
-          <VWindow v-model="activeTab" class="mt-5 disable-tab-transition">
+          <VWindow
+            v-model="activeTab"
+            class="mt-5 disable-tab-transition"
+          >
             <VWindowItem value="entity">
               <!-- 👉 Form -->
               <VForm>
                 <VRow>
                   <!-- 👉 Firm Name -->
-                  <VCol md="6" lg="3" cols="12">
+                  <VCol
+                    md="6"
+                    lg="3"
+                    cols="12"
+                  >
                     <VTextField
                       v-model="accountDataLocal.firm_name"
                       placeholder="Vauban Technologies Ltd"
@@ -321,7 +389,11 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 Entity Name -->
-                  <VCol md="6" lg="3" cols="12">
+                  <VCol
+                    md="6"
+                    lg="3"
+                    cols="12"
+                  >
                     <VTextField
                       v-model="accountDataLocal.entity_name"
                       placeholder="Nano I a Series of S5V Coinvest"
@@ -330,7 +402,11 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 Doing Business Name -->
-                  <VCol md="6" lg="3" cols="12">
+                  <VCol
+                    md="6"
+                    lg="3"
+                    cols="12"
+                  >
                     <VTextField
                       v-model="accountDataLocal.doing_business_as"
                       placeholder="Vauban Ltd"
@@ -339,7 +415,11 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 EIN Number -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.ein_number"
                       label="EIN Number"
@@ -349,7 +429,10 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Address 1 -->
-                  <VCol cols="12" md="6">
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
                     <VTextField
                       v-model="accountDataLocal.address_1"
                       label="Address 1"
@@ -358,7 +441,10 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 Address 2 -->
-                  <VCol cols="12" md="6">
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
                     <VTextField
                       v-model="accountDataLocal.address_2"
                       label="Address 2"
@@ -367,7 +453,11 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 City -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.city"
                       label="City"
@@ -377,7 +467,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 State -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.state"
                       label="State"
@@ -387,7 +481,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Zip Code -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.zip"
                       label="Zip Code"
@@ -397,7 +495,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Country -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.country"
                       label="Country"
@@ -407,7 +509,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Type -->
-                  <VCol cols="12" md="6" lg="4">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="4"
+                  >
                     <VTextField
                       v-model="accountDataLocal.type"
                       label="Entity Type"
@@ -417,7 +523,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Type -->
-                  <VCol cols="12" md="6" lg="4">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="4"
+                  >
                     <VTextField
                       v-model="accountDataLocal.form_id"
                       label="Form ID"
@@ -426,7 +536,11 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 First Tax Year -->
-                  <VCol cols="12" md="6" lg="4">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="4"
+                  >
                     <VTextField
                       v-model="accountDataLocal.first_tax_year"
                       label="First Tax Year"
@@ -440,10 +554,18 @@ const headerTitle = () => {
                     <VTable>
                       <thead>
                         <tr>
-                          <th class="text-left">First Name</th>
-                          <th class="text-left">Last Name</th>
-                          <th class="text-left">Title</th>
-                          <th class="text-left">Email</th>
+                          <th class="text-left">
+                            First Name
+                          </th>
+                          <th class="text-left">
+                            Last Name
+                          </th>
+                          <th class="text-left">
+                            Title
+                          </th>
+                          <th class="text-left">
+                            Email
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -451,17 +573,29 @@ const headerTitle = () => {
                           v-for="item in accountDataLocal.officer_list"
                           :key="item.email"
                         >
-                          <td class="text-left">{{ item.first_name }}</td>
-                          <td class="text-center">{{ item.last_name }}</td>
-                          <td class="text-center">{{ item.title }}</td>
-                          <td class="text-center">{{ item.email }}</td>
+                          <td class="text-left">
+                            {{ item.first_name }}
+                          </td>
+                          <td class="text-center">
+                            {{ item.last_name }}
+                          </td>
+                          <td class="text-center">
+                            {{ item.title }}
+                          </td>
+                          <td class="text-center">
+                            {{ item.email }}
+                          </td>
                         </tr>
                       </tbody>
                     </VTable>
                   </VCol>
 
                   <!-- 👉 Contact First Name -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_first_name"
                       label="Contact First Name"
@@ -471,7 +605,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Contact Last Name -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_last_name"
                       label="Contact Last Name"
@@ -481,7 +619,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Contact Email -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_email"
                       label="Contact Email"
@@ -492,7 +634,11 @@ const headerTitle = () => {
                   </VCol>
 
                   <!-- 👉 Contact Phone -->
-                  <VCol cols="12" md="6" lg="3">
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.contact_phone"
                       label="Contact Phone"
@@ -501,7 +647,10 @@ const headerTitle = () => {
                     />
                   </VCol>
                   <!-- 👉 Ref By -->
-                  <VCol cols="12" md="6">
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
                     <VTextField
                       v-model="accountDataLocal.ref_by"
                       label="Referred By"
@@ -543,26 +692,11 @@ const headerTitle = () => {
                     ></VueDatePicker>
                   </VCol> -->
 
-                  <VCol
-                    cols="4"
-                    md="3"
-                    v-for="document in accountDataLocal.documents"
-                    :key="document.id"
-                  >
-                    <div v-if="document.url.includes('xlsx')" class="pdf-preview">
-                      <XlsxViewer v-if="document.url.includes('xlsx')" :excelFile="document.url" />
-                    </div>
-                    <iframe v-if="document.url.includes('xlsx') == false" :src="document.url" class="pdf-preview"></iframe>
-                    <a :href="document.url" target="_blank">
-                      <VIcon
-                        icon="bx-link-external"
-                        color="primary"
-                      />
-                    </a>
-                  </VCol>
-
                   <!-- 👉 Person -->
-                  <VCol cols="12" md="3">
+                  <VCol
+                    cols="12"
+                    md="3"
+                  >
                     <VTextField
                       v-model="accountDataLocal.person"
                       label="Entered By"
@@ -582,16 +716,36 @@ const headerTitle = () => {
               <VTable>
                 <thead>
                   <tr>
-                    <th class="text-left">First Name</th>
-                    <th class="text-left">Last Name</th>
-                    <th class="text-left">Email</th>
-                    <th class="text-left">Phone</th>
-                    <th class="text-left">Address 1</th>
-                    <th class="text-left">Address 2</th>
-                    <th class="text-left">City</th>
-                    <th class="text-left">State</th>
-                    <th class="text-left">Zip</th>
-                    <th class="text-left">Country</th>
+                    <th class="text-left">
+                      First Name
+                    </th>
+                    <th class="text-left">
+                      Last Name
+                    </th>
+                    <th class="text-left">
+                      Email
+                    </th>
+                    <th class="text-left">
+                      Phone
+                    </th>
+                    <th class="text-left">
+                      Address 1
+                    </th>
+                    <th class="text-left">
+                      Address 2
+                    </th>
+                    <th class="text-left">
+                      City
+                    </th>
+                    <th class="text-left">
+                      State
+                    </th>
+                    <th class="text-left">
+                      Zip
+                    </th>
+                    <th class="text-left">
+                      Country
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -599,16 +753,36 @@ const headerTitle = () => {
                     v-for="item in accountDataLocal.director_list"
                     :key="item.email"
                   >
-                    <td class="text-left">{{ item.first_name }}</td>
-                    <td class="text-center">{{ item.last_name }}</td>
-                    <td class="text-center">{{ item.email }}</td>
-                    <td class="text-center">{{ item.phone }}</td>
-                    <td class="text-center">{{ item.address1 }}</td>
-                    <td class="text-center">{{ item.address2 }}</td>
-                    <td class="text-center">{{ item.city }}</td>
-                    <td class="text-center">{{ item.state }}</td>
-                    <td class="text-center">{{ item.zip }}</td>
-                    <td class="text-center">{{ item.country }}</td>
+                    <td class="text-left">
+                      {{ item.first_name }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.last_name }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.email }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.phone }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.address1 }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.address2 }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.city }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.state }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.zip }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.country }}
+                    </td>
                   </tr>
                 </tbody>
               </VTable>
@@ -617,18 +791,42 @@ const headerTitle = () => {
               <VTable>
                 <thead>
                   <tr>
-                    <th class="text-left">Entity Name</th>
-                    <th class="text-left">Company Name</th>
-                    <th class="text-left">Contact First Name</th>
-                    <th class="text-left">Contact Last Name</th>
-                    <th class="text-left">Address 1</th>
-                    <th class="text-left">Address 2</th>
-                    <th class="text-left">City</th>
-                    <th class="text-left">State</th>
-                    <th class="text-left">Zip</th>
-                    <th class="text-left">Country</th>
-                    <th class="text-left">Email</th>
-                    <th class="text-left">Phone</th>
+                    <th class="text-left">
+                      Entity Name
+                    </th>
+                    <th class="text-left">
+                      Company Name
+                    </th>
+                    <th class="text-left">
+                      Contact First Name
+                    </th>
+                    <th class="text-left">
+                      Contact Last Name
+                    </th>
+                    <th class="text-left">
+                      Address 1
+                    </th>
+                    <th class="text-left">
+                      Address 2
+                    </th>
+                    <th class="text-left">
+                      City
+                    </th>
+                    <th class="text-left">
+                      State
+                    </th>
+                    <th class="text-left">
+                      Zip
+                    </th>
+                    <th class="text-left">
+                      Country
+                    </th>
+                    <th class="text-left">
+                      Email
+                    </th>
+                    <th class="text-left">
+                      Phone
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -636,18 +834,42 @@ const headerTitle = () => {
                     v-for="item in accountDataLocal.registered_agent_list"
                     :key="item.email"
                   >
-                    <td class="text-left">{{ item.entity_name }}</td>
-                    <td class="text-left">{{ item.company_name }}</td>
-                    <td class="text-left">{{ item.first_name }}</td>
-                    <td class="text-center">{{ item.last_name }}</td>
-                    <td class="text-center">{{ item.address1 }}</td>
-                    <td class="text-center">{{ item.address2 }}</td>
-                    <td class="text-center">{{ item.city }}</td>
-                    <td class="text-center">{{ item.state }}</td>
-                    <td class="text-center">{{ item.zip }}</td>
-                    <td class="text-center">{{ item.country }}</td>
-                    <td class="text-center">{{ item.email }}</td>
-                    <td class="text-center">{{ item.phone }}</td>
+                    <td class="text-left">
+                      {{ item.entity_name }}
+                    </td>
+                    <td class="text-left">
+                      {{ item.company_name }}
+                    </td>
+                    <td class="text-left">
+                      {{ item.first_name }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.last_name }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.address1 }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.address2 }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.city }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.state }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.zip }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.country }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.email }}
+                    </td>
+                    <td class="text-center">
+                      {{ item.phone }}
+                    </td>
                   </tr>
                 </tbody>
               </VTable>
@@ -656,9 +878,13 @@ const headerTitle = () => {
               <VTable>
                 <thead>
                   <tr>
-                    <th class="text-left">Service</th>
-                    <th class="text-left">Annual Fee</th>
-                    <th class="text-left"></th>
+                    <th class="text-left">
+                      Service
+                    </th>
+                    <th class="text-left">
+                      Annual Fee
+                    </th>
+                    <th class="text-left" />
                   </tr>
                 </thead>
                 <tbody>
@@ -667,25 +893,75 @@ const headerTitle = () => {
                     :key="item.service"
                   >
                     <td>{{ item.service }}</td>
-                    <td class="text-center">{{ item.fee }}</td>
                     <td class="text-center">
-                      <VIcon icon="bx-trash" @click="removeService(index)" />
+                      {{ item.fee }}
+                    </td>
+                    <td class="text-center">
+                      <VIcon
+                        icon="bx-trash"
+                        @click="removeService(index)"
+                      />
                     </td>
                   </tr>
                 </tbody>
               </VTable>
+            </VWindowItem>
+            <VWindowItem value="files">
+              <VRow>
+                <VCol
+                  v-for="document in accountDataLocal.documents"
+                  :key="document.id"
+                  cols="12"
+                >
+                  <VRow align="center">
+                    <VCol cols="1">
+                      <VIcon
+                        :icon="getFileIcon(document.url)"
+                        color="primary"
+                      />
+                    </VCol>
+                    <VCol cols="9">
+                      <a
+                        :href="document.url"
+                        target="_blank"
+                      >
+                        {{ document.file_name || document.url.split('/').pop() }}
+                      </a>
+                    </VCol>
+                    <VCol cols="1">
+                      <VIcon
+                        icon="mdi-download"
+                        color="primary"
+                        @click="downloadDocument(document.url, document.file_name)"
+                      />
+                    </VCol>
+                    <VCol cols="1">
+                      <VIcon
+                        icon="bx-minus-circle"
+                        color="primary"
+                        @click="removeDocument(document.id)"
+                      />
+                    </VCol>
+                  </VRow>
+                </VCol>
+              </VRow>
             </VWindowItem>
           </VWindow>
         </VCardText>
       </VCard>
     </VCol>
   </VRow>
-  <VDialog v-model="deleteOwnerDialog" width="500">
+  <VDialog
+    v-model="deleteOwnerDialog"
+    width="500"
+  >
     <VCard :loading="loading">
-      <VCardTitle class="headline">Confirm Deletion</VCardTitle>
+      <VCardTitle class="headline">
+        Confirm Deletion
+      </VCardTitle>
       <VCardText>
         Are you sure you want to remove owner
-        <span style="color: black">
+        <span style="color: black;">
           {{
             accountDataLocal.owners.filter((i) => i.id == ownerIdToDelete)[0]
               ?.first_name
@@ -699,55 +975,99 @@ const headerTitle = () => {
         ?
       </VCardText>
       <VCardActions>
-        <VSpacer></VSpacer>
-        <VBtn color="green darken-1" text @click="deleteOwnerDialog = false"
-          >Cancel</VBtn
+        <VSpacer />
+        <VBtn
+          color="green darken-1"
+          text
+          @click="deleteOwnerDialog = false"
         >
+          Cancel
+        </VBtn>
         <VBtn
           color="red darken-1"
           text
-          @click="confirmDeleteOwner"
           :loading="loading"
-          >Delete</VBtn
+          @click="confirmDeleteOwner"
         >
+          Delete
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
-  <VDialog v-model="deleteServiceDialog" width="500">
+  <VDialog
+    v-model="deleteServiceDialog"
+    width="500"
+  >
     <VCard :loading="loading">
-      <VCardTitle class="headline">Confirm Deletion</VCardTitle>
+      <VCardTitle class="headline">
+        Confirm Deletion
+      </VCardTitle>
       <VCardText>
         Are you sure you want to remove service
-        <span style="color: black">
+        <span style="color: black;">
           {{ serviceFeeDataLocal[serviceIdToDelete]?.service }}
         </span>
         ?
       </VCardText>
       <VCardActions>
-        <VSpacer></VSpacer>
-        <VBtn color="green darken-1" text @click="deleteServiceDialog = false"
-          >Cancel</VBtn
+        <VSpacer />
+        <VBtn
+          color="green darken-1"
+          text
+          @click="deleteServiceDialog = false"
         >
+          Cancel
+        </VBtn>
         <VBtn
           color="red darken-1"
           text
-          @click="confirmDeleteService"
           :loading="loading"
-          >Delete</VBtn
+          @click="confirmDeleteService"
         >
+          Delete
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+  <VDialog
+    v-model="deleteDocumentDialog"
+    width="500"
+  >
+    <VCard>
+      <VCardTitle class="headline">
+        Confirm Deletion
+      </VCardTitle>
+      <VCardText> Are you sure you want to delete this document? </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn
+          color="green darken-1"
+          text
+          @click="deleteDocumentDialog = false"
+        >
+          Cancel
+        </VBtn>
+        <VBtn
+          color="red darken-1"
+          text
+          @click="confirmDelete"
+        >
+          Delete
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
 </template>
 <style scoped>
 .pdf-preview {
-  width: 100%;
-  height: 200px; /* Adjust as needed */
   border: none;
+  block-size: 200px; /* Adjust as needed */
+  inline-size: 100%;
 }
+
 .edit-entity-icon {
   position: absolute;
-  right: 10px;
   cursor: pointer;
+  inset-inline-end: 10px;
 }
 </style>

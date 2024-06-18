@@ -76,22 +76,22 @@ class UserController extends Controller
 
 			// Validate the incoming request data
 			$request->validate([
-				'name' => 'string|max:255',
+				'first_name' => 'string|max:255',
+				'last_name' => 'sometimes|nullable|string|max:255',
 				'email' => 'string|email|max:255|unique:users,email,' . $user->id,
-				'phone' => 'string|max:255',
-				'address' => 'string|max:255',
-				'address2' => 'string|max:255',
-				'role' => 'in:admin,user',
+				'phone' => 'sometimes|nullable|string|max:255',
+				'address' => 'sometimes|nullable|string|max:255',
+				'address2' => 'sometimes|nullable|string|max:255',
 				'avatar' => 'sometimes|file|image|max:2048', // 2MB Max
 			]);
 
 			// Update user's information
-			$user->name = $request->input('name', $user->name);
-			$user->email = $request->input('email', $user->email);
-			$user->phone = $request->input('phone', $user->phone);
-			$user->address = $request->input('address', $user->address);
-			$user->address2 = $request->input('address2', $user->address2);
-			$user->role = $request->input('role', $user->role);
+			$user->first_name = $request->input('first_name');
+			$user->last_name = $request->input('last_name');
+			$user->email = $request->input('email');
+			$user->phone = $request->input('phone');
+			$user->address = $request->input('address');
+			$user->address2 = $request->input('address2');
 
 			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 			// Handle avatar update if provided
@@ -229,22 +229,24 @@ class UserController extends Controller
 	public function store(Request $request)
 	{
 		$request->validate([
-			'name' => 'required|string|max:255',
-			'company' => 'required|string|max:100',
+			'first_name' => 'required|string|max:255',
+			'last_name' => 'sometimes|nullable|string|max:255',
+			'company' => 'sometimes|nullable|string|max:100',
 			'email' => 'required|string|email|max:255|unique:users',
-			'phone' => 'required|string|max:255',
-			'address' => 'required|string|max:255',
-			'address2' => 'required|string|max:255',
+			'phone' => 'sometimes|nullable|string|max:255',
+			'address' => 'sometimes|nullable|string|max:255',
+			'address2' => 'sometimes|nullable|string|max:255',
 			'avatar' => 'sometimes|file|image|max:2048',
-			'city' => 'required|string|max:50',
-			'state' => 'required|string|max:50',
-			'zip' => 'required|string|max:10',
-			'country' => 'required|string|max:50',
-			'role' => 'required|in:admin,user', // Ensure role is either 'admin' or 'user'
+			'city' => 'sometimes|nullable|string|max:50',
+			'state' => 'sometimes|nullable|string|max:50',
+			'zip' => 'sometimes|nullable|string|max:10',
+			'country' => 'sometimes|nullable|string|max:50',
+			'role' => 'required|in:Admin,User', // Ensure role is either 'admin' or 'user'
 		]);
 
-		$user = new User($request->only(['name', 'company', 'email', 'phone', 'address', 'address2', 'role', 'city', 'state', 'zip', 'country']));
-		$person = $this->generatePersonName($request->get('name'));
+		$user = new User($request->only(['first_name', 'last_name', 'company', 'email', 'phone', 'address', 'address2', 'role', 'city', 'state', 'zip', 'country']));
+		$name = $request->get('first_name') . " " . $request->get('last_name');
+		$person = $this->generatePersonName(trim($name));
 		$user->person = $person;
 		$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 
@@ -334,32 +336,34 @@ class UserController extends Controller
 
 			// Validate the incoming request data
 			$request->validate([
-				'name' => 'string|max:255',
-				'company' => 'string|max:100',
+				'first_name' => 'string|max:255',
+				'last_name' => 'string|nullable|max:255',
+				'company' => 'string|nullable|max:100',
 				'email' => 'string|email|max:255|unique:users,email,' . $id,
-				'phone' => 'string|max:255',
-				'address' => 'string|max:255',
-				'address2' => 'string|max:255',
-				'role' => 'in:admin,user',
-				'city' => 'string|max:50',
-				'state' => 'string|max:50',
-				'zip' => 'string|max:10',
-				'country' => 'string|max:50',
+				'phone' => 'string|nullable|max:255',
+				'address' => 'string|nullable|max:255',
+				'address2' => 'string|nullable|max:255',
+				'role' => 'in:Admin,User',
+				'city' => 'string|nullable|max:50',
+				'state' => 'string|nullable|max:50',
+				'zip' => 'string|nullable|max:10',
+				'country' => 'string|nullable|max:50',
 				'avatar' => 'sometimes|file|image|max:2048', // 2MB Max
 			]);
 
 			// Update user's information
-			$user->name = $request->input('name', $user->name);
-			$user->company = $request->input('company', $user->company);
-			$user->email = $request->input('email', $user->email);
-			$user->phone = $request->input('phone', $user->phone);
-			$user->address = $request->input('address', $user->address);
-			$user->address2 = $request->input('address2', $user->address2);
-			$user->city = $request->input('city', $user->city);
-			$user->state = $request->input('state', $user->state);
-			$user->zip = $request->input('zip', $user->zip);
-			$user->country = $request->input('country', $user->country);
-			$user->role = $request->input('role', $user->role);
+			$user->first_name = $request->input('first_name');
+			$user->last_name = $request->input('last_name');
+			$user->company = $request->input('company');
+			$user->email = $request->input('email');
+			$user->phone = $request->input('phone');
+			$user->address = $request->input('address');
+			$user->address2 = $request->input('address2');
+			$user->city = $request->input('city');
+			$user->state = $request->input('state');
+			$user->zip = $request->input('zip');
+			$user->country = $request->input('country');
+			$user->role = $request->input('role');
 
 			$pathPrefix = env('FILE_PATH_PREFIX', '/storage/');
 			// Handle avatar update if provided
@@ -396,7 +400,8 @@ class UserController extends Controller
 			$search = $request->input('search');
 			// Assuming you want to search across multiple properties
 			$query->where(function ($query) use ($search) {
-				$query->where('name', 'LIKE', "%{$search}%")
+				$query->where('first_name', 'LIKE', "%{$search}%")
+					->orWhere('last_name', 'LIKE', "%{$search}%")
 					->orWhere('email', 'LIKE', "%{$search}%")
 					->orWhere('company', 'LIKE', "%{$search}%")
 					->orWhere('address', 'LIKE', "%{$search}%")

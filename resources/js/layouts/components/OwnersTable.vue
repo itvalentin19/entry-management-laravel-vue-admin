@@ -65,34 +65,86 @@ const menuList = ref([
   <VTable fixed-header>
     <thead>
       <tr>
-        <th v-if="props.viewOnly == false"></th>
-        <th class="text-uppercase sortable-header" @click="handleSort('id')">
+        <th v-if="props.viewOnly == false" />
+        <th
+          class="text-uppercase sortable-header"
+          @click="handleSort('id')"
+        >
           Id
         </th>
-        <th class="sortable-header" @click="handleSort('first_name')">
+        <th
+          class="sortable-header"
+          @click="handleSort('first_name')"
+        >
           FirstName
         </th>
-        <th class="sortable-header" @click="handleSort('last_name')">
+        <th
+          class="sortable-header"
+          @click="handleSort('last_name')"
+        >
           LastName
         </th>
-        <th class="sortable-header" @click="handleSort('ownership_stake')">
+        <th
+          class="sortable-header"
+          @click="handleSort('ownership_stake')"
+        >
           Ownership (%)
         </th>
-        <th class="sortable-header" @click="handleSort('address1')">
+        <th
+          class="sortable-header"
+          @click="handleSort('address1')"
+        >
           Address 1
         </th>
-        <th class="sortable-header" @click="handleSort('address2')">
+        <th
+          class="sortable-header"
+          @click="handleSort('address2')"
+        >
           Address 2
         </th>
-        <th class="sortable-header" @click="handleSort('city')">City</th>
-        <th class="sortable-header" @click="handleSort('state')">State</th>
-        <th class="sortable-header" @click="handleSort('zip')">Zip</th>
-        <th class="sortable-header" @click="handleSort('country')">Country</th>
-        <th class="sortable-header" @click="handleSort('email')">Email</th>
-        <th class="sortable-header" @click="handleSort('phone')">Phone</th>
-        <th v-if="props.viewOnly == false">Document Type</th>
-        <th v-if="props.viewOnly == false">Document Expiration</th>
-        <th v-if="props.viewOnly == false">Document</th>
+        <th
+          class="sortable-header"
+          @click="handleSort('city')"
+        >
+          City
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('state')"
+        >
+          State
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('zip')"
+        >
+          Zip
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('country')"
+        >
+          Country
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('email')"
+        >
+          Email
+        </th>
+        <th
+          class="sortable-header"
+          @click="handleSort('phone')"
+        >
+          Phone
+        </th>
+        <th v-if="props.viewOnly == false">
+          Document Type
+        </th>
+        <th v-if="props.viewOnly == false">
+          Document Expiration
+        </th>
+        <!-- <th v-if="props.viewOnly == false">Document</th> -->
         <th
           v-if="props.viewOnly == false"
           class="sortable-header"
@@ -104,12 +156,18 @@ const menuList = ref([
     </thead>
 
     <tbody v-if="props.userList">
-      <tr v-for="owner in props.userList" :key="owner.id">
+      <tr
+        v-for="owner in props.userList"
+        :key="owner.id"
+      >
         <td
-          class="text-center"
           v-if="_user?.id == owner.user_id && props.viewOnly == false"
+          class="text-center"
         >
-          <MoreBtn :menu-list="menuList" :data="owner" />
+          <MoreBtn
+            :menu-list="menuList"
+            :data="owner"
+          />
         </td>
         <td>
           {{ owner.id }}
@@ -147,13 +205,19 @@ const menuList = ref([
         <td class="text-center">
           {{ owner.phone }}
         </td>
-        <td class="text-center" v-if="props.viewOnly == false">
+        <td
+          v-if="props.viewOnly == false"
+          class="text-center"
+        >
           {{ owner.document_type }}
         </td>
-        <td class="text-center" v-if="props.viewOnly == false">
-          {{ moment(owner.document_expiration).format("YYYY-MM-DD HH:mm:ss") }}
+        <td
+          v-if="props.viewOnly == false"
+          class="text-center"
+        >
+          {{ owner.document_expiration ? moment(owner.document_expiration).format("YYYY-MM-DD HH:mm:ss") : '' }}
         </td>
-        <td class="text-center" v-if="props.viewOnly == false">
+        <!-- <td class="text-center" v-if="props.viewOnly == false">
           <a
             v-if="owner.kyc_document?.url"
             target="_blank"
@@ -161,9 +225,12 @@ const menuList = ref([
           >
             <VBtn color="transparent" size="small" icon="bx-link-alt" />
           </a>
-        </td>
-        <td class="text-center" v-if="props.viewOnly == false">
-          {{ moment(owner.created_at).format("YYYY-MM-DD") }}
+        </td> -->
+        <td
+          v-if="props.viewOnly == false"
+          class="text-center"
+        >
+          {{ owner.created_at ? moment(owner.created_at).format("YYYY-MM-DD") : '' }}
         </td>
       </tr>
     </tbody>

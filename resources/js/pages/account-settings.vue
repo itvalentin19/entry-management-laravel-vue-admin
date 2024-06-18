@@ -1,24 +1,21 @@
 <script setup>
-import avatar1 from "@images/avatars/avatar-1.png";
-import { useRoute, useRouter } from "vue-router";
-import AccountSettingsAccount from "@/views/pages/account-settings/AccountSettingsAccount.vue";
-import AccountSettingsNotification from "@/views/pages/account-settings/AccountSettingsNotification.vue";
-import AccountSettingsSecurity from "@/views/pages/account-settings/AccountSettingsSecurity.vue";
-import { useToast } from "vue-toastification";
-import { computed, watchEffect } from "vue";
-import { useStore } from "vuex";
 import ApiService from "@/services/api";
+import avatar1 from "@images/avatars/avatar-1.png";
+import { computed, watchEffect } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
+import { useStore } from "vuex";
 
 const route = useRoute();
 const store = useStore();
 const user = computed(() => store.getters.user);
 const accountData = {
-  name: "",
+  first_name: "",
+  last_name: "",
   email: "",
   phone: "",
   address: "",
   avatarImg: avatar1,
-  role: "user",
 };
 const refInputEl = ref();
 const accountDataLocal = ref(accountData);
@@ -77,7 +74,6 @@ const resetAvatar = () => {
 const setUserDetail = () => {
   accountDataLocal.value = user.value;
   accountDataLocal.value.avatarImg = user.value.photo || avatar1;
-  accountDataLocal.value.role = user.value.admin ? "admin" : "user";
 };
 
 watchEffect(() => {
@@ -94,7 +90,7 @@ const handleUpdateUser = async () => {
     // Append user data
     for (const key in accountDataLocal.value) {
       if (key !== "avatarImg") {
-        formData.append(key, accountDataLocal.value[key]);
+        formData.append(key, accountDataLocal.value[key] ?? "");
       }
     }
 
@@ -157,19 +153,62 @@ const handleUpdatePassword = async () => {
     console.error(error);
   }
 };
+
+const formatPhone = (value) => {
+  if (!value) return "";
+  let numericValue = value.replace(/\D/g, "");
+  let formatted = "";
+
+  if (numericValue.length > 1) {
+    formatted += `${numericValue.charAt(0)}-`;
+    numericValue = numericValue.substring(1);
+  }
+  if (numericValue.length > 3) {
+    formatted += `${numericValue.substring(0, 3)}-`;
+    numericValue = numericValue.substring(3);
+  }
+  if (numericValue.length > 3) {
+    formatted += `${numericValue.substring(0, 3)}-${numericValue.substring(3)}`;
+  } else {
+    formatted += numericValue;
+  }
+  return formatted;
+};
+watch(
+  () => accountDataLocal.value.phone,
+  (newValue) => {
+    accountDataLocal.value.phone = formatPhone(newValue);
+  },
+  { immediate: true }
+);
+
 </script>
 
 <template>
   <div>
-    <VTabs v-model="activeTab" show-arrows>
-      <VTab v-for="item in tabs" :key="item.icon" :value="item.tab">
-        <VIcon size="20" start :icon="item.icon" />
+    <VTabs
+      v-model="activeTab"
+      show-arrows
+    >
+      <VTab
+        v-for="item in tabs"
+        :key="item.icon"
+        :value="item.tab"
+      >
+        <VIcon
+          size="20"
+          start
+          :icon="item.icon"
+        />
         {{ item.title }}
       </VTab>
     </VTabs>
     <VDivider />
 
-    <VWindow v-model="activeTab" class="mt-5 disable-tab-transition">
+    <VWindow
+      v-model="activeTab"
+      class="mt-5 disable-tab-transition"
+    >
       <!-- Account -->
       <VWindowItem value="account">
         <VRow>
@@ -187,8 +226,14 @@ const handleUpdatePassword = async () => {
                 <!-- 👉 Upload Photo -->
                 <form class="d-flex flex-column justify-center gap-5">
                   <div class="d-flex flex-wrap gap-2">
-                    <VBtn color="primary" @click="refInputEl?.click()">
-                      <VIcon icon="bx-cloud-upload" class="d-sm-none" />
+                    <VBtn
+                      color="primary"
+                      @click="refInputEl?.click()"
+                    >
+                      <VIcon
+                        icon="bx-cloud-upload"
+                        class="d-sm-none"
+                      />
                       <span class="d-none d-sm-block">Upload new photo</span>
                     </VBtn>
 
@@ -199,7 +244,7 @@ const handleUpdatePassword = async () => {
                       accept=".jpeg,.png,.jpg,GIF"
                       hidden
                       @input="changeAvatar"
-                    />
+                    >
 
                     <VBtn
                       type="reset"
@@ -208,7 +253,10 @@ const handleUpdatePassword = async () => {
                       @click="resetAvatar"
                     >
                       <span class="d-none d-sm-block">Reset</span>
-                      <VIcon icon="bx-refresh" class="d-sm-none" />
+                      <VIcon
+                        icon="bx-refresh"
+                        class="d-sm-none"
+                      />
                     </VBtn>
                   </div>
 
@@ -224,17 +272,34 @@ const handleUpdatePassword = async () => {
                 <!-- 👉 Form -->
                 <VForm class="mt-6">
                   <VRow>
-                    <!-- 👉 Name -->
-                    <VCol md="6" cols="12">
+                    <!-- 👉 First Name -->
+                    <VCol
+                      md="3"
+                      cols="6"
+                    >
                       <VTextField
-                        v-model="accountDataLocal.name"
+                        v-model="accountDataLocal.first_name"
                         placeholder="John"
-                        label="Name"
+                        label="First Name"
+                      />
+                    </VCol>
+                    <!-- 👉 Last Name -->
+                    <VCol
+                      md="3"
+                      cols="6"
+                    >
+                      <VTextField
+                        v-model="accountDataLocal.last_name"
+                        placeholder="John"
+                        label="Last Name"
                       />
                     </VCol>
 
                     <!-- 👉 Email -->
-                    <VCol cols="12" md="6">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <VTextField
                         v-model="accountDataLocal.email"
                         label="E-mail"
@@ -244,7 +309,10 @@ const handleUpdatePassword = async () => {
                     </VCol>
 
                     <!-- 👉 Phone -->
-                    <VCol cols="12" md="6">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <VTextField
                         v-model="accountDataLocal.phone"
                         label="Phone Number"
@@ -253,7 +321,10 @@ const handleUpdatePassword = async () => {
                     </VCol>
 
                     <!-- 👉 Address -->
-                    <VCol cols="12" md="6">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <VTextField
                         v-model="accountDataLocal.address"
                         label="Address"
@@ -261,19 +332,14 @@ const handleUpdatePassword = async () => {
                       />
                     </VCol>
 
-                    <!-- 👉 Role -->
-                    <!-- <VCol cols="12" md="6">
-                      <VSelect
-                        v-model="accountDataLocal.role"
-                        :items="['admin', 'user']"
-                        label="Role"
-                        placeholder="Select a role"
-                      />
-                    </VCol> -->
-
                     <!-- 👉 Form Actions -->
-                    <VCol cols="12" class="d-flex flex-wrap gap-4">
-                      <VBtn @click="handleUpdateUser"> Update User </VBtn>
+                    <VCol
+                      cols="12"
+                      class="d-flex flex-wrap gap-4"
+                    >
+                      <VBtn @click="handleUpdateUser">
+                        Update User
+                      </VBtn>
                       <!-- <VBtn v-else @click="onCreateUser">{{ "Create User" }}</VBtn> -->
                     </VCol>
                   </VRow>
@@ -294,7 +360,10 @@ const handleUpdatePassword = async () => {
                 <VCardText>
                   <!-- 👉 Current Password -->
                   <VRow>
-                    <VCol cols="12" md="6">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <!-- 👉 current password -->
                       <VTextField
                         v-model="currentPassword"
@@ -313,7 +382,10 @@ const handleUpdatePassword = async () => {
 
                   <!-- 👉 New Password -->
                   <VRow>
-                    <VCol cols="12" md="6">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <!-- 👉 new password -->
                       <VTextField
                         v-model="newPassword"
@@ -329,7 +401,10 @@ const handleUpdatePassword = async () => {
                       />
                     </VCol>
 
-                    <VCol cols="12" md="6">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <!-- 👉 confirm password -->
                       <VTextField
                         v-model="confirmPassword"
