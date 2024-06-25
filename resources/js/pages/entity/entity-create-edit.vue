@@ -20,7 +20,7 @@ const accountData = {
   city: null,
   state: null,
   zip: null,
-  country: "USA",
+  country: "United States",
   type: null,
   contact_first_name: null,
   contact_last_name: null,
@@ -113,6 +113,7 @@ const documentIdToDelete = ref(null);
 const addReferDialog = ref(false);
 const loading = ref(false);
 const isDragging = ref(false);
+const isProcessing = ref(false);
 
 const referredByItem = {
   name: null,
@@ -130,7 +131,7 @@ const ownerItem = {
   city: null,
   state: null,
   zip: null,
-  country: "USA",
+  country: "United States",
   ownership_stake: null,
   document_type: "DL",
   document_expiration: null,
@@ -287,6 +288,7 @@ const onCreate = async () => {
         "Content-Type": "multipart/form-data",
       },
     };
+    isProcessing.value = true;
     if (entityId.value) {
       // Update existing Entity
       res = await ApiService.updateEntity(entityId.value, formData, config);
@@ -323,6 +325,8 @@ const onCreate = async () => {
       toast.error("Error: " + error.message);
     }
     console.error(error);
+  } finally {
+    isProcessing.value = false;
   }
 };
 
@@ -626,10 +630,11 @@ const removeOwner = (index) => {
 
 const onCopyAddress1FromEntity = (target) => {
   target.address1 = accountDataLocal.value.address_1;
-}
-
-const onCopyAddress2FromEntity = (target) => {
   target.address2 = accountDataLocal.value.address_2;
+  target.city = accountDataLocal.value.city;
+  target.state = accountDataLocal.value.state;
+  target.zip = accountDataLocal.value.zip;
+  target.country = accountDataLocal.value.country;
 }
 
 const getFileIcon = (url) => {
@@ -737,6 +742,18 @@ onMounted(() => {
       <VIcon icon="bx-arrow-back" />
       Go To Home
     </VBtn>
+    
+    <VOverlay
+      v-model="isProcessing"
+      style="width: 100%;height: 100%;flex: 1;align-items: center;justify-content: center;"
+    >
+      <VProgressCircular
+        indeterminate
+        size="64"
+        width="8"
+        color="primary"
+      />
+    </VOverlay>
   </div>
   <VTabs
     v-model="activeTab"
@@ -858,14 +875,23 @@ onMounted(() => {
                     sm="6"
                     lg="3"
                   >
-                    <VAutocomplete
-                      v-model="accountDataLocal.state"
-                      label="State"
-                      placeholder="FL"
-                      item-title="name"
-                      item-value="abbreviation"
-                      :items="states"
-                    />
+                    <template v-if="accountDataLocal.country === 'United States'">
+                      <VAutocomplete
+                        v-model="accountDataLocal.state"
+                        label="State"
+                        placeholder="FL"
+                        item-title="name"
+                        item-value="abbreviation"
+                        :items="states"
+                      />
+                    </template>
+                    <template v-else>
+                      <VTextField
+                        v-model="accountDataLocal.state"
+                        label="State"
+                        placeholder="Enter state"
+                      />
+                    </template>
                   </VCol>
 
                   <!-- 👉 Zip Code -->
@@ -946,14 +972,23 @@ onMounted(() => {
                     sm="6"
                     lg="3"
                   >
-                    <VAutocomplete
-                      v-model="accountDataLocal.jurisdiction"
-                      label="Jurisdiction"
-                      placeholder=""
-                      item-title="name"
-                      item-value="name"
-                      :items="states"
-                    />
+                    <template v-if="accountDataLocal.country === 'United States'">
+                      <VAutocomplete
+                        v-model="accountDataLocal.jurisdiction"
+                        label="Jurisdiction"
+                        placeholder=""
+                        item-title="name"
+                        item-value="name"
+                        :items="states"
+                      />
+                    </template>
+                    <template v-else>
+                      <VTextField
+                        v-model="accountDataLocal.jurisdiction"
+                        label="Jurisdiction"
+                        placeholder="Enter Jurisdiction"
+                      />
+                    </template>
                   </VCol>
                   <!-- 👉 Date Incorporated -->
                   <VCol
@@ -1191,14 +1226,6 @@ onMounted(() => {
                               label="Address 2"
                               placeholder="Suite 410"
                             />
-                            <VBtn
-                              size="small"
-                              variant="outlined"
-                              style="margin-top: 4px;"
-                              @click="onCopyAddress2FromEntity(director)"
-                            >
-                              Copy from Entity
-                            </VBtn>
                           </VCol>
 
                           <VCol
@@ -1217,14 +1244,23 @@ onMounted(() => {
                             md="4"
                             sm="6"
                           >
-                            <VAutocomplete
-                              v-model="director.state"
-                              label="State"
-                              placeholder="FL"
-                              item-title="name"
-                              item-value="abbreviation"
-                              :items="states"
-                            />
+                            <template v-if="director.country === 'United States'">
+                              <VAutocomplete
+                                v-model="director.state"
+                                label="State"
+                                placeholder="FL"
+                                item-title="name"
+                                item-value="abbreviation"
+                                :items="states"
+                              />
+                            </template>
+                            <template v-else>
+                              <VTextField
+                                v-model="director.state"
+                                label="State"
+                                placeholder="Enter state"
+                              />
+                            </template>
                           </VCol>
                           <VCol
                             cols="12"
@@ -1352,14 +1388,6 @@ onMounted(() => {
                               label="Address 2"
                               placeholder="Suite 410"
                             />
-                            <VBtn
-                              size="small"
-                              variant="outlined"
-                              style="margin-top: 4px;"
-                              @click="onCopyAddress2FromEntity(owner)"
-                            >
-                              Copy from Entity
-                            </VBtn>
                           </VCol>
                           <VCol
                             cols="12"
@@ -1376,14 +1404,23 @@ onMounted(() => {
                             cols="12"
                             md="6"
                           >
-                            <VAutocomplete
-                              v-model="owner.state"
-                              label="State"
-                              placeholder="FL"
-                              item-title="name"
-                              item-value="abbreviation"
-                              :items="states"
-                            />
+                            <template v-if="owner.country === 'United States'">
+                              <VAutocomplete
+                                v-model="owner.state"
+                                label="State"
+                                placeholder="FL"
+                                item-title="name"
+                                item-value="abbreviation"
+                                :items="states"
+                              />
+                            </template>
+                            <template v-else>
+                              <VTextField
+                                v-model="owner.state"
+                                label="State"
+                                placeholder="Enter state"
+                              />
+                            </template>
                           </VCol>
 
                           <VCol
@@ -1432,7 +1469,7 @@ onMounted(() => {
                             />
                           </VCol>
 
-                          <VCol
+                          <!-- <VCol
                             cols="12"
                             md="6"
                           >
@@ -1442,7 +1479,7 @@ onMounted(() => {
                               type="date"
                               placeholder="MM/DD/YYYY"
                             />
-                          </VCol>
+                          </VCol> -->
                           <!-- <VCol
                             cols="12"
                             md="6"
@@ -1616,14 +1653,6 @@ onMounted(() => {
                               label="Address 2"
                               placeholder="Suite 410"
                             />
-                            <VBtn
-                              size="small"
-                              variant="outlined"
-                              style="margin-top: 4px;"
-                              @click="onCopyAddress2FromEntity(officer)"
-                            >
-                              Copy from Entity
-                            </VBtn>
                           </VCol>
                           <VCol
                             cols="12"
@@ -1641,14 +1670,23 @@ onMounted(() => {
                             md="4"
                             sm="6"
                           >
-                            <VAutocomplete
-                              v-model="officer.state"
-                              label="State"
-                              placeholder="FL"
-                              item-title="name"
-                              item-value="abbreviation"
-                              :items="states"
-                            />
+                            <template v-if="officer.country === 'United States'">
+                              <VAutocomplete
+                                v-model="officer.state"
+                                label="State"
+                                placeholder="FL"
+                                item-title="name"
+                                item-value="abbreviation"
+                                :items="states"
+                              />
+                            </template>
+                            <template v-else>
+                              <VTextField
+                                v-model="officer.state"
+                                label="State"
+                                placeholder="Enter state"
+                              />
+                            </template>
                           </VCol>
                           <VCol
                             cols="12"
@@ -1783,14 +1821,6 @@ onMounted(() => {
                               label="Address 2"
                               placeholder="Suite 410"
                             />
-                            <VBtn
-                              size="small"
-                              variant="outlined"
-                              style="margin-top: 4px;"
-                              @click="onCopyAddress2FromEntity(agent)"
-                            >
-                              Copy from Entity
-                            </VBtn>
                           </VCol>
                           <VCol
                             cols="12"
@@ -1808,14 +1838,23 @@ onMounted(() => {
                             md="4"
                             sm="6"
                           >
-                            <VAutocomplete
-                              v-model="agent.state"
-                              label="State"
-                              placeholder="FL"
-                              item-title="name"
-                              item-value="abbreviation"
-                              :items="states"
-                            />
+                            <template v-if="agent.country === 'United States'">
+                              <VAutocomplete
+                                v-model="agent.state"
+                                label="State"
+                                placeholder="FL"
+                                item-title="name"
+                                item-value="abbreviation"
+                                :items="states"
+                              />
+                            </template>
+                            <template v-else>
+                              <VTextField
+                                v-model="agent.state"
+                                label="State"
+                                placeholder="Enter state"
+                              />
+                            </template>
                           </VCol>
                           <VCol
                             cols="12"
